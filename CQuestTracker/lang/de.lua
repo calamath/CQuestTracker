@@ -1,0 +1,52 @@
+------------------------------------------------
+-- CQuestTracker
+-- German localization
+-- Version 1, 2022-01-05, by Baertram
+------------------------------------------------
+
+--	Localization Strings
+SafeAddString(SI_CQT_WELCOME_TEXT1, 							"Willkommen beim CQuestTracker AddOn !", 1)
+SafeAddString(SI_CQT_WELCOME_TEXT2, 							" Dieser Quest Tracker wird die angezeigte Liste automatisch aktualisieren und aktuell laufende Quests mit höherer Priorität anzeigen.", 1)
+SafeAddString(SI_CQT_WELCOME_TEXT3, 							" Zum Start wird nur die verfogte Quest angezeigt. Wenn du weitere Questst sofort anzeigen möchtest, musst du folgendes tun:", 1)
+SafeAddString(SI_CQT_WELCOME_TEXT4, 							" Öffne die Quest Liste an der linken oberen Ecke des Quest Tarckers und wähle deine Favoriten Quests durch Linksklick auf den Questnamen. Du kannst Quests auch für immer anpinnen, or ignorieren/verstecken lassen.", 1)
+SafeAddString(SI_CQT_TITLEBAR_QUEST_LIST_BUTTON_TIPS, 			"Quest Liste", 1)
+SafeAddString(SI_CQT_TITLEBAR_OPEN_SETTINGS_BUTTON_TIPS, 		"Zeige Einstellungen", 1)
+SafeAddString(SI_CQT_QUESTLIST_MENU_HEADER, 					"Quest Liste: (<<1>>/<<2>>)", 1)
+SafeAddString(SI_CQT_ENABLE_PINNING_QUEST, 						"Quest anpinnen", 1)
+SafeAddString(SI_CQT_DISABLE_PINNING_QUEST, 					"Anpinnen rückgängig machen", 1)
+SafeAddString(SI_CQT_ENABLE_IGNORING_QUEST, 					"Ignoriere die Quest", 1)
+SafeAddString(SI_CQT_DISABLE_IGNORING_QUEST, 					"Deaktiviere Ignorieren der Quest", 1)
+SafeAddString(SI_CQT_PICK_OUT_QUEST, 							"Wähle die Quest", 1)
+SafeAddString(SI_CQT_RULE_OUT_QUEST, 							"Quest Verfolg beenden.", 1)
+SafeAddString(SI_CQT_MOST_LOWER_QUEST, 							"Quest nach ganz unten schieben", 1)
+
+SafeAddString(SI_CQT_QUESTTYPE_ZONE_STORY_QUEST, 				"Zonen Geschichte", 1)
+SafeAddString(SI_CQT_QUESTTYPE_SIDE_QUEST, 						"Neben Quest", 1)
+SafeAddString(SI_CQT_QUEST_BACKGROUND_HEADER, 					"Hintegrund:", 1)
+SafeAddString(SI_CQT_QUEST_OR_DESCRIPTION, 						L(SI_QUEST_OR_DESCRIPTION), 1)
+SafeAddString(SI_CQT_QUEST_OPTIONAL_STEPS_DESCRIPTION, 			L(SI_QUEST_OPTIONAL_STEPS_DESCRIPTION), 1)
+SafeAddString(SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION, 		"Optionale Schritte - Vervollst. einen:", 1)
+SafeAddString(SI_CQT_QUEST_OBJECTIVES_HEADER, 					"<<C:1[keine Ziele/Ziel/Ziele]>>:", 1)
+SafeAddString(SI_CQT_QUEST_OBJECTIVES_OR_HEADER, 				"<<C:1[keine Ziele/Ziel/Ziele - Vervollst. eines]>>:", 1)
+SafeAddString(SI_CQT_QUEST_HINT_STEPS_HEADER, 					"<<C:1[keine Tipps/Tipp/Tipps]>>:", 1)
+
+SafeAddString(SI_CQT_UI_PANEL_HEADER1_TEXT, 					"Dieses AddOn stellt einen mehrfachen Quest Tracker bereit der sich automatisch auf deine aktuellen Quest-Aktivitäten fokussiert.", 1)
+SafeAddString(SI_CQT_UI_ACCOUNT_WIDE_OP_NAME, 					"Verwende Account-weite Einstellungen", 1)
+SafeAddString(SI_CQT_UI_ACCOUNT_WIDE_OP_TIPS, 					"Wenn die Account-weiten Einstellungen AUSgeschaltet sind, dann wird jeder deiner Charaktere eigene Einstellungen abspeichern.", 1)
+SafeAddString(SI_CQT_UI_BEHAVIOR_HEADER1_TEXT, 					"Verhalten Optionen", 1)
+SafeAddString(SI_CQT_UI_HIDE_DEFAULT_TRACKER_OP_NAME, 			"Verstecke Default Quest Tracker", 1)
+SafeAddString(SI_CQT_UI_HIDE_DEFAULT_TRACKER_OP_TIPS, 			"Versteckt den Vanilla ZOs Quest Tracker", 1)
+SafeAddString(SI_CQT_UI_HIDE_QUEST_TRACKER_OP_NAME, 			"Verstecke diesen Quest Tracker", 1)
+SafeAddString(SI_CQT_UI_HIDE_QUEST_TRACKER_OP_TIPS, 			"Versteckt diesen CQuest Tracker", 1)
+SafeAddString(SI_CQT_UI_TRACKER_VISUAL_HEADER1_TEXT,			"Tracker Visuelle Optionen", 1)
+SafeAddString(SI_CQT_UI_QUEST_NAME_FONT_SUBHEADER_TEXT, 		"Quest Name Font:", 1)
+SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONT_SUBHEADER_TEXT, 	"Quest Kondition Font:", 1)
+SafeAddString(SI_CQT_UI_COMMON_FONTTYPE_MENU_NAME,  			"|u25:0::|uFont Typ", 1)
+SafeAddString(SI_CQT_UI_COMMON_FONTSIZE_MENU_NAME,  			"|u25:0::|uFont Größe", 1)
+SafeAddString(SI_CQT_UI_COMMON_FONTWEIGHT_MENU_NAME,  			"|u25:0::|uFont Gewicht", 1)
+SafeAddString(SI_CQT_UI_QUEST_NAME_FONTTYPE_MENU_TIPS,  		"Wähle deinen bevorzugten Font Typ.", 1)
+SafeAddString(SI_CQT_UI_QUEST_NAME_FONTSIZE_MENU_TIPS,  		"Wähle deine bevorzugte Font Größe.", 1)
+SafeAddString(SI_CQT_UI_QUEST_NAME_FONTWEIGHT_MENU_TIPS,  		"Wähle dein bevorzugtes Font Gewicht.", 1)
+SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONTTYPE_MENU_TIPS,  	"Wähle deinen bevorzugten Font Typ.", 1)
+SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONTSIZE_MENU_TIPS,  	"Wähle deine bevorzugte Font Größe", 1)
+SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONTWEIGHT_MENU_TIPS, 	"Wähle dein bevorzugtes Font Gewicht, z.B. Norma, Fett, Kursiv", 1)
