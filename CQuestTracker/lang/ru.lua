@@ -1,7 +1,7 @@
 ------------------------------------------------
 -- CQuestTracker
 -- Russian localization
--- Version 1, 08-01-2022, by Inzenieris#2546
+-- Version 2, 08-01-2022, by Inzenieris#2546
 ------------------------------------------------
 
 --	Localization Strings
@@ -22,15 +22,15 @@ SafeAddString(SI_CQT_MOST_LOWER_QUEST, 							"Вывести квест в ни
 
 SafeAddString(SI_CQT_QUESTTYPE_ZONE_STORY_QUEST, 				"Сюжетный квест локации", 1)
 SafeAddString(SI_CQT_QUESTTYPE_SIDE_QUEST, 						"Побочный  квест", 1)
-SafeAddString(SI_CQT_QUEST_BACKGROUND_HEADER, 					"Фон:", 1)
-SafeAddString(SI_CQT_QUEST_OR_DESCRIPTION, 						L(SI_QUEST_OR_DESCRIPTION), 1)
-SafeAddString(SI_CQT_QUEST_OPTIONAL_STEPS_DESCRIPTION, 			L(SI_QUEST_OPTIONAL_STEPS_DESCRIPTION), 1)
-SafeAddString(SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION, 		"Опциональные шаги  - выполните один из:", 1)
-SafeAddString(SI_CQT_QUEST_OBJECTIVES_HEADER, 					"<<C:1[Нет примечаний/Примечание/Примечания]>>:", 1)
-SafeAddString(SI_CQT_QUEST_OBJECTIVES_OR_HEADER, 				"<<C:1[Нет примечаний/Примечание/Примечания - выполните один из]>>:", 1)
-SafeAddString(SI_CQT_QUEST_HINT_STEPS_HEADER, 					"<<C:1[Нет примечаний/Примечание/Примечания]>>:", 1)
+SafeAddString(SI_CQT_QUEST_BACKGROUND_HEADER, 					"Задачи:", 1)
 
-SafeAddString(SI_CQT_UI_PANEL_HEADER1_TEXT, 					"Этоn аддон отслеживет несколько квестов, основываясь на ваших последних действиях, связанных с квестами..", 1)
+
+SafeAddString(SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION, 		"Опциональные шаги  - выполните один из:", 1)
+SafeAddString(SI_CQT_QUEST_OBJECTIVES_HEADER, 					"<<C:1[Цель/Цели/Нет целей]>>:", 1)
+SafeAddString(SI_CQT_QUEST_OBJECTIVES_OR_HEADER, 				"<<C:1[Цель/Цели - выполните одну из:/Нет целей]>>:", 1)
+SafeAddString(SI_CQT_QUEST_HINT_STEPS_HEADER, 					"<<C:1[Совет/Советы/Нет советов]>>:", 1)
+
+SafeAddString(SI_CQT_UI_PANEL_HEADER1_TEXT, 					"Этот аддон отслеживет несколько квестов, основываясь на ваших последних действиях, связанных с квестами..", 1)
 SafeAddString(SI_CQT_UI_ACCOUNT_WIDE_OP_NAME, 					"Настройки на аккаунт", 1)
 SafeAddString(SI_CQT_UI_ACCOUNT_WIDE_OP_TIPS, 					"Если параметр Настройки на аккаунт отключен, то у каждого персонажа могут быть разные параметры конфигурации, установленные ниже.", 1)
 SafeAddString(SI_CQT_UI_BEHAVIOR_HEADER1_TEXT, 					"Настройки  поведения", 1)
@@ -42,7 +42,7 @@ SafeAddString(SI_CQT_UI_TRACKER_VISUAL_HEADER1_TEXT,			"Настройки  от
 SafeAddString(SI_CQT_UI_QUEST_NAME_FONT_SUBHEADER_TEXT, 		"Шрифт имени квеста:", 1)
 SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONT_SUBHEADER_TEXT, 	"Шрифт задач квеста:", 1)
 SafeAddString(SI_CQT_UI_COMMON_FONTTYPE_MENU_NAME,  			"|u25:0::|uШрифт", 1)
-SafeAddString(SI_CQT_UI_COMMON_FONTSIZE_MENU_NAME,  			"|u25:0::|uРазмер шрифта", 1)
+SafeAddString(SI_CQT_UI_COMMON_FONTSIZE_MENU_NAME,  			"|u25:0::|uРазмер шрифта", 1)  
 SafeAddString(SI_CQT_UI_COMMON_FONTWEIGHT_MENU_NAME,  			"|u25:0::|uВес шрифта", 1)
 SafeAddString(SI_CQT_UI_QUEST_NAME_FONTTYPE_MENU_TIPS,  		"Выбор предпочитаемого шрифта.", 1)
 SafeAddString(SI_CQT_UI_QUEST_NAME_FONTSIZE_MENU_TIPS,  		"Выбор предпочитаемого размера шрифта.", 1)
