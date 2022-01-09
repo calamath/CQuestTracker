@@ -23,8 +23,6 @@ SafeAddString(SI_CQT_MOST_LOWER_QUEST, 							"Quest nach ganz unten schieben", 
 SafeAddString(SI_CQT_QUESTTYPE_ZONE_STORY_QUEST, 				"Zonen Geschichte", 1)
 SafeAddString(SI_CQT_QUESTTYPE_SIDE_QUEST, 						"Neben Quest", 1)
 SafeAddString(SI_CQT_QUEST_BACKGROUND_HEADER, 					"Hintegrund:", 1)
-SafeAddString(SI_CQT_QUEST_OR_DESCRIPTION, 						L(SI_QUEST_OR_DESCRIPTION), 1)
-SafeAddString(SI_CQT_QUEST_OPTIONAL_STEPS_DESCRIPTION, 			L(SI_QUEST_OPTIONAL_STEPS_DESCRIPTION), 1)
 SafeAddString(SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION, 		"Optionale Schritte - Vervollst. einen:", 1)
 SafeAddString(SI_CQT_QUEST_OBJECTIVES_HEADER, 					"<<C:1[keine Ziele/Ziel/Ziele]>>:", 1)
 SafeAddString(SI_CQT_QUEST_OBJECTIVES_OR_HEADER, 				"<<C:1[keine Ziele/Ziel/Ziele - Vervollst. eines]>>:", 1)
