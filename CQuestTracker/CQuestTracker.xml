@@ -129,11 +129,11 @@
 		</Button>
 		<TopLevelControl name="CQT_UI_TrackerPanel" mouseEnabled="true" movable="true" resizeHandleSize="4" hidden="true">
 			<Dimensions x="400" y="600"/>
-			<DimensionConstraints minX="200"/>
+			<DimensionConstraints minX="200" minY="80"/>
 			<OnInitialized>
 			</OnInitialized>
 			<Controls>
-				<Control name="$(parent)TitleBar" inheritAlpha="false">
+				<Control name="$(parent)TitleBar" inheritAlpha="false" hidden="true">
 					<Dimensions y="22"/>
 					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" offsetX="3" offsetY="3"/>
 					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" offsetX="-3" offsetY="3"/>
@@ -192,7 +192,7 @@
 						ComparativeTooltip2:SetHidden(true)
 					</OnHide>
 					<Controls>
-						<Texture name="$(parent)Background" color="666666" excludeFromResizeToFitExtents="true" layer="BACKGROUND" level="1" hidden="false">
+						<Texture name="$(parent)Background" color="666666" excludeFromResizeToFitExtents="true" layer="BACKGROUND" level="1">
 							<Dimensions x="472" y="389.7806"/>
 							<Anchor point="TOPLEFT" relativePoint="TOPLEFT" offsetX="4" offsetY="4"/>
 							<TextureCoords left="0" right="0.60546875" top="0" bottom="1"/>

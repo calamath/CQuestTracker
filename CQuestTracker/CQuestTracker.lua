@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.0.2", 
+	version = "1.0.3", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -267,13 +267,25 @@ function CQT_TrackerPanel:Initialize(control, attrib)
 	self.overriddenAttrib = attrib or {}
 	self.panelControl = control
 	self.fragment = ZO_HUDFadeSceneFragment:New(control)
+	self.panelBg = self.panelControl:GetNamedChild("Bg")
 	self.container = control:GetNamedChild("ContainerScrollChild")
 	self.journalIndexToTreeNode = {}
+	control:SetHandler("OnMouseEnter", function(control)
+		if MouseIsInside(self.titlebar) then
+			self:ShowPanelFrame()
+		end
+	end)
+	control:SetHandler("OnMoveStart", function(control)
+		self:ShowPanelFrame()
+	end)
 	control:SetHandler("OnMoveStop", function(control)
 		local x, y = control:GetScreenRect()
 		self:SetAttribute("offsetX", x)
 		self:SetAttribute("offsetY", y)
 		self:ResetAnchorPosition()
+	end)
+	control:SetHandler("OnResizeStart", function(control)
+		self:ShowPanelFrame()
 	end)
 	control:SetHandler("OnResizeStop", function(control)
 		local x, y = control:GetScreenRect()
@@ -288,12 +300,11 @@ function CQT_TrackerPanel:Initialize(control, attrib)
 	self.titlebar = control:GetNamedChild("TitleBar")
 	self.titlebarFragment = ZO_SimpleSceneFragment:New(self.titlebar)
 	self.titlebarFragment:RegisterCallback("StateChange", function(oldState, newState)
-		if newState == SCENE_FRAGMENT_SHOWING then
-			self.panelControl:GetNamedChild("Bg"):SetEdgeColor(0.3984375, 0.6640625, 1, 1)
-		elseif newState == SCENE_FRAGMENT_HIDING then
-			self.panelControl:GetNamedChild("Bg"):SetEdgeColor(0.3984375, 0.6640625, 1, 0)
+		if newState == SCENE_FRAGMENT_HIDING then
+			self:HidePanelFrame()
 		end
 	end)
+	self:HidePanelFrame()
 	self:InitializeTree()
 	self:ResetAnchorPosition()
 	CALLBACK_MANAGER:RegisterCallback("CQT-TrackerPanelVisualUpdated", function(key)
@@ -321,6 +332,18 @@ function CQT_TrackerPanel:RegisterTitleBarButton(controlName, onClickedCallback,
 				button.tooltipText = tooltipText
 			end
 		end
+	end
+end
+
+function CQT_TrackerPanel:ShowPanelFrame()
+	if self.panelBg then
+		self.panelBg:SetEdgeColor(0.3984375, 0.6640625, 1, 1)
+	end
+end
+
+function CQT_TrackerPanel:HidePanelFrame()
+	if self.panelBg then
+		self.panelBg:SetEdgeColor(0.3984375, 0.6640625, 1, 0)
 	end
 end
 
@@ -1253,6 +1276,9 @@ function CQT:CreateSettingPanel()
 		displayName = "Calamath's Quest Tracker", 
 		author = self.author, 
 		version = self.version, 
+		website = "https://www.esoui.com/downloads/info3276-CalamathsQuestTracker.html", 
+		feedback = "https://www.esoui.com/downloads/info3276-CalamathsQuestTracker.html#comments", 
+		donation = "https://www.esoui.com/downloads/info3276-CalamathsQuestTracker.html#donate", 
 		slashCommand = "/cqt", 
 		registerForRefresh = true, 
 		registerForDefaults = true, 
