@@ -1,9 +1,9 @@
 ## Title: Calamath's Quest Tracker
 ## Description: Traditional MMORPG style multiple quest tracker
-## Version: 1.0.3
+## Version: 1.0.4
 ## Author: Calamath
 ## License: Artistic License 2.0
-## AddOnVersion: 10003
+## AddOnVersion: 10004
 ## APIVersion: 101032
 ## DependsOn: LibAddonMenu-2.0>=32 LibCustomMenu>=712 LibMediaProvider-1.0>=18
 ## OptionalDependsOn: LibDebugLogger>=217

@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.0.3", 
+	version = "1.0.4", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -169,6 +169,7 @@ function CQT_QuestCache_Singleton:GetNumQuestIdCache()
 		end
 	end
 --	self.LDL:Debug("numQuests: ", num)
+	return num
 end
 
 function CQT_QuestCache_Singleton:GetQuestIds(journalIndex)
@@ -630,6 +631,7 @@ function CQT:Initialize()
 	self.sessionStartTime = { GetTimeStamp(), 0 }
 	self.isFirstTimePlayerActivated = true
 	self.isSettingPanelInitialized = false
+	self.isSettingPanelShown = false
 
 	self.questList = {}
 	self.activityLog = ZO_SavedVars:NewCharacterIdSettings("CQuestTrackerLog", 1, nil, { quest = {}, }, GetWorldName())
@@ -653,6 +655,14 @@ function CQT:Initialize()
 	HUD_SCENE:AddFragment(self.trackerPanel:GetFragment())
 	HUD_UI_SCENE:AddFragment(self.trackerPanel:GetFragment())
 	HUD_UI_SCENE:AddFragment(self.trackerPanel:GetTitleBarFragment())
+	if self.svCurrent.panelBehavior.showInGameMenuScene then
+		self:AddTrackerPanelFragmentToGameMenuScene()
+	end
+	KEYBINDINGS_FRAGMENT:RegisterCallback("StateChange", function(oldState, newState)
+		if newState == SCENE_FRAGMENT_SHOWING or newState == SCENE_FRAGMENT_HIDING then
+			self:UpdateTrackerPanelVisibility()
+		end
+	end)
 
 	ZO_Dialogs_RegisterCustomDialog(self.name .. "_WELCOME_MESSAGE", {
 		canQueue = true, 
@@ -716,6 +726,7 @@ function CQT:RegisterEvents()
 --			if initial then		-- ----------------------------- after fast travel
 --			end
 		end
+		self:UpdateTrackerPanelVisibility()
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_DEACTIVATED, function(event)
 		self.activityLog.apiVersion = self.currentApiVersion
@@ -723,6 +734,11 @@ function CQT:RegisterEvents()
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_INTERFACE_SETTING_CHANGED, function(event, settingSystemType, settingId)
 		if settingSystemType == SETTING_TYPE_UI and settingId == UI_SETTING_SHOW_QUEST_TRACKER then
 			self.svCurrent.hideFocusedQuestTracker = not GetSetting_Bool(SETTING_TYPE_UI, UI_SETTING_SHOW_QUEST_TRACKER)
+		end
+	end)
+	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_COMBAT_STATE, function(event, inCombat)
+		if not self.svCurrent.panelBehavior.showInCombat then
+			self:UpdateTrackerPanelVisibility()
 		end
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_QUEST_ADDED, function(event, journalIndex, questName, objectiveName)
@@ -1255,6 +1271,33 @@ function CQT:ShowQuestListManagementMenu(owner, initialRefCount, menuType)
 	end
 end
 
+function CQT:AddTrackerPanelFragmentToGameMenuScene()
+	if self.trackerPanel then
+		local trackerPanelFragment= self.trackerPanel:GetFragment()
+		local trackerPanelTitleBarFragment = self.trackerPanel:GetTitleBarFragment()
+		if not GAME_MENU_SCENE:HasFragment(trackerPanelFragment) then
+			GAME_MENU_SCENE:AddFragment(trackerPanelFragment)
+		end
+		if not GAME_MENU_SCENE:HasFragment(trackerPanelTitleBarFragment) then
+			GAME_MENU_SCENE:AddFragment(trackerPanelTitleBarFragment)
+		end
+		
+	end
+end
+
+function CQT:RemoveTrackerPanelFragmentFromGameMenuScene()
+	if self.trackerPanel then
+		local trackerPanelFragment= self.trackerPanel:GetFragment()
+		local trackerPanelTitleBarFragment = self.trackerPanel:GetTitleBarFragment()
+		if GAME_MENU_SCENE:HasFragment(trackerPanelFragment) then
+			GAME_MENU_SCENE:RemoveFragment(trackerPanelFragment)
+		end
+		if GAME_MENU_SCENE:HasFragment(trackerPanelTitleBarFragment) then
+			GAME_MENU_SCENE:RemoveFragment(trackerPanelTitleBarFragment)
+		end
+	end
+end
+
 function CQT:UpdateTrackerPanelAttribute(key, value)
 	if self.svCurrent.panelAttributes[key] then
 		self.svCurrent.panelAttributes[key] = value
@@ -1264,7 +1307,11 @@ end
 
 function CQT:UpdateTrackerPanelVisibility()
 	if self.trackerPanel then
-		self.trackerPanel:GetFragment():SetHiddenForReason("DisabledBySetting", self.svCurrent.hideCQuestTracker, 0, 0)
+		local trackerPanelFragment= self.trackerPanel:GetFragment()
+		trackerPanelFragment:SetHiddenForReason("DisabledInCombat", (not self.svCurrent.panelBehavior.showInCombat) and IsUnitInCombat("player"), 0, 0)
+		trackerPanelFragment:SetHiddenForReason("DisabledInBattlegrounds", (not self.svCurrent.panelBehavior.showInBattleground) and IsActiveWorldBattleground(), 0, 0)
+		trackerPanelFragment:SetHiddenForReason("DisabledWhileKeybindingsSettings", KEYBINDINGS_FRAGMENT:IsShowing(), 0, 0)
+		trackerPanelFragment:SetHiddenForReason("DisabledBySetting", self.svCurrent.hideCQuestTracker, 0, 0)
 	end
 end
 
@@ -1299,7 +1346,7 @@ function CQT:CreateSettingPanel()
 		tooltip = L(SI_CQT_UI_ACCOUNT_WIDE_OP_TIPS), 
 		width = "full", 
 		requiresReload = true, 
-		default = true, 
+		default = CQT_SV_DEFAULT.accountWide, 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "header", 
@@ -1315,7 +1362,7 @@ function CQT:CreateSettingPanel()
 		end, 
 --		tooltip = L(SI_CQT_UI_HIDE_DEFAULT_TRACKER_OP_TIPS), 
 		width = "full", 
-		default = true, 
+		default = CQT_SV_DEFAULT.hideFocusedQuestTracker, 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "checkbox",
@@ -1327,7 +1374,47 @@ function CQT:CreateSettingPanel()
 		end, 
 --		tooltip = L(SI_CQT_UI_HIDE_QUEST_TRACKER_OP_TIPS), 
 		width = "full", 
-		default = true, 
+		default = CQT_SV_DEFAULT.hideCQuestTracker, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_SHOW_IN_COMBAT_OP_NAME), 
+		getFunc = function() return self.svCurrent.panelBehavior.showInCombat end, 
+		setFunc = function(newValue)
+			self.svCurrent.panelBehavior.showInCombat = newValue
+			self:UpdateTrackerPanelVisibility()
+		end, 
+		tooltip = L(SI_CQT_UI_SHOW_IN_COMBAT_OP_TIPS), 
+		width = "full", 
+		default = CQT_SV_DEFAULT.panelBehavior.showInCombat, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_SHOW_IN_GAMEMENU_SCENE_OP_NAME), 
+		getFunc = function() return self.svCurrent.panelBehavior.showInGameMenuScene end, 
+		setFunc = function(newValue)
+			self.svCurrent.panelBehavior.showInGameMenuScene = newValue
+			if newValue then
+				self:RemoveTrackerPanelFragmentFromGameMenuScene()
+			else
+				self:AddTrackerPanelFragmentToGameMenuScene()
+			end
+		end, 
+		tooltip = L(SI_CQT_UI_SHOW_IN_GAMEMENU_SCENE_OP_TIPS), 
+		width = "full", 
+		default = CQT_SV_DEFAULT.panelBehavior.showInGameMenuScene, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_HIDE_IN_BATTLEGROUNDS_OP_NAME), 
+		getFunc = function() return not self.svCurrent.panelBehavior.showInBattleground end, 
+		setFunc = function(newValue)
+			self.svCurrent.panelBehavior.showInBattleground = not newValue
+			self:UpdateTrackerPanelVisibility()
+		end, 
+		tooltip = L(SI_CQT_UI_HIDE_IN_BATTLEGROUNDS_OP_TIPS), 
+		width = "full", 
+		default = not CQT_SV_DEFAULT.panelBehavior.showInBattleground, 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "header", 
@@ -1481,8 +1568,14 @@ function CQT:CreateSettingPanel()
 		self.isSettingPanelInitialized = true
 	end
 	CALLBACK_MANAGER:RegisterCallback("LAM-PanelControlsCreated", OnLAMPanelControlsCreated)
---	CALLBACK_MANAGER:RegisterCallback("LAM-PanelOpened", OnLAMPanelOpened)
---	CALLBACK_MANAGER:RegisterCallback("LAM-PanelClosed", OnLAMPanelClosed)
+	CALLBACK_MANAGER:RegisterCallback("LAM-PanelOpened", function(panel)
+		if panel ~= self.settingPanel then return end
+		self.isSettingPanelShown = true
+	end)
+	CALLBACK_MANAGER:RegisterCallback("LAM-PanelClosed", function(panel)
+		if panel ~= self.settingPanel then return end
+		self.isSettingPanelShown = false
+	end)
 end
 
 function CQT:OpenSettingPanel()
