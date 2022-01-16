@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.0.4", 
+	version = "1.0.5", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -1395,9 +1395,9 @@ function CQT:CreateSettingPanel()
 		setFunc = function(newValue)
 			self.svCurrent.panelBehavior.showInGameMenuScene = newValue
 			if newValue then
-				self:RemoveTrackerPanelFragmentFromGameMenuScene()
-			else
 				self:AddTrackerPanelFragmentToGameMenuScene()
+			else
+				self:RemoveTrackerPanelFragmentFromGameMenuScene()
 			end
 		end, 
 		tooltip = L(SI_CQT_UI_SHOW_IN_GAMEMENU_SCENE_OP_TIPS), 

@@ -1,3 +1,7 @@
+V1.0.5: [V10005] by Calamath
+- Fixed an issue where tracker visibility was opposite to the setting while in the Game Menu.
+- Updated Japanese translations.
+
 V1.0.4: [V10004] by Calamath
 - Added some visibility setting options for the tracker panel.
 
@@ -13,5 +17,4 @@ V1.0.1: [V10001] by Calamath
 
 V1.0.0: [V10000] by Calamath
 - initial release
-
 
