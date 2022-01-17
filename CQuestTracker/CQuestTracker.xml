@@ -164,15 +164,11 @@
 						</Button>
 					</Controls>
 				</Control>
-				<Backdrop name="$(parent)Bg" override="true" inherits="ZO_DefaultBackdrop" edgeColor="66AAFFFF" centerColor="00000000" alpha="1">
-					<AnchorFill/>
+				<Backdrop name="$(parent)Bg" edgeColor="66AAFFFF" centerColor="00000000" alpha="1">
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" offsetX="3" offsetY="25"/>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" offsetX="-3" offsetY="-3" />
 					<Edge file="EsoUI/Art/Tooltips/UI-Border_greyscale.dds" edgeFileWidth="128" edgeFileHeight="16"/>
-					<Insets left="2" top="2" right="-2" bottom="-2"/>
-					<Controls>
-						<Texture name="$(parent)MungeOverlay" override="true" textureFile="EsoUI/Art/Tooltips/munge_overlay.dds" addressMode="WRAP" hidden="true">
-							<AnchorFill/>
-						</Texture>
-					</Controls>
+					<Insets left="0" top="0" right="0" bottom="-2"/>
 				</Backdrop>
 				<Control name="$(parent)Container" inherits="ZO_ScrollContainer">
 					<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="3" offsetY="23" />

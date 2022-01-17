@@ -26,8 +26,8 @@ local strings = {
 	SI_CQT_QUESTTYPE_ZONE_STORY_QUEST =				"Zone Story", 
 	SI_CQT_QUESTTYPE_SIDE_QUEST =					"Side Quest", 
 	SI_CQT_QUEST_BACKGROUND_HEADER =				"Background:", 
-	SI_CQT_QUEST_OR_DESCRIPTION =					L(SI_QUEST_OR_DESCRIPTION), 
-	SI_CQT_QUEST_OPTIONAL_STEPS_DESCRIPTION =		L(SI_QUEST_OPTIONAL_STEPS_DESCRIPTION), 
+	SI_CQT_QUEST_OR_DESCRIPTION =					L(SI_QUEST_OR_DESCRIPTION), -- "Complete one:"	[No translation necessary]
+	SI_CQT_QUEST_OPTIONAL_STEPS_DESCRIPTION =		L(SI_QUEST_OPTIONAL_STEPS_DESCRIPTION), -- "Optional Steps:"	[No translation necessary]
 	SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION =	"Optional steps - complete one:", 
 	SI_CQT_QUEST_OBJECTIVES_HEADER =				"<<C:1[no objectives/objective/objectives]>>:", 
 	SI_CQT_QUEST_OBJECTIVES_OR_HEADER =				"<<C:1[no objectives/objective/objectives - complete one]>>:", 
@@ -53,13 +53,17 @@ local strings = {
 	SI_CQT_UI_COMMON_FONTTYPE_MENU_NAME = 			"|u25:0::|uFont Type", 
 	SI_CQT_UI_COMMON_FONTSIZE_MENU_NAME = 			"|u25:0::|uFont Size", 
 	SI_CQT_UI_COMMON_FONTWEIGHT_MENU_NAME = 		"|u25:0::|uFont Weight", 
-	SI_CQT_UI_QUEST_NAME_FONTTYPE_MENU_TIPS = 		"Specify your prefered font type.", 
-	SI_CQT_UI_QUEST_NAME_FONTSIZE_MENU_TIPS = 		"Specify your prefered font size.", 
-	SI_CQT_UI_QUEST_NAME_FONTWEIGHT_MENU_TIPS = 	"Specify your prefered font weight.", 
-	SI_CQT_UI_QUEST_CONDITION_FONTTYPE_MENU_TIPS = 	"Specify your prefered font type.", 
-	SI_CQT_UI_QUEST_CONDITION_FONTSIZE_MENU_TIPS = 	"Specify your prefered font size.", 
-	SI_CQT_UI_QUEST_CONDITION_FONTWEIGHT_MENU_TIPS = "Specify your prefered font weight.", 
-
+	SI_CQT_UI_QUEST_NAME_FONTTYPE_MENU_TIPS = 		"Specify your preferred font type.", 
+	SI_CQT_UI_QUEST_NAME_FONTSIZE_MENU_TIPS = 		"Specify your preferred font size.", 
+	SI_CQT_UI_QUEST_NAME_FONTWEIGHT_MENU_TIPS = 	"Specify your preferred font weight.", 
+	SI_CQT_UI_QUEST_CONDITION_FONTTYPE_MENU_TIPS = 	"Specify your preferred font type.", 
+	SI_CQT_UI_QUEST_CONDITION_FONTSIZE_MENU_TIPS = 	"Specify your preferred font size.", 
+	SI_CQT_UI_QUEST_CONDITION_FONTWEIGHT_MENU_TIPS = "Specify your preferred font weight.", 
+	SI_CQT_UI_BACKGROUND_SUBHEADER_TEXT =			"Background:", 
+	SI_CQT_UI_COMMON_BACKGROUND_COLOR_MENU_NAME =	"|u25:0::|uBackground Color", 
+	SI_CQT_UI_COMMON_OPACITY_MENU_NAME =			"|u25:0::|u" .. L(SI_COLOR_PICKER_ALPHA), 	-- "|u25:0::|uOpacity"	[No translation necessary]
+	SI_CQT_UI_BACKGROUND_COLOR_MENU_TIPS =			"Specify your preferred background color of the tracker panel.", 
+	SI_CQT_UI_BACKGROUND_OPACITY_MENU_TIPS =		"Specify your preferred opacity of the background color.", 
 }
 
 for stringId, stringToAdd in pairs(strings) do

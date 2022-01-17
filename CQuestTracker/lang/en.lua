@@ -53,12 +53,15 @@ SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONT_SUBHEADER_TEXT, 	"Quest Condition F
 SafeAddString(SI_CQT_UI_COMMON_FONTTYPE_MENU_NAME,  			"|u25:0::|uFont Type", 1)
 SafeAddString(SI_CQT_UI_COMMON_FONTSIZE_MENU_NAME,  			"|u25:0::|uFont Size", 1)
 SafeAddString(SI_CQT_UI_COMMON_FONTWEIGHT_MENU_NAME,  			"|u25:0::|uFont Weight", 1)
-SafeAddString(SI_CQT_UI_QUEST_NAME_FONTTYPE_MENU_TIPS,  		"Specify your prefered font type.", 1)
-SafeAddString(SI_CQT_UI_QUEST_NAME_FONTSIZE_MENU_TIPS,  		"Specify your prefered font size.", 1)
-SafeAddString(SI_CQT_UI_QUEST_NAME_FONTWEIGHT_MENU_TIPS,  		"Specify your prefered font weight.", 1)
-SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONTTYPE_MENU_TIPS,  	"Specify your prefered font type.", 1)
-SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONTSIZE_MENU_TIPS,  	"Specify your prefered font size.", 1)
-SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONTWEIGHT_MENU_TIPS, 	"Specify your prefered font weight.", 1)
-
+SafeAddString(SI_CQT_UI_QUEST_NAME_FONTTYPE_MENU_TIPS,  		"Specify your preferred font type.", 1)
+SafeAddString(SI_CQT_UI_QUEST_NAME_FONTSIZE_MENU_TIPS,  		"Specify your preferred font size.", 1)
+SafeAddString(SI_CQT_UI_QUEST_NAME_FONTWEIGHT_MENU_TIPS,  		"Specify your preferred font weight.", 1)
+SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONTTYPE_MENU_TIPS,  	"Specify your preferred font type.", 1)
+SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONTSIZE_MENU_TIPS,  	"Specify your preferred font size.", 1)
+SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONTWEIGHT_MENU_TIPS, 	"Specify your preferred font weight.", 1)
+SafeAddString(SI_CQT_UI_BACKGROUND_SUBHEADER_TEXT,  			"Background:", 1)
+SafeAddString(SI_CQT_UI_COMMON_BACKGROUND_COLOR_MENU_NAME,  	"|u25:0::|uBackground Color", 1)
+SafeAddString(SI_CQT_UI_BACKGROUND_COLOR_MENU_TIPS,  			"Specify your preferred background color of the tracker panel.", 1)
+SafeAddString(SI_CQT_UI_BACKGROUND_OPACITY_MENU_TIPS, 			"Specify your preferred opacity of the background color.", 1)
 
 --]]

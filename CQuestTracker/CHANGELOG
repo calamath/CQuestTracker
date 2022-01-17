@@ -1,3 +1,8 @@
+V1.0.6: [V10006] by Calamath
+- Added tracker background color settings.
+- Changed some of the default values used by the default buttons in the add-on settings.
+- Fixed typos.
+
 V1.0.5: [V10005] by Calamath
 - Fixed an issue where tracker visibility was opposite to the setting while in the Game Menu.
 - Updated Japanese translations.

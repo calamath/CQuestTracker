@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.0.5", 
+	version = "1.0.6", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -263,7 +263,7 @@ function CQT_TrackerPanel:Initialize(control, attrib)
 		showOptionalStep = true, 
 		showHintStep = true, 
 		showHiddenStep = false, 
-		bgColor = { ZO_ColorDef:New("000000FF"):UnpackRGBA() }, 
+		bgColor = { ZO_ColorDef:New(0, 0, 0, 0):UnpackRGBA() }, 
 	}
 	self.overriddenAttrib = attrib or {}
 	self.panelControl = control
@@ -305,10 +305,12 @@ function CQT_TrackerPanel:Initialize(control, attrib)
 			self:HidePanelFrame()
 		end
 	end)
+	self:SetupPanelVisual()
 	self:HidePanelFrame()
 	self:InitializeTree()
 	self:ResetAnchorPosition()
 	CALLBACK_MANAGER:RegisterCallback("CQT-TrackerPanelVisualUpdated", function(key)
+		self:SetupPanelVisual()
 		self:RefreshTree()
 	end)
 	CALLBACK_MANAGER:RegisterCallback("CQT-QuestListUpdated", function(questList)
@@ -333,6 +335,12 @@ function CQT_TrackerPanel:RegisterTitleBarButton(controlName, onClickedCallback,
 				button.tooltipText = tooltipText
 			end
 		end
+	end
+end
+
+function CQT_TrackerPanel:SetupPanelVisual()
+	if self.panelBg then
+		self.panelBg:SetCenterColor(unpack(self:GetAttribute("bgColor")))
 	end
 end
 
@@ -598,7 +606,7 @@ local CQT_SV_DEFAULT = {
 		conditionFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
 		conditionColor = { ZO_SELECTED_TEXT:UnpackRGBA() }, 
 		showHintStep = true, 
-		bgColor = { ZO_ColorDef:New("000000FF"):UnpackRGBA() }, 
+		bgColor = { ZO_ColorDef:New(0, 0, 0, 0):UnpackRGBA() }, 
 	}, 
 	qhFont = {
 		[FONT_TYPE] = "$(BOLD_FONT)", 
@@ -615,8 +623,8 @@ local CQT_SV_DEFAULT = {
 	panelBehavior = {
 		minimizeInHUD = false, 
 		showInCombat = true, 
-		showInBattleground = true, 
-		showInGameMenuScene = false, 
+		showInBattleground = false, 
+		showInGameMenuScene = true, 
 	}, 
 	qtooltip = {
 		show = true, 
@@ -1558,6 +1566,43 @@ function CQT:CreateSettingPanel()
 		end, 
 		scrollable = 15, 
 		default = CQT_SV_DEFAULT.qcFont[FONT_WEIGHT], 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "description", 
+		title = "", 
+		text = L(SI_CQT_UI_BACKGROUND_SUBHEADER_TEXT), 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "colorpicker", 
+		name = L(SI_CQT_UI_COMMON_BACKGROUND_COLOR_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_BACKGROUND_COLOR_MENU_TIPS), 
+		getFunc = function()
+			local r, g, b = unpack(self.svCurrent.panelAttributes.bgColor)
+			return r, g, b
+		end, 
+		setFunc = function(r, g, b)
+			local a = self.svCurrent.panelAttributes.bgColor[4]
+			self:UpdateTrackerPanelAttribute("bgColor", { r, g, b, a, })
+		end, 
+		default = {
+			r = CQT_SV_DEFAULT.panelAttributes.bgColor[1], 
+			g = CQT_SV_DEFAULT.panelAttributes.bgColor[2], 
+			b = CQT_SV_DEFAULT.panelAttributes.bgColor[3], 
+		}, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "slider", 
+		name = L(SI_CQT_UI_COMMON_OPACITY_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_BACKGROUND_OPACITY_MENU_TIPS), 
+		getFunc = function() return zo_round(self.svCurrent.panelAttributes.bgColor[4] * 100) end, 
+		setFunc = function(newValue)
+			local r, g, b = unpack(self.svCurrent.panelAttributes.bgColor)
+			self:UpdateTrackerPanelAttribute("bgColor", { r, g, b, newValue / 100, })
+		end, 
+		min = 0.0, 
+		max = 100.0, 
+		step = 1, 
+		default = zo_round(CQT_SV_DEFAULT.panelAttributes.bgColor[4] * 100), 
 	}
 
 	LAM:RegisterOptionControls("CQuestTracker", optionsData)
