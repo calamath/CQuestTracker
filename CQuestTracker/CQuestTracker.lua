@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.0.6", 
+	version = "1.0.7", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -253,16 +253,17 @@ function CQT_TrackerPanel:Initialize(control, attrib)
 		defaultIndent = 30, 
 		defaultSpacing = 0, 
 		headerFont = "$(BOLD_FONT)|$(KB_18)|soft-shadow-thick", 
-		headerColor = { ZO_NORMAL_TEXT:UnpackRGBA() }, 
+		headerColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_NORMAL) }, 
+		headerColorSelected = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
 		headerChildIndent = 30, 
 		headerChildSpacing = 0, 
 		conditionFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
-		conditionColor = { ZO_SELECTED_TEXT:UnpackRGBA() }, 
+		conditionColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
 		conditionChildIndent = 0, 
 		conditionChildSpacing = 0, 
 		showOptionalStep = true, 
 		showHintStep = true, 
-		showHiddenStep = false, 
+		hintColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
 		bgColor = { ZO_ColorDef:New(0, 0, 0, 0):UnpackRGBA() }, 
 	}
 	self.overriddenAttrib = attrib or {}
@@ -411,11 +412,19 @@ function CQT_TrackerPanel:InitializeTree()
 		local isValid, _, _, _, textOffsetX, textOffsetY = control.text:GetAnchor(0)
 		control:SetDimensions(control.node:GetTree():GetWidth(), textHeight + (isValid and textOffsetY or 0))
 	end
+	local function HeaderNodeGetTextColor(label)
+		if label and label.selected then
+			return unpack(self:GetAttribute("headerColorSelected"))
+		else
+			return unpack(self:GetAttribute("headerColor"))
+		end
+	end
 	local function HeaderNodeSetup(node, control, data, open, userRequested, enabled)
 		local name, _, _, _, _, completed, tracked, _, _, questType, instanceDisplayType = GetJournalQuestInfo(data.journalIndex)
 		control.journalIndex = data.journalIndex
 		control.text:SetFont(self:GetAttribute("headerFont"))
-		control.text:SetColor(unpack(self:GetAttribute("headerColor")))
+		control.text.GetTextColor = HeaderNodeGetTextColor
+		control.text:RefreshTextColor()
 		control.text:SetDimensionConstraints(0, 0, HeaderNodeLabelMaxWidth(control), 0)
 		control.text:SetText(name)
 --		control.icon:SetTexture("/esoui/art/icons/heraldrycrests_misc_blank_01.dds")	-- black icon
@@ -443,7 +452,12 @@ function CQT_TrackerPanel:InitializeTree()
 		control:SetDimensions(control.text:GetTextWidth(), control.text:GetTextHeight())
 	end
 	local function EntryNodeSetup(node, control, data, open, userRequested, enabled)
-		control.text:SetText(data or "")
+		if data.visibility == QUEST_STEP_VISIBILITY_HINT then
+			control.text:SetColor(unpack(self:GetAttribute("hintColor")))
+		else
+			control.text:SetColor(unpack(self:GetAttribute("conditionColor")))
+		end
+		control.text:SetText(data.text or "")
 		EntryNodeUpdateSize(control)
 	end
 	self.trackerTree:AddTemplate("CQT_Entry", EntryNodeSetup)
@@ -460,7 +474,11 @@ function CQT_TrackerPanel:InitializeTree()
 	end
 	local function ConditionNodeSetup(node, control, data, open, userRequested, enabled)
 		control.text:SetFont(self:GetAttribute("conditionFont"))
-		control.text:SetColor(unpack(self:GetAttribute("conditionColor")))
+		if data.visibility == QUEST_STEP_VISIBILITY_HINT then
+			control.text:SetColor(unpack(self:GetAttribute("hintColor")))
+		else
+			control.text:SetColor(unpack(self:GetAttribute("conditionColor")))
+		end
 		control.text:SetDimensionConstraints(0, 0, ConditionNodeLabelMaxWidth(control), 0)
 		control.text:SetText(data.text or "unknown")
 		control.status:SetTexture("EsoUI/Art/Miscellaneous/check_icon_32.dds")
@@ -522,12 +540,12 @@ function CQT_TrackerPanel:RefreshTree()
 					end
 				end
 			end
-			firstNode = tree:AddNode("CQT_QuestCondition", { text = overrideText, isChecked = checked }, parentNode, sound, open)
+			firstNode = tree:AddNode("CQT_QuestCondition", { text = overrideText, visibility = stepVisibility, isChecked = checked }, parentNode, sound, open)
 		else
 			for conditionIndex = 1, conditionCount do
 				local conditionText, curCount, maxCount, isFailCondition, isComplete, isGroupCreditShared, isVisible, conditionType = GetJournalQuestConditionInfo(journalIndex, stepIndex, conditionIndex)
 				if (not isFailCondition) and (conditionText ~= "") and isVisible then
-					local taskNode = tree:AddNode("CQT_QuestCondition", { text = conditionText, isChecked = isComplete or (curCount == maxCount) }, parentNode, sound, open)
+					local taskNode = tree:AddNode("CQT_QuestCondition", { text = conditionText, visibility = stepVisibility, isChecked = isComplete or (curCount == maxCount) }, parentNode, sound, open)
 					firstNode = firstNode or taskNode
 					if previousNode then
 						previousNode.nextNode = taskNode
@@ -550,31 +568,35 @@ function CQT_TrackerPanel:RefreshTree()
 		questNode[i] = self.trackerTree:AddNode("CQT_QuestHeader", questInfo, nil, nil, true)
 		self.journalIndexToTreeNode[questInfo.journalIndex] = questNode[i]
 		if IsOrDescription(questInfo.journalIndex, QUEST_MAIN_STEP_INDEX) then
-			local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", L(SI_CQT_QUEST_OR_DESCRIPTION), questNode[i], nil, true)
+			local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", { text = L(SI_CQT_QUEST_OR_DESCRIPTION) }, questNode[i], nil, true)
 		end
 		PopulateQuestConditions(questInfo.journalIndex, QUEST_MAIN_STEP_INDEX, self.trackerTree, questNode[i], nil, true)
-		for stepIndex = QUEST_MAIN_STEP_INDEX + 1, GetJournalQuestNumSteps(questInfo.journalIndex) do
-			local _, stepVisibility, stepType = GetJournalQuestStepInfo(questInfo.journalIndex, stepIndex)
-			if stepType ~= QUEST_STEP_TYPE_END and stepVisibility == QUEST_STEP_VISIBILITY_OPTIONAL then
-				if IsOrDescription(questInfo.journalIndex, stepIndex) then
-					local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", L(SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION), questNode[i], nil, true)
-				else
-					local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", L(SI_CQT_QUEST_OPTIONAL_STEPS_DESCRIPTION), questNode[i], nil, true)
-				end
-				PopulateQuestConditions(questInfo.journalIndex, stepIndex, self.trackerTree, questNode[i], nil, true)
-			end
-		end
-		local hintSubHeaderDisplayed = false
-		local visibleHintCount = GetNumVisibleQuestHintSteps(questInfo.journalIndex)
-		if visibleHintCount > 0 then
+		if self:GetAttribute("showOptionalStep") then
 			for stepIndex = QUEST_MAIN_STEP_INDEX + 1, GetJournalQuestNumSteps(questInfo.journalIndex) do
 				local _, stepVisibility, stepType = GetJournalQuestStepInfo(questInfo.journalIndex, stepIndex)
-				if stepType ~= QUEST_STEP_TYPE_END and stepVisibility == QUEST_STEP_VISIBILITY_HINT then
-					if not hintSubHeaderDisplayed then
-						local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", zo_strformat(L(SI_CQT_QUEST_HINT_STEPS_HEADER), visibleHintCount), questNode[i], nil, false)
-						hintSubHeaderDisplayed = true
+				if stepType ~= QUEST_STEP_TYPE_END and stepVisibility == QUEST_STEP_VISIBILITY_OPTIONAL then
+					if IsOrDescription(questInfo.journalIndex, stepIndex) then
+						local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", { text = L(SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION) }, questNode[i], nil, true)
+					else
+						local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", { text = L(SI_CQT_QUEST_OPTIONAL_STEPS_DESCRIPTION) }, questNode[i], nil, true)
 					end
-					PopulateQuestConditions(questInfo.journalIndex, stepIndex, self.trackerTree, questNode[i], nil, false)
+					PopulateQuestConditions(questInfo.journalIndex, stepIndex, self.trackerTree, questNode[i], nil, true)
+				end
+			end
+		end
+		if self:GetAttribute("showHintStep") then
+			local hintSubHeaderDisplayed = false
+			local visibleHintCount = GetNumVisibleQuestHintSteps(questInfo.journalIndex)
+			if visibleHintCount > 0 then
+				for stepIndex = QUEST_MAIN_STEP_INDEX + 1, GetJournalQuestNumSteps(questInfo.journalIndex) do
+					local _, stepVisibility, stepType = GetJournalQuestStepInfo(questInfo.journalIndex, stepIndex)
+					if stepType ~= QUEST_STEP_TYPE_END and stepVisibility == QUEST_STEP_VISIBILITY_HINT then
+						if not hintSubHeaderDisplayed then
+							local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", { text = zo_strformat(L(SI_CQT_QUEST_HINT_STEPS_HEADER), visibleHintCount), visibility = stepVisibility }, questNode[i], nil, false)
+							hintSubHeaderDisplayed = true
+						end
+						PopulateQuestConditions(questInfo.journalIndex, stepIndex, self.trackerTree, questNode[i], nil, false)
+					end
 				end
 			end
 		end
@@ -602,10 +624,12 @@ local CQT_SV_DEFAULT = {
 		width = 400, 
 		height = 600, 
 		headerFont = "$(BOLD_FONT)|$(KB_18)|soft-shadow-thick", 
-		headerColor = { ZO_NORMAL_TEXT:UnpackRGBA() }, 
+		headerColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_NORMAL) }, 
+		headerColorSelected = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
 		conditionFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
-		conditionColor = { ZO_SELECTED_TEXT:UnpackRGBA() }, 
+		conditionColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
 		showHintStep = true, 
+		hintColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
 		bgColor = { ZO_ColorDef:New(0, 0, 0, 0):UnpackRGBA() }, 
 	}, 
 	qhFont = {
@@ -647,12 +671,12 @@ function CQT:Initialize()
 	-- CQuestTracker Config
 	self.svCurrent = {}
 	self.svAccount = ZO_SavedVars:NewAccountWide("CQuestTrackerSV", 1, nil, CQT_SV_DEFAULT, GetWorldName())
---	self:ValidateConfigDataSV(self.svAccount)
+	self:ValidateConfigDataSV(self.svAccount)
 	if self.svAccount.accountWide then
 		self.svCurrent = self.svAccount
 	else
 		self.svCharacter = ZO_SavedVars:NewCharacterIdSettings("CQuestTrackerSV", 1, nil, CQT_SV_DEFAULT, GetWorldName())
---		self:ValidateConfigDataSV(self.svCharacter)
+		self:ValidateConfigDataSV(self.svCharacter)
 		self.svCurrent = self.svCharacter
 	end
 
@@ -708,6 +732,11 @@ function CQT:ConfigDebug(arg)
 	else
 		self.LDL = { Verbose = dummy, Debug = dummy, Info = dummy, Warn = dummy, Error = dummy, }
 	end
+end
+
+function CQT:ValidateConfigDataSV(sv)
+	if sv.panelAttributes.headerColorSelected == nil			then sv.panelAttributes.headerColorSelected				= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.headerColorSelected)	end
+	if sv.panelAttributes.hintColor == nil						then sv.panelAttributes.hintColor						= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.hintColor)				end
 end
 
 function CQT:RegisterEvents()
@@ -1522,6 +1551,42 @@ function CQT:CreateSettingPanel()
 		default = CQT_SV_DEFAULT.qhFont[FONT_WEIGHT], 
 	}
 	optionsData[#optionsData + 1] = {
+		type = "colorpicker", 
+		name = L(SI_CQT_UI_QUEST_NAME_NORMAL_COLOR_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_QUEST_NAME_NORMAL_COLOR_MENU_TIPS), 
+		getFunc = function()
+			local r, g, b = unpack(self.svCurrent.panelAttributes.headerColor)
+			return r, g, b
+		end, 
+		setFunc = function(r, g, b)
+			local a = self.svCurrent.panelAttributes.headerColor[4]
+			self:UpdateTrackerPanelAttribute("headerColor", { r, g, b, a, })
+		end, 
+		default = {
+			r = CQT_SV_DEFAULT.panelAttributes.headerColor[1], 
+			g = CQT_SV_DEFAULT.panelAttributes.headerColor[2], 
+			b = CQT_SV_DEFAULT.panelAttributes.headerColor[3], 
+		}, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "colorpicker", 
+		name = L(SI_CQT_UI_QUEST_NAME_FOCUSED_COLOR_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_QUEST_NAME_FOCUSED_COLOR_MENU_TIPS), 
+		getFunc = function()
+			local r, g, b = unpack(self.svCurrent.panelAttributes.headerColorSelected)
+			return r, g, b
+		end, 
+		setFunc = function(r, g, b)
+			local a = self.svCurrent.panelAttributes.headerColorSelected[4]
+			self:UpdateTrackerPanelAttribute("headerColorSelected", { r, g, b, a, })
+		end, 
+		default = {
+			r = CQT_SV_DEFAULT.panelAttributes.headerColorSelected[1], 
+			g = CQT_SV_DEFAULT.panelAttributes.headerColorSelected[2], 
+			b = CQT_SV_DEFAULT.panelAttributes.headerColorSelected[3], 
+		}, 
+	}
+	optionsData[#optionsData + 1] = {
 		type = "description", 
 		title = "", 
 		text = L(SI_CQT_UI_QUEST_CONDITION_FONT_SUBHEADER_TEXT), 
@@ -1566,6 +1631,42 @@ function CQT:CreateSettingPanel()
 		end, 
 		scrollable = 15, 
 		default = CQT_SV_DEFAULT.qcFont[FONT_WEIGHT], 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "colorpicker", 
+		name = L(SI_CQT_UI_QUEST_CONDITION_COLOR_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_QUEST_CONDITION_COLOR_MENU_TIPS), 
+		getFunc = function()
+			local r, g, b = unpack(self.svCurrent.panelAttributes.conditionColor)
+			return r, g, b
+		end, 
+		setFunc = function(r, g, b)
+			local a = self.svCurrent.panelAttributes.conditionColor[4]
+			self:UpdateTrackerPanelAttribute("conditionColor", { r, g, b, a, })
+		end, 
+		default = {
+			r = CQT_SV_DEFAULT.panelAttributes.conditionColor[1], 
+			g = CQT_SV_DEFAULT.panelAttributes.conditionColor[2], 
+			b = CQT_SV_DEFAULT.panelAttributes.conditionColor[3], 
+		}, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "colorpicker", 
+		name = L(SI_CQT_UI_QUEST_HINT_COLOR_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_QUEST_HINT_COLOR_MENU_TIPS), 
+		getFunc = function()
+			local r, g, b = unpack(self.svCurrent.panelAttributes.hintColor)
+			return r, g, b
+		end, 
+		setFunc = function(r, g, b)
+			local a = self.svCurrent.panelAttributes.hintColor[4]
+			self:UpdateTrackerPanelAttribute("hintColor", { r, g, b, a, })
+		end, 
+		default = {
+			r = CQT_SV_DEFAULT.panelAttributes.hintColor[1], 
+			g = CQT_SV_DEFAULT.panelAttributes.hintColor[2], 
+			b = CQT_SV_DEFAULT.panelAttributes.hintColor[3], 
+		}, 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "description", 
@@ -1718,11 +1819,13 @@ end
 
 function CQT_QuestHeader_OnMouseEnter(control)
 	ZO_IconHeader_OnMouseEnter(control)
+	control.text:SetDesaturation(-1.5)
 	CQT:ShowQuestTooltipNextToOwner(control, control.journalIndex)
 end
 
 function CQT_QuestHeader_OnMouseExit(control)
 	ZO_IconHeader_OnMouseExit(control)
+	control.text:SetDesaturation(0)
 	CQT:HideQuestTooltip()
 end
 

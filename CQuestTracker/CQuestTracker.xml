@@ -66,7 +66,7 @@
 				CQT_QuestHeaderTemplate_OnInitialized(self)
 			</OnInitialized>
 			<Controls>
-				<Label name="$(parent)Text" inherits="ZO_SelectableLabel CQT_MouseBehaviorPropagationToParent" override="true" font="$(BOLD_FONT)|$(KB_18)|soft-shadow-thick" maxLineCount="1" wrapMode="ELLIPSIS">
+				<Label name="$(parent)Text" override="true" inherits="ZO_SelectableLabel CQT_MouseBehaviorPropagationToParent" font="$(BOLD_FONT)|$(KB_18)|soft-shadow-thick" maxLineCount="1" wrapMode="ELLIPSIS">
 					<Anchor point="TOPLEFT" offsetX="28" offsetY="12"/>
 				</Label>
 				<Texture name="$(parent)Icon" override="true" scale="1" level="1">
