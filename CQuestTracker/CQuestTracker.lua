@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.0.7", 
+	version = "1.1.0", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -246,6 +246,7 @@ end
 
 function CQT_TrackerPanel:Initialize(control, attrib)
 	self.attrib = {
+		compactMode = false, 
 		offsetX = 400, 
 		offsetY = 300, 
 		width = 400, 
@@ -370,7 +371,7 @@ function CQT_TrackerPanel:GetTitleBarFragment()
 end
 
 function CQT_TrackerPanel:GetAttribute(key)
-	if self.overriddenAttrib[key] then
+	if self.overriddenAttrib[key] ~= nil then
 		return self.overriddenAttrib[key]
 	else
 		return self.attrib[key]
@@ -378,7 +379,7 @@ function CQT_TrackerPanel:GetAttribute(key)
 end
 
 function CQT_TrackerPanel:SetAttribute(key, value)
-	if self.overriddenAttrib[key] then
+	if self.overriddenAttrib[key] ~= nil then
 		self.overriddenAttrib[key] = value
 	else
 		self.attrib[key] = value
@@ -392,6 +393,14 @@ function CQT_TrackerPanel:SetAttributes(attributeTable)
 	end
 end
 
+function CQT_TrackerPanel:ClearAllTreeNodeOpenStatus()
+	ZO_ClearTable(self.trackerTree.treeNodeOpenStatus)
+end
+
+function CQT_TrackerPanel:SetTreeNodeOpenStatus(questId, userRequestedOpen)
+	self.trackerTree.treeNodeOpenStatus[questId] = userRequestedOpen
+end
+
 function CQT_TrackerPanel:ResetAnchorPosition()
 	self.panelControl:ClearAnchors()
 	self.panelControl:SetAnchor(TOPLEFT, guiRoot, TOPLEFT, self:GetAttribute("offsetX"), self:GetAttribute("offsetY"))
@@ -402,7 +411,6 @@ end
 
 function CQT_TrackerPanel:InitializeTree()
 	self.trackerTree = ZO_Tree:New(self.container, self:GetAttribute("defaultIndent"), self:GetAttribute("defaultSpacing"), self.container:GetParent():GetWidth())
-
 	local function HeaderNodeLabelMaxWidth(control)
 		local isValid, _, _, _, textOffsetX, _ = control.text:GetAnchor(0)
 		return control.node:GetTree():GetWidth() - (isValid and textOffsetX or 0)
@@ -422,6 +430,7 @@ function CQT_TrackerPanel:InitializeTree()
 	local function HeaderNodeSetup(node, control, data, open, userRequested, enabled)
 		local name, _, _, _, _, completed, tracked, _, _, questType, instanceDisplayType = GetJournalQuestInfo(data.journalIndex)
 		control.journalIndex = data.journalIndex
+		control.questId = data.questId
 		control.text:SetFont(self:GetAttribute("headerFont"))
 		control.text.GetTextColor = HeaderNodeGetTextColor
 		control.text:RefreshTextColor()
@@ -490,10 +499,25 @@ function CQT_TrackerPanel:InitializeTree()
 		return left.text == right.text
 	end
 	self.trackerTree:AddTemplate("CQT_QuestCondition", ConditionNodeSetup, nil, ConditionNodeEquality, self:GetAttribute("conditionChildIndent"), self:GetAttribute("conditionChildSpacing"))
-	self.trackerTree:SetExclusive(true)
+	self.trackerTree:SetExclusive(false)
+	self.trackerTree:SetOpenAnimation("ZO_TreeOpenAnimation")
+	self.trackerTree.treeNodeOpenStatus = {}
 end
 
 function CQT_TrackerPanel:RefreshTree()
+	local function ShouldOpenQuestHeader(questInfo)
+		local userRequestedOpen = self.trackerTree.treeNodeOpenStatus[questInfo.questId]
+		if userRequestedOpen == nil then
+			if self:GetAttribute("compactMode") then
+				local tracked = select(7, GetJournalQuestInfo(questInfo.journalIndex))
+				return tracked or (questInfo.timestamp[3] and questInfo.timestamp[3] > 0)
+			else
+				return true
+			end
+		else
+			return userRequestedOpen
+		end
+	end
 	local function GetNumVisibleQuestConditions(journalIndex, stepIndex)
 		local visibleConditionCount = 0
 		for conditionIndex = 1, GetJournalQuestNumConditions(journalIndex, stepIndex) do
@@ -561,11 +585,12 @@ function CQT_TrackerPanel:RefreshTree()
 	if not questList then return end
 	self.journalIndexToTreeNode = {}
 	self.trackerTree:Reset()
+    self.trackerTree:SetSuspendAnimations(false)
 	local questNode = {}
 	local firstNode = nil
 	local previousNode = nil
 	for i, questInfo in ipairs(questList) do
-		questNode[i] = self.trackerTree:AddNode("CQT_QuestHeader", questInfo, nil, nil, true)
+		questNode[i] = self.trackerTree:AddNode("CQT_QuestHeader", questInfo, nil, nil, ShouldOpenQuestHeader(questInfo))
 		self.journalIndexToTreeNode[questInfo.journalIndex] = questNode[i]
 		if IsOrDescription(questInfo.journalIndex, QUEST_MAIN_STEP_INDEX) then
 			local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", { text = L(SI_CQT_QUEST_OR_DESCRIPTION) }, questNode[i], nil, true)
@@ -619,6 +644,7 @@ local CQT_SV_DEFAULT = {
 	maxNumDisplay = 5, 
 	maxNumPinnedQuest = 5, 
 	panelAttributes = {
+		compactMode = false, 
 		offsetX = 400, 
 		offsetY = 300, 
 		width = 400, 
@@ -735,6 +761,7 @@ function CQT:ConfigDebug(arg)
 end
 
 function CQT:ValidateConfigDataSV(sv)
+	if sv.panelAttributes.compactMode == nil					then sv.panelAttributes.compactMode						= CQT_SV_DEFAULT.panelAttributes.compactMode								end
 	if sv.panelAttributes.headerColorSelected == nil			then sv.panelAttributes.headerColorSelected				= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.headerColorSelected)	end
 	if sv.panelAttributes.hintColor == nil						then sv.panelAttributes.hintColor						= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.hintColor)				end
 end
@@ -957,6 +984,7 @@ function CQT:UpdateTimeStampByIndex(journalIndex, arg1, arg2)
 	return self:UpdateTimeStamp(GetQuestId(journalIndex), arg1, arg2)
 end
 function CQT:UpdateTimeStamp(questId, arg1, arg2)
+	self.trackerPanel:SetTreeNodeOpenStatus(questId, nil)	-- clear previous status
 	if not self.activityLog.quest[questId] then
 		self.activityLog.quest[questId] = {}
 	end
@@ -968,6 +996,7 @@ function CQT:SetPinnedStatusTimeStampByIndex(journalIndex, arg3)
 	return self:SetPinnedStatusTimeStamp(GetQuestId(journalIndex), arg3)
 end
 function CQT:SetPinnedStatusTimeStamp(questId, arg3)
+	self.trackerPanel:SetTreeNodeOpenStatus(questId, nil)	-- clear previous status
 	if self.activityLog.quest[questId] then
 		self.activityLog.quest[questId][3] = arg3 or GetTimeStamp()
 	end
@@ -977,6 +1006,7 @@ function CQT:ResetPinnedStatusTimeStampByIndex(journalIndex)
 	return self:ResetPinnedStatusTimeStamp(GetQuestId(journalIndex))
 end
 function CQT:ResetPinnedStatusTimeStamp(questId)
+	self.trackerPanel:SetTreeNodeOpenStatus(questId, nil)	-- clear previous status
 	if self.activityLog.quest[questId] then
 		self.activityLog.quest[questId][3] = nil
 	end
@@ -986,6 +1016,7 @@ function CQT:DeleteTimeStampByIndex(journalIndex)
 	return self:DeleteTimeStamp(GetQuestId(journalIndex))
 end
 function CQT:DeleteTimeStamp(questId)
+	self.trackerPanel:SetTreeNodeOpenStatus(questId, nil)	-- clear previous status
 	if self.activityLog.quest[questId] then
 		self.activityLog.quest[questId] = nil
 	end
@@ -1336,7 +1367,7 @@ function CQT:RemoveTrackerPanelFragmentFromGameMenuScene()
 end
 
 function CQT:UpdateTrackerPanelAttribute(key, value)
-	if self.svCurrent.panelAttributes[key] then
+	if self.svCurrent.panelAttributes[key] ~= nil then
 		self.svCurrent.panelAttributes[key] = value
 		CALLBACK_MANAGER:FireCallbacks("CQT-TrackerPanelVisualUpdated", key)
 	end
@@ -1452,6 +1483,22 @@ function CQT:CreateSettingPanel()
 		tooltip = L(SI_CQT_UI_HIDE_IN_BATTLEGROUNDS_OP_TIPS), 
 		width = "full", 
 		default = not CQT_SV_DEFAULT.panelBehavior.showInBattleground, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "header", 
+		name = L(SI_CQT_UI_PANEL_OPTION_HEADER1_TEXT), 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_COMPACT_MODE_OP_NAME), 
+		getFunc = function() return self.svCurrent.panelAttributes.compactMode end, 
+		setFunc = function(newValue)
+			self.trackerPanel:ClearAllTreeNodeOpenStatus()
+			self:UpdateTrackerPanelAttribute("compactMode", newValue)
+		end, 
+		tooltip = L(SI_CQT_UI_COMPACT_MODE_OP_TIPS), 
+		width = "full", 
+		default = CQT_SV_DEFAULT.panelAttributes.compactMode, 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "header", 
@@ -1752,7 +1799,7 @@ function CQT_QuestHeaderTemplate_OnInitialized(control)
 	control.OnMouseUp = CQT_QuestHeader_OnMouseUp
 	control.OnMouseEnter = CQT_QuestHeader_OnMouseEnter
 	control.OnMouseExit = CQT_QuestHeader_OnMouseExit
-	control.OnMouseDoubleClick = CQT_QuestHeader_OnMouseDoubleClick
+--	control.OnMouseDoubleClick = CQT_QuestHeader_OnMouseDoubleClick
 end
 
 function CQT_EntryTemplate_OnInitialized(control)
@@ -1778,7 +1825,15 @@ end
 function CQT_QuestHeader_OnMouseUp(control, button, upInside)
 	if upInside then
 		if button == MOUSE_BUTTON_INDEX_LEFT then
-			FOCUSED_QUEST_TRACKER:ForceAssist(control.journalIndex)
+			if control.enabled and control.node:GetTree():IsEnabled() then
+				if select(7, GetJournalQuestInfo(control.journalIndex)) then
+					control.node:GetTree().treeNodeOpenStatus[control.questId] = not control.node:IsOpen()
+				else
+					control.node:GetTree().treeNodeOpenStatus[control.questId] = nil
+				end
+				control.node:GetTree():ToggleNode(control.node)
+				FOCUSED_QUEST_TRACKER:ForceAssist(control.journalIndex)
+			end
 		elseif button == MOUSE_BUTTON_INDEX_RIGHT then
 			ClearMenu()
 			if CQT:IsPinnedQuestByIndex(control.journalIndex) then

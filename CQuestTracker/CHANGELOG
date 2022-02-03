@@ -1,3 +1,9 @@
+V1.1.0: [V10100] by Calamath
+- Added the Compact Mode option to limit the display of quest conditions. Only focused and pinned quests will be displayed.
+- You can now temporarily choose to show or hide the conditions of each quest by clicking the left mouse button.
+- Removed the interface to open the quest list menu by double-clicking.
+- Fixed potential bugs in the handling of boolean values for tracker panel attributes.
+
 V1.0.7: [V10007] by Calamath
 - Added tracker font color settings.
 
