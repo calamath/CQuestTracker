@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.1.0", 
+	version = "1.1.1", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -1508,13 +1508,14 @@ function CQT:CreateSettingPanel()
 	local fontTypeChoices = {
 		"Bold Font", 
 		"Chat Font", 
---		"Custom", 
+		"Custom", 
 	}
 	local fontTypeChoicesValues = {
 		"$(BOLD_FONT)", 
 		"$(CHAT_FONT)", 
---		"custom", 
+		"custom", 
 	}
+	local fontStyleChoices = LMP:List("font")
 	local fontSizeChoices = {
 		"14", 
 		"15", 
@@ -1569,6 +1570,20 @@ function CQT:CreateSettingPanel()
 		end, 
 		scrollable = 15, 
 		default = CQT_SV_DEFAULT.qhFont[FONT_TYPE], 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "dropdown", 
+		name = L(SI_CQT_UI_COMMON_FONTSTYLE_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_QUEST_NAME_FONTSTYLE_MENU_TIPS), 
+		choices = fontStyleChoices, 
+		getFunc = function() return self.svCurrent.qhFont[FONT_STYLE] end, 
+		setFunc = function(styleStr)
+			self.svCurrent.qhFont[FONT_STYLE] = styleStr
+			self:UpdateTrackerPanelAttribute("headerFont", GetFontDescriptor(self.svCurrent.qhFont))
+		end, 
+		scrollable = 15, 
+		disabled = function() return self.svCurrent.qhFont[FONT_TYPE] ~= "custom" end, 
+		default = CQT_SV_DEFAULT.qhFont[FONT_STYLE], 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "dropdown", 
@@ -1651,6 +1666,20 @@ function CQT:CreateSettingPanel()
 		end, 
 		scrollable = 15, 
 		default = CQT_SV_DEFAULT.qcFont[FONT_TYPE], 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "dropdown", 
+		name = L(SI_CQT_UI_COMMON_FONTSTYLE_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_QUEST_CONDITION_FONTSTYLE_MENU_TIPS), 
+		choices = fontStyleChoices, 
+		getFunc = function() return self.svCurrent.qcFont[FONT_STYLE] end, 
+		setFunc = function(styleStr)
+			self.svCurrent.qcFont[FONT_STYLE] = styleStr
+			self:UpdateTrackerPanelAttribute("conditionFont", GetFontDescriptor(self.svCurrent.qcFont))
+		end, 
+		scrollable = 15, 
+		disabled = function() return self.svCurrent.qcFont[FONT_TYPE] ~= "custom" end, 
+		default = CQT_SV_DEFAULT.qcFont[FONT_STYLE], 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "dropdown", 
