@@ -137,6 +137,10 @@
 					<Dimensions y="22"/>
 					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" offsetX="3" offsetY="3"/>
 					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" offsetX="-3" offsetY="3"/>
+					<OnInitialized>
+						self.bg = self:GetNamedChild("Bg")
+						self.text = self:GetNamedChild("Text")
+					</OnInitialized>
 					<Controls>
 						<Texture name="$(parent)Bg" color="66AAFF" alpha="0.7" layer="BACKGROUND">
 							<AnchorFill/>

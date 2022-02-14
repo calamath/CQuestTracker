@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.1.1", 
+	version = "1.1.2", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -265,6 +265,7 @@ function CQT_TrackerPanel:Initialize(control, attrib)
 		showOptionalStep = true, 
 		showHintStep = true, 
 		hintColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
+		titlebarColor = { 0.4, 0.6666667, 1, 0.7 }, 
 		bgColor = { ZO_ColorDef:New(0, 0, 0, 0):UnpackRGBA() }, 
 	}
 	self.overriddenAttrib = attrib or {}
@@ -279,7 +280,7 @@ function CQT_TrackerPanel:Initialize(control, attrib)
 		end
 	end)
 	control:SetHandler("OnMoveStart", function(control)
-		self:ShowPanelFrame()
+		self:ShowPanelFrame(1)
 	end)
 	control:SetHandler("OnMoveStop", function(control)
 		local x, y = control:GetScreenRect()
@@ -288,7 +289,7 @@ function CQT_TrackerPanel:Initialize(control, attrib)
 		self:ResetAnchorPosition()
 	end)
 	control:SetHandler("OnResizeStart", function(control)
-		self:ShowPanelFrame()
+		self:ShowPanelFrame(1)
 	end)
 	control:SetHandler("OnResizeStop", function(control)
 		local x, y = control:GetScreenRect()
@@ -341,20 +342,30 @@ function CQT_TrackerPanel:RegisterTitleBarButton(controlName, onClickedCallback,
 end
 
 function CQT_TrackerPanel:SetupPanelVisual()
+	local titlebarColor = self:GetAttribute("titlebarColor")
+	if self.titlebar.bg then
+		self.titlebar.bg:SetColor(unpack(titlebarColor))
+	end
+	if self.titlebar.text then
+		local r, g, b = self.titlebar.text:GetColor()
+		self.titlebar.text:SetColor(r, g, b, titlebarColor[4])
+	end
 	if self.panelBg then
 		self.panelBg:SetCenterColor(unpack(self:GetAttribute("bgColor")))
 	end
 end
 
-function CQT_TrackerPanel:ShowPanelFrame()
+function CQT_TrackerPanel:ShowPanelFrame(desiredAlpha)
 	if self.panelBg then
-		self.panelBg:SetEdgeColor(0.3984375, 0.6640625, 1, 1)
+		local r, g, b, a = unpack(self:GetAttribute("titlebarColor"))
+		self.panelBg:SetEdgeColor(r, g, b, desiredAlpha or a)
 	end
 end
 
 function CQT_TrackerPanel:HidePanelFrame()
 	if self.panelBg then
-		self.panelBg:SetEdgeColor(0.3984375, 0.6640625, 1, 0)
+		local r, g, b = unpack(self:GetAttribute("titlebarColor"))
+		self.panelBg:SetEdgeColor(r, g, b, 0)
 	end
 end
 
@@ -656,6 +667,7 @@ local CQT_SV_DEFAULT = {
 		conditionColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
 		showHintStep = true, 
 		hintColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
+		titlebarColor = { 0.4, 0.6666667, 1, 0.7 }, 
 		bgColor = { ZO_ColorDef:New(0, 0, 0, 0):UnpackRGBA() }, 
 	}, 
 	qhFont = {
@@ -764,6 +776,7 @@ function CQT:ValidateConfigDataSV(sv)
 	if sv.panelAttributes.compactMode == nil					then sv.panelAttributes.compactMode						= CQT_SV_DEFAULT.panelAttributes.compactMode								end
 	if sv.panelAttributes.headerColorSelected == nil			then sv.panelAttributes.headerColorSelected				= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.headerColorSelected)	end
 	if sv.panelAttributes.hintColor == nil						then sv.panelAttributes.hintColor						= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.hintColor)				end
+	if sv.panelAttributes.titlebarColor == nil					then sv.panelAttributes.titlebarColor					= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.titlebarColor)			end
 end
 
 function CQT:RegisterEvents()
@@ -1501,6 +1514,17 @@ function CQT:CreateSettingPanel()
 		default = CQT_SV_DEFAULT.panelAttributes.compactMode, 
 	}
 	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_HIDE_QUEST_HINT_STEP_OP_NAME), 
+		getFunc = function() return not self.svCurrent.panelAttributes.showHintStep end, 
+		setFunc = function(newValue)
+			self:UpdateTrackerPanelAttribute("showHintStep", not newValue)
+		end, 
+		tooltip = L(SI_CQT_UI_HIDE_QUEST_HINT_STEP_OP_TIPS), 
+		width = "full", 
+		default = not CQT_SV_DEFAULT.panelAttributes.showHintStep, 
+	}
+	optionsData[#optionsData + 1] = {
 		type = "header", 
 		name = L(SI_CQT_UI_TRACKER_VISUAL_HEADER1_TEXT), 
 	}
@@ -1747,6 +1771,43 @@ function CQT:CreateSettingPanel()
 	optionsData[#optionsData + 1] = {
 		type = "description", 
 		title = "", 
+		text = L(SI_CQT_UI_TITLEBAR_SUBHEADER_TEXT), 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "colorpicker", 
+		name = L(SI_CQT_UI_TITLEBAR_COLOR_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_TITLEBAR_COLOR_MENU_TIPS), 
+		getFunc = function()
+			local r, g, b = unpack(self.svCurrent.panelAttributes.titlebarColor)
+			return r, g, b
+		end, 
+		setFunc = function(r, g, b)
+			local a = self.svCurrent.panelAttributes.titlebarColor[4]
+			self:UpdateTrackerPanelAttribute("titlebarColor", { r, g, b, a, })
+		end, 
+		default = {
+			r = CQT_SV_DEFAULT.panelAttributes.titlebarColor[1], 
+			g = CQT_SV_DEFAULT.panelAttributes.titlebarColor[2], 
+			b = CQT_SV_DEFAULT.panelAttributes.titlebarColor[3], 
+		}, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "slider", 
+		name = L(SI_CQT_UI_COMMON_OPACITY_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_TITLEBAR_OPACITY_MENU_TIPS), 
+		getFunc = function() return zo_round(self.svCurrent.panelAttributes.titlebarColor[4] * 100) end, 
+		setFunc = function(newValue)
+			local r, g, b = unpack(self.svCurrent.panelAttributes.titlebarColor)
+			self:UpdateTrackerPanelAttribute("titlebarColor", { r, g, b, newValue / 100, })
+		end, 
+		min = 0.0, 
+		max = 100.0, 
+		step = 1, 
+		default = zo_round(CQT_SV_DEFAULT.panelAttributes.titlebarColor[4] * 100), 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "description", 
+		title = "", 
 		text = L(SI_CQT_UI_BACKGROUND_SUBHEADER_TEXT), 
 	}
 	optionsData[#optionsData + 1] = {
@@ -1917,6 +1978,11 @@ function CQT_QuestHeader_OnMouseDoubleClick(control, button)
 	if button == MOUSE_BUTTON_INDEX_LEFT then
 		CQT:ShowQuestListManagementMenu(control)
 	end
+end
+
+function CQT_TrackerPanelTitleBar_OnInitialized(control)
+	control.bg = control:GetNamedChild("Bg")
+	control.text = control:GetNamedChild("Text")
 end
 
 function CQT_QuestListButton_OnClicked(control, button)
