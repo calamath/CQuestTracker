@@ -1,3 +1,8 @@
+V1.1.3: [V10103] by Calamath
+- Added a setting option to adjust the maximum number of quests displayed in the range of 2 to 10.
+- Added clamped to screen option.
+- Updated translations.
+
 V1.1.2: [V10102] by Calamath
 - Added suppress quest hint option.
 - Added title bar color settings.

@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.1.2", 
+	version = "1.1.3", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -247,6 +247,7 @@ end
 function CQT_TrackerPanel:Initialize(control, attrib)
 	self.attrib = {
 		compactMode = false, 
+		clampedToScreen = false, 
 		offsetX = 400, 
 		offsetY = 300, 
 		width = 400, 
@@ -353,6 +354,7 @@ function CQT_TrackerPanel:SetupPanelVisual()
 	if self.panelBg then
 		self.panelBg:SetCenterColor(unpack(self:GetAttribute("bgColor")))
 	end
+	self.panelControl:SetClampedToScreen(self:GetAttribute("clampedToScreen"))
 end
 
 function CQT_TrackerPanel:ShowPanelFrame(desiredAlpha)
@@ -656,6 +658,7 @@ local CQT_SV_DEFAULT = {
 	maxNumPinnedQuest = 5, 
 	panelAttributes = {
 		compactMode = false, 
+		clampedToScreen = false, 
 		offsetX = 400, 
 		offsetY = 300, 
 		width = 400, 
@@ -774,6 +777,7 @@ end
 
 function CQT:ValidateConfigDataSV(sv)
 	if sv.panelAttributes.compactMode == nil					then sv.panelAttributes.compactMode						= CQT_SV_DEFAULT.panelAttributes.compactMode								end
+	if sv.panelAttributes.clampedToScreen == nil				then sv.panelAttributes.clampedToScreen					= CQT_SV_DEFAULT.panelAttributes.clampedToScreen							end
 	if sv.panelAttributes.headerColorSelected == nil			then sv.panelAttributes.headerColorSelected				= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.headerColorSelected)	end
 	if sv.panelAttributes.hintColor == nil						then sv.panelAttributes.hintColor						= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.hintColor)				end
 	if sv.panelAttributes.titlebarColor == nil					then sv.panelAttributes.titlebarColor					= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.titlebarColor)			end
@@ -1502,6 +1506,22 @@ function CQT:CreateSettingPanel()
 		name = L(SI_CQT_UI_PANEL_OPTION_HEADER1_TEXT), 
 	}
 	optionsData[#optionsData + 1] = {
+		type = "slider", 
+		name = L(SI_CQT_UI_MAX_NUM_QUEST_DISPLAYED_OP_NAME), 
+		tooltip = L(SI_CQT_UI_MAX_NUM_QUEST_DISPLAYED_OP_TIPS), 
+		min = 2, 
+		max = 10, 
+		step = 1, 
+		getFunc = function() return self.svCurrent.maxNumDisplay end, 
+		setFunc = function(newValue)
+			self.svCurrent.maxNumDisplay = newValue
+			self.svCurrent.maxNumPinnedQuest = newValue
+			self:RefreshQuestList()
+		end, 
+		clampInput = true, 
+		default = CQT_SV_DEFAULT.maxNumDisplay, 
+	}
+	optionsData[#optionsData + 1] = {
 		type = "checkbox",
 		name = L(SI_CQT_UI_COMPACT_MODE_OP_NAME), 
 		getFunc = function() return self.svCurrent.panelAttributes.compactMode end, 
@@ -1512,6 +1532,17 @@ function CQT:CreateSettingPanel()
 		tooltip = L(SI_CQT_UI_COMPACT_MODE_OP_TIPS), 
 		width = "full", 
 		default = CQT_SV_DEFAULT.panelAttributes.compactMode, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_CLAMPED_TO_SCREEN_OP_NAME), 
+		getFunc = function() return self.svCurrent.panelAttributes.clampedToScreen end, 
+		setFunc = function(newValue)
+			self:UpdateTrackerPanelAttribute("clampedToScreen", newValue)
+		end, 
+		tooltip = L(SI_CQT_UI_CLAMPED_TO_SCREEN_OP_TIPS), 
+		width = "full", 
+		default = CQT_SV_DEFAULT.panelAttributes.clampedToScreen, 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "checkbox",
@@ -1978,11 +2009,6 @@ function CQT_QuestHeader_OnMouseDoubleClick(control, button)
 	if button == MOUSE_BUTTON_INDEX_LEFT then
 		CQT:ShowQuestListManagementMenu(control)
 	end
-end
-
-function CQT_TrackerPanelTitleBar_OnInitialized(control)
-	control.bg = control:GetNamedChild("Bg")
-	control.text = control:GetNamedChild("Text")
 end
 
 function CQT_QuestListButton_OnClicked(control, button)

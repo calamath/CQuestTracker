@@ -1,13 +1,8 @@
 ------------------------------------------------
 -- CQuestTracker
--- English localization
+-- French localization
+-- Version 0, 2022-02-23
 ------------------------------------------------
-
--- NOTE :
--- The English localization is in 'strings.lua'.
--- Thus the contents of this file can be used as a template for translation into other languages.
-
---[[
 
 --	Localization Strings
 SafeAddString(SI_CQT_WELCOME_TEXT1, 							"Welcome to CQuestTracker add-on !", 1)
@@ -25,8 +20,8 @@ SafeAddString(SI_CQT_PICK_OUT_QUEST, 							"Pick out the quest", 1)
 SafeAddString(SI_CQT_RULE_OUT_QUEST, 							"Rule out the quest", 1)
 SafeAddString(SI_CQT_MOST_LOWER_QUEST, 							"Most lower the quest", 1)
 
-SafeAddString(SI_CQT_QUESTTYPE_ZONE_STORY_QUEST, 				"Zone Story", 1)
-SafeAddString(SI_CQT_QUESTTYPE_SIDE_QUEST, 						"Side Quest", 1)
+SafeAddString(SI_CQT_QUESTTYPE_ZONE_STORY_QUEST, 				"Quête d'histoire de zone", 1)
+SafeAddString(SI_CQT_QUESTTYPE_SIDE_QUEST, 						"Quête annexe", 1)
 SafeAddString(SI_CQT_QUEST_BACKGROUND_HEADER, 					"Background:", 1)
 SafeAddString(SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION, 		"Optional steps - complete one:", 1)
 SafeAddString(SI_CQT_QUEST_OBJECTIVES_HEADER, 					"<<C:1[no objectives/objective/objectives]>>:", 1)
@@ -88,4 +83,3 @@ SafeAddString(SI_CQT_UI_COMMON_BACKGROUND_COLOR_MENU_NAME,  	"|u25:0::|uBackgrou
 SafeAddString(SI_CQT_UI_BACKGROUND_COLOR_MENU_TIPS,  			"Specify your preferred background color of the tracker panel.", 1)
 SafeAddString(SI_CQT_UI_BACKGROUND_OPACITY_MENU_TIPS, 			"Specify your preferred opacity of the background color.", 1)
 
---]]
