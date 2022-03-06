@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.1.3", 
+	version = "1.1.4", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -276,7 +276,7 @@ function CQT_TrackerPanel:Initialize(control, attrib)
 	self.container = control:GetNamedChild("ContainerScrollChild")
 	self.journalIndexToTreeNode = {}
 	control:SetHandler("OnMouseEnter", function(control)
-		if MouseIsInside(self.titlebar) then
+		if MouseIsInside(self.titlebar) and not self.titlebar:IsHidden() then
 			self:ShowPanelFrame()
 		end
 	end)
@@ -1253,7 +1253,7 @@ function CQT:ShowQuestListManagementMenu(owner, initialRefCount, menuType)
 			end
 			CQT:LayoutQuestTooltip(CQT_QuestTooltip, journalIndex)
 		else
-			ClearTooltip(CQT_QuestTooltip)
+			CQT:HideQuestTooltip()
 		end
 	end
 	local quests = QUEST_JOURNAL_MANAGER:GetQuestList()
@@ -1346,6 +1346,7 @@ function CQT:ShowQuestListManagementMenu(owner, initialRefCount, menuType)
 				})
 			end
 			AddCustomSubMenuItem(zo_strformat(format, v.name), subMenuEntries, nil, nil, nil, nil, function()
+				self:HideQuestTooltip()
 				self:PickOutQuestByIndex(v.questIndex)
 			end)
 			AddCustomMenuTooltip(function(control, inside)

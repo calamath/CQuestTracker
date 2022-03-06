@@ -1,3 +1,7 @@
+V1.1.4: [V10104] by Calamath
+- Fixed an issue the quest tooltip kept appearing when selecting a quest name in the quest list menu.
+- Addressed a rare issue where the quest tracker panel frame appears unnecessary when moving in-game scenes.
+
 V1.1.3: [V10103] by Calamath
 - Added a setting option to adjust the maximum number of quests displayed in the range of 2 to 10.
 - Added clamped to screen option.
