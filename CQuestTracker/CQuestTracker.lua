@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.1.4", 
+	version = "1.1.5", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -705,6 +705,7 @@ function CQT:Initialize()
 	self.isFirstTimePlayerActivated = true
 	self.isSettingPanelInitialized = false
 	self.isSettingPanelShown = false
+	self.isQuestTooltipShown = false
 
 	self.questList = {}
 	self.activityLog = ZO_SavedVars:NewCharacterIdSettings("CQuestTrackerLog", 1, nil, { quest = {}, }, GetWorldName())
@@ -731,6 +732,13 @@ function CQT:Initialize()
 	if self.svCurrent.panelBehavior.showInGameMenuScene then
 		self:AddTrackerPanelFragmentToGameMenuScene()
 	end
+	self.trackerPanel:GetTitleBarFragment():RegisterCallback("StateChange", function(oldState, newState)
+		if newState == SCENE_FRAGMENT_HIDING then
+			if self:IsQuestTooltipShown() then
+				self:HideQuestTooltip()
+			end
+		end
+	end)
 	KEYBINDINGS_FRAGMENT:RegisterCallback("StateChange", function(oldState, newState)
 		if newState == SCENE_FRAGMENT_SHOWING or newState == SCENE_FRAGMENT_HIDING then
 			self:UpdateTrackerPanelVisibility()
@@ -1063,6 +1071,10 @@ function CQT:ValidateActivityLog()
 end
 
 
+function CQT:IsQuestTooltipShown()
+	return self.isQuestTooltipShown
+end
+
 function CQT:LayoutQuestTooltip(tooltip, journalIndex)
 	local function GetNumVisibleQuestConditions(journalIndex, stepIndex)
 		local visibleConditionCount = 0
@@ -1227,12 +1239,14 @@ function CQT:ShowQuestTooltipNextToOwner(control, journalIndex)
 		else
 			InitializeTooltip(CQT_QuestTooltip, owner, LEFT, PADDING, 0, RIGHT)
 		end
-		CQT:LayoutQuestTooltip(CQT_QuestTooltip, journalIndex)
+		self:LayoutQuestTooltip(CQT_QuestTooltip, journalIndex)
+		self.isQuestTooltipShown = true
 	end
 end
 
 function CQT:HideQuestTooltip()
 	ClearTooltip(CQT_QuestTooltip)
+	self.isQuestTooltipShown = false
 end
 
 function CQT:ShowQuestListManagementMenu(owner, initialRefCount, menuType)
@@ -1251,9 +1265,10 @@ function CQT:ShowQuestListManagementMenu(owner, initialRefCount, menuType)
 			else
 				InitializeTooltip(CQT_QuestTooltip, owner, LEFT, PADDING, 0, RIGHT)
 			end
-			CQT:LayoutQuestTooltip(CQT_QuestTooltip, journalIndex)
+			self:LayoutQuestTooltip(CQT_QuestTooltip, journalIndex)
+			self.isQuestTooltipShown = true
 		else
-			CQT:HideQuestTooltip()
+			self:HideQuestTooltip()
 		end
 	end
 	local quests = QUEST_JOURNAL_MANAGER:GetQuestList()

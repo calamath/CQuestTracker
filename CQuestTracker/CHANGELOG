@@ -1,3 +1,7 @@
+V1.1.5: [V10105] by Calamath
+- Fixed an issue the quest tooltip kept appearing when moving in-game scenes while displaying the quest list menu.
+- Updated API version to 101033 (ESO 7.3.x : Ascending Tide)
+
 V1.1.4: [V10104] by Calamath
 - Fixed an issue the quest tooltip kept appearing when selecting a quest name in the quest list menu.
 - Addressed a rare issue where the quest tracker panel frame appears unnecessary when moving in-game scenes.
