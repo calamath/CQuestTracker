@@ -87,5 +87,11 @@ SafeAddString(SI_CQT_UI_BACKGROUND_SUBHEADER_TEXT,  			"Background:", 1)
 SafeAddString(SI_CQT_UI_COMMON_BACKGROUND_COLOR_MENU_NAME,  	"|u25:0::|uBackground Color", 1)
 SafeAddString(SI_CQT_UI_BACKGROUND_COLOR_MENU_TIPS,  			"Specify your preferred background color of the tracker panel.", 1)
 SafeAddString(SI_CQT_UI_BACKGROUND_OPACITY_MENU_TIPS, 			"Specify your preferred opacity of the background color.", 1)
+SafeAddString(SI_CQT_UI_ADVANCED_OPTION_HEADER1_TEXT, 			"Advanced Options", 1)
+SafeAddString(SI_CQT_UI_FOCUSED_QUEST_CONTROL_HEADER1_TEXT, 	"Focused Quest Control", 1)
+SafeAddString(SI_CQT_UI_AUTO_TRACK_ADDED_QUEST_OP_NAME, 		"|u25:0::|uAuto track to the added quest", 1)
+SafeAddString(SI_CQT_UI_AUTO_TRACK_ADDED_QUEST_OP_TIPS, 		"Turning this setting on will automatically change the focused quest to added quest. The standard setting is on.", 1)
+SafeAddString(SI_CQT_UI_AUTO_TRACK_PROGRESSED_QUEST_OP_NAME, 	"|u25:0::|uAuto track to the progressed quest", 1)
+SafeAddString(SI_CQT_UI_AUTO_TRACK_PROGRESSED_QUEST_OP_TIPS, 	"Turning this setting on will automatically change the focused quest as the quest progresses. The standard setting is off.", 1)
 
 --]]

@@ -88,6 +88,13 @@ local strings = {
 	SI_CQT_UI_COMMON_OPACITY_MENU_NAME =			"|u25:0::|u" .. L(SI_COLOR_PICKER_ALPHA), 	-- "|u25:0::|uOpacity"	[No translation necessary]
 	SI_CQT_UI_BACKGROUND_COLOR_MENU_TIPS =			"Specify your preferred background color of the tracker panel.", 
 	SI_CQT_UI_BACKGROUND_OPACITY_MENU_TIPS =		"Specify your preferred opacity of the background color.", 
+	SI_CQT_UI_ADVANCED_OPTION_HEADER1_TEXT =		"Advanced Options", 
+	SI_CQT_UI_FOCUSED_QUEST_CONTROL_HEADER1_TEXT =	"Focused Quest Control", 
+	SI_CQT_UI_AUTO_TRACK_ADDED_QUEST_OP_NAME =		"|u25:0::|uAuto track to the added quest", 
+	SI_CQT_UI_AUTO_TRACK_ADDED_QUEST_OP_TIPS =		"Turning this setting on will automatically change the focused quest to added quest. The standard setting is on.", 
+	SI_CQT_UI_AUTO_TRACK_PROGRESSED_QUEST_OP_NAME =	"|u25:0::|uAuto track to the progressed quest", 
+	SI_CQT_UI_AUTO_TRACK_PROGRESSED_QUEST_OP_TIPS =	"Turning this setting on will automatically change the focused quest as the quest progresses. The standard setting is off.", 
+
 }
 
 for stringId, stringToAdd in pairs(strings) do

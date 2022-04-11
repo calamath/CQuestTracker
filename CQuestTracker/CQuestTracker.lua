@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.1.5", 
+	version = "1.1.6", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -695,6 +695,8 @@ local CQT_SV_DEFAULT = {
 		show = true, 
 		anchor = LEFT, 
 	}, 
+	autoTrackToAddedQuest = true, 
+	autoTrackToProgressedQuest = false, 
 }
 function CQT:Initialize()
 	self:ConfigDebug()
@@ -706,6 +708,7 @@ function CQT:Initialize()
 	self.isSettingPanelInitialized = false
 	self.isSettingPanelShown = false
 	self.isQuestTooltipShown = false
+	self.forceAssistControl = {}
 
 	self.questList = {}
 	self.activityLog = ZO_SavedVars:NewCharacterIdSettings("CQuestTrackerLog", 1, nil, { quest = {}, }, GetWorldName())
@@ -722,7 +725,7 @@ function CQT:Initialize()
 		self.svCurrent = self.svCharacter
 	end
 
--- tracker panel
+	-- tracker panel
 	self.trackerPanel = CQT_TrackerPanel:New(CQT_UI_TrackerPanel, self.svCurrent.panelAttributes)
 	self.trackerPanel:RegisterTitleBarButton("SettingBtn", CQT_SettingButton_OnClicked, L(SI_CQT_TITLEBAR_OPEN_SETTINGS_BUTTON_TIPS))
 	self.trackerPanel:RegisterTitleBarButton("QuestListBtn", CQT_QuestListButton_OnClicked, L(SI_CQT_TITLEBAR_QUEST_LIST_BUTTON_TIPS))
@@ -745,6 +748,10 @@ function CQT:Initialize()
 		end
 	end)
 
+	-- focused quest management
+	self:InitializeFocusedQuestControlTable()
+
+	-- tutorial
 	ZO_Dialogs_RegisterCustomDialog(self.name .. "_WELCOME_MESSAGE", {
 		canQueue = true, 
 		title = {
@@ -789,6 +796,8 @@ function CQT:ValidateConfigDataSV(sv)
 	if sv.panelAttributes.headerColorSelected == nil			then sv.panelAttributes.headerColorSelected				= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.headerColorSelected)	end
 	if sv.panelAttributes.hintColor == nil						then sv.panelAttributes.hintColor						= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.hintColor)				end
 	if sv.panelAttributes.titlebarColor == nil					then sv.panelAttributes.titlebarColor					= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.titlebarColor)			end
+	if sv.autoTrackToAddedQuest == nil							then sv.autoTrackToAddedQuest							= CQT_SV_DEFAULT.autoTrackToAddedQuest										end
+	if sv.autoTrackToProgressedQuest == nil						then sv.autoTrackToProgressedQuest						= CQT_SV_DEFAULT.autoTrackToProgressedQuest									end
 end
 
 function CQT:RegisterEvents()
@@ -830,19 +839,28 @@ function CQT:RegisterEvents()
 			self:UpdateTrackerPanelVisibility()
 		end
 	end)
+	if FOCUSED_QUEST_TRACKER and FOCUSED_QUEST_TRACKER.OnQuestAdded then
+		-- The default quest tracker unconditionally changes the focused quest when accepting a quest, but the add-on takes over its control by CQT:UpdateFocusedQuestByEvent.
+		-- Returning true in the Hook function means blocking the execution of the original FOCUSED_QUEST_TRACKER:OnQuestAdd function.
+		ZO_PreHook(FOCUSED_QUEST_TRACKER, "OnQuestAdded", function(self, questIndex) return true end)
+	end
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_QUEST_ADDED, function(event, journalIndex, questName, objectiveName)
 		self:UpdateTimeStampByIndex(journalIndex)
+		self:UpdateFocusedQuestByEvent(event, journalIndex)
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_QUEST_ADVANCED, function(event, journalIndex, questName, isPushed, isComplete, mainStepChanged)
 		self:UpdateTimeStampByIndex(journalIndex)
+		self:UpdateFocusedQuestByEvent(event, journalIndex)
 		self:RefreshQuestList()
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_QUEST_CONDITION_COUNTER_CHANGED, function(event, journalIndex, questName, conditionText, conditionType, currConditionVal, newConditionVal, conditionMax, isFailCondition, stepOverrideText, isPushed, isComplete, isConditionComplete, isStepHidden, isConditionCompleteStatusChanged, isConditionCompletableBySiblingStatusChanged)
 		self:UpdateTimeStampByIndex(journalIndex)
+		self:UpdateFocusedQuestByEvent(event, journalIndex)
 		self:RefreshQuestList()
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_QUEST_CONDITION_OVERRIDE_TEXT_CHANGED, function(event, journalIndex)
 		self:UpdateTimeStampByIndex(journalIndex)
+		self:UpdateFocusedQuestByEvent(event, journalIndex)
 		self:RefreshQuestList()
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_QUEST_LIST_UPDATED, function(event)
@@ -862,6 +880,29 @@ function CQT:RegisterEvents()
 	end)
 end
 
+function CQT:InitializeFocusedQuestControlTable()
+	ZO_ClearTable(self.forceAssistControl)
+	if FOCUSED_QUEST_TRACKER and FOCUSED_QUEST_TRACKER.ForceAssist then
+		if EVENT_QUEST_ADDED then
+			self.forceAssistControl[EVENT_QUEST_ADDED] = self.svCurrent.autoTrackToAddedQuest
+		end
+		if EVENT_QUEST_ADVANCED then
+			self.forceAssistControl[EVENT_QUEST_ADVANCED] = self.svCurrent.autoTrackToProgressedQuest
+		end
+		if EVENT_QUEST_CONDITION_COUNTER_CHANGED then
+			self.forceAssistControl[EVENT_QUEST_CONDITION_COUNTER_CHANGED] = self.svCurrent.autoTrackToProgressedQuest
+		end
+	end
+end
+
+function CQT:UpdateFocusedQuestByEvent(event, journalIndex)
+	if self.forceAssistControl[event] then
+		FOCUSED_QUEST_TRACKER:ForceAssist(journalIndex)
+		if FOCUSED_QUEST_TRACKER.UpdateAssistedVisibility then
+			FOCUSED_QUEST_TRACKER:UpdateAssistedVisibility()
+		end
+	end
+end
 
 function CQT:RefreshQuestList()
 	local quests = QUEST_JOURNAL_MANAGER:GetQuestList()
@@ -1888,6 +1929,39 @@ function CQT:CreateSettingPanel()
 		max = 100.0, 
 		step = 1, 
 		default = zo_round(CQT_SV_DEFAULT.panelAttributes.bgColor[4] * 100), 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "header", 
+		name = L(SI_CQT_UI_ADVANCED_OPTION_HEADER1_TEXT), 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "description", 
+		title = "", 
+		text = L(SI_CQT_UI_FOCUSED_QUEST_CONTROL_HEADER1_TEXT), 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_AUTO_TRACK_ADDED_QUEST_OP_NAME), 
+		getFunc = function() return self.svCurrent.autoTrackToAddedQuest end, 
+		setFunc = function(newValue)
+			self.svCurrent.autoTrackToAddedQuest = newValue
+			self:InitializeFocusedQuestControlTable()
+		end, 
+		tooltip = L(SI_CQT_UI_AUTO_TRACK_ADDED_QUEST_OP_TIPS), 
+		width = "full", 
+		default = CQT_SV_DEFAULT.autoTrackToAddedQuest, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_AUTO_TRACK_PROGRESSED_QUEST_OP_NAME), 
+		getFunc = function() return self.svCurrent.autoTrackToProgressedQuest end, 
+		setFunc = function(newValue)
+			self.svCurrent.autoTrackToProgressedQuest = newValue
+			self:InitializeFocusedQuestControlTable()
+		end, 
+		tooltip = L(SI_CQT_UI_AUTO_TRACK_PROGRESSED_QUEST_OP_TIPS), 
+		width = "full", 
+		default = CQT_SV_DEFAULT.autoTrackToProgressedQuest, 
 	}
 
 	LAM:RegisterOptionControls("CQuestTracker", optionsData)

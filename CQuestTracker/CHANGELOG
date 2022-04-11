@@ -1,3 +1,6 @@
+V1.1.6: [V10106] by Calamath
+- Added options to control whether the focused quest changes when the quest is accepted or advanced.
+
 V1.1.5: [V10105] by Calamath
 - Fixed an issue the quest tooltip kept appearing when moving in-game scenes while displaying the quest list menu.
 - Updated API version to 101033 (ESO 7.3.x : Ascending Tide)
