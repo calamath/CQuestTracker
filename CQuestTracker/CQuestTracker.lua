@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.1.6", 
+	version = "1.2.0", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -208,8 +208,190 @@ function CQT_QuestCache_Singleton:GetJournalQuestCache(journalIndex)
 end
 
 local CQT_QuestCacheManager = CQT_QuestCache_Singleton:New()	-- Never do this more than once!
+
+-- global API --
 local GetQuestCacheManager = function() return CQT_QuestCacheManager end
 local GetQuestId = function(journalIndex) return CQT_QuestCacheManager:GetQuestId(journalIndex) end
+
+
+-- ---------------------------------------------------------------------------------------
+-- Quest Timer Manager Class
+-- ---------------------------------------------------------------------------------------
+local CQT_QuestTimer_Singleton = ZO_InitializingObject:Subclass()
+function CQT_QuestTimer_Singleton:Initialize(template, attrib)
+	self.name = "CQT-QuestTimerSingleton"
+	self.template = template or "CQT_QuestTimerTemplate"
+	self.attrib = {
+		timerFont = "$(BOLD_FONT)|$(KB_18)|soft-shadow-thick", 
+		timerColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_NORMAL) }, 
+		timerIcon = "Esoui/Art/Miscellaneous/timer_64.dds", 
+	}
+	self.overriddenAttrib = attrib or {}
+	self.timers = {}
+	self.control = WINDOW_MANAGER:CreateControl("CQT_UI_QuestTimerRoot", GuiRoot, CT_CONTROL)
+	self.timerPool = ZO_ControlPool:New(self.template, self.control)
+	self.timerPool:SetCustomFactoryBehavior(function(control)
+		control.time = control:GetNamedChild("Time")
+		control.icon = control:GetNamedChild("Icon")
+		control:SetHandler("OnUpdate", function(control, time)
+			self:UpdateTimer(control, time)
+		end)
+	end)
+	self.timerPool:SetCustomAcquireBehavior(function(control, key)
+		control.time:SetFont(self:GetAttribute("timerFont"))
+		control.time:SetColor(unpack(self:GetAttribute("timerColor")))
+		local icon = self:GetAttribute("timerIcon")
+		control.icon:SetTexture(icon)
+		if icon ~= "" then
+			local iconSize = control.time:GetFontHeight()
+			control.icon:SetDimensions(iconSize, iconSize)
+		else
+			control.icon:SetDimensions(0, 0)
+		end
+	end)
+	self.timerPool:SetCustomResetBehavior(function(control)
+		control:SetParent(self.control)
+		control:ClearAnchors()
+		control.time:SetText("")
+		control.time:SetHidden(false)
+	end)
+	self.control:RegisterForEvent(EVENT_QUEST_TIMER_UPDATED, function(event, journalIndex)
+		local timerStart, timerEnd, isVisible, isPaused = GetJournalQuestTimerInfo(journalIndex)
+		if isVisible then
+			self:CreateTimer(journalIndex)
+		else
+			self:RemoveTimer(journalIndex)
+		end
+	end)
+	self.control:RegisterForEvent(EVENT_QUEST_TIMER_PAUSED, function(event, journalIndex, isPaused)
+		if self.timers[journalIndex] then
+			local timerStart, timerEnd, isVisible, isPaused = GetJournalQuestTimerInfo(journalIndex)
+			self.timers[journalIndex].isPaused = isPaused
+			if not isPaused then
+				self.timers[journalIndex].timerStart = timerStart
+				self.timers[journalIndex].timerEnd = timerEnd
+			end
+		end
+	end)
+	self.control:RegisterForEvent(EVENT_QUEST_REMOVED, function(event, _, journalIndex)
+		self:RemoveTimer(journalIndex)
+	end)
+
+	for i = 1, MAX_JOURNAL_QUESTS do
+		if IsValidQuestIndex(i) then
+			self:CreateTimer(i)
+		end
+	end	
+end
+
+function CQT_QuestTimer_Singleton:GetAttribute(key)
+	if self.overriddenAttrib[key] ~= nil then
+		return self.overriddenAttrib[key]
+	else
+		return self.attrib[key]
+	end
+end
+
+function CQT_QuestTimer_Singleton:SetAttribute(key, value)
+	if self.overriddenAttrib[key] ~= nil then
+		self.overriddenAttrib[key] = value
+	else
+		self.attrib[key] = value
+	end
+end
+
+function CQT_QuestTimer_Singleton:AcquireTimer(journalIndex)
+	if self.timers[journalIndex] then
+		return self.timers[journalIndex]
+	end
+	local timer, key = self.timerPool:AcquireObject()
+	timer.key = key
+	timer:SetHidden(false)
+	self.timers[journalIndex] = timer
+	return timer
+end
+
+function CQT_QuestTimer_Singleton:RemoveTimer(journalIndex)
+	if self.timers[journalIndex] then
+		self.timerPool:ReleaseObject(self.timers[journalIndex].key)
+		self.timers[journalIndex] = nil
+	end
+end
+
+function CQT_QuestTimer_Singleton:UpdateTimer(timer, now)
+	if not timer.isPaused and timer.nextUpdate <= now then
+		local remainingTime = timer.timerEnd - now
+		if remainingTime > 0 then
+			local timeText, nextUpdateDelta = ZO_FormatTime(remainingTime, TIME_FORMAT_STYLE_COLONS, TIME_FORMAT_PRECISION_SECONDS, TIME_FORMAT_DIRECTION_DESCENDING)
+			timer.time:SetText(timeText)
+			timer.nextUpdate = now + nextUpdateDelta
+		else
+			self:RemoveTimer(timer.journalIndex)
+		end
+	end
+end
+
+function CQT_QuestTimer_Singleton:CreateTimer(journalIndex)
+	local timerStart, timerEnd, isVisible, isPaused = GetJournalQuestTimerInfo(journalIndex)
+	if isVisible then
+		local timer = self:AcquireTimer(journalIndex)
+		timer.journalIndex = journalIndex
+		timer.timerStart = timerStart
+		timer.timerEnd = timerEnd
+		timer.isVisible = isVisible
+		timer.isPaused = isPaused
+
+		local now =  GetFrameTimeSeconds()
+		timer.nextUpdate = now
+
+		self:UpdateTimer(timer, now)
+	end
+end
+
+function CQT_QuestTimer_Singleton:GetTimerAPI(journalIndex)
+	return self.timers[journalIndex]
+end
+
+function CQT_QuestTimer_Singleton:SetUserAttributeTableAPI(overriddenAttrib)
+	if type(overriddenAttrib) == "table" then
+		self.overriddenAttrib = overriddenAttrib
+	end
+end
+
+function CQT_QuestTimer_Singleton:DiscardAllTimerLayoutsAPI()
+	for _, timer in pairs(self.timers) do
+		timer:SetParent(self.control)
+		timer:ClearAnchors()
+	end
+end
+
+local CQT_QuestTimerManager = {
+	internal = CQT_QuestTimer_Singleton:New(), 	-- Never do this more than once!
+	api = {}, 
+}
+--
+-- ---- CQT_QuestTimerManager API ----
+--
+-- * GetQuestTimerManager():GetTimer(*luaindex* _journalQuestIndex_)
+-- ** _Returns:_ *object:nilable* _questTimerControl_
+ -- It is necessary to tie it to a container with SetParent() and lay it out with SetAnchor(), to display the acquired timer control.
+CQT_QuestTimerManager.api.GetTimer = function(self, journalIndex)
+	return CQT_QuestTimerManager.internal:GetTimerAPI(journalIndex)
+end
+
+-- * GetQuestTimerManager():SetUserAttributeTable(*table* _overriddenAttrib_)
+-- Specify if you want to use a user-defined attribute table
+CQT_QuestTimerManager.api.SetUserAttributeTable = function(self, overriddenAttrib)
+	return CQT_QuestTimerManager.internal:SetUserAttributeTableAPI(overriddenAttrib)
+end
+
+-- * GetQuestTimerManager():DiscardAllTimerLayouts()
+-- Utility function to release all laid out timer controls at once
+CQT_QuestTimerManager.api.DiscardAllTimerLayouts = function(self)
+	return CQT_QuestTimerManager.internal:DiscardAllTimerLayoutsAPI()
+end
+-- global API --
+local GetQuestTimerManager = function() return CQT_QuestTimerManager.api end
 
 
 -- ---------------------------------------------------------------------------------------
@@ -275,6 +457,7 @@ function CQT_TrackerPanel:Initialize(control, attrib)
 	self.panelBg = self.panelControl:GetNamedChild("Bg")
 	self.container = control:GetNamedChild("ContainerScrollChild")
 	self.journalIndexToTreeNode = {}
+	self.questTimer = GetQuestTimerManager()
 	control:SetHandler("OnMouseEnter", function(control)
 		if MouseIsInside(self.titlebar) and not self.titlebar:IsHidden() then
 			self:ShowPanelFrame()
@@ -442,12 +625,13 @@ function CQT_TrackerPanel:InitializeTree()
 	end
 	local function HeaderNodeSetup(node, control, data, open, userRequested, enabled)
 		local name, _, _, _, _, completed, tracked, _, _, questType, instanceDisplayType = GetJournalQuestInfo(data.journalIndex)
+		local timerWidth = data.timer and data.timer:GetWidth() or 0
 		control.journalIndex = data.journalIndex
 		control.questId = data.questId
 		control.text:SetFont(self:GetAttribute("headerFont"))
 		control.text.GetTextColor = HeaderNodeGetTextColor
 		control.text:RefreshTextColor()
-		control.text:SetDimensionConstraints(0, 0, HeaderNodeLabelMaxWidth(control), 0)
+		control.text:SetDimensionConstraints(0, 0, HeaderNodeLabelMaxWidth(control) - timerWidth, 0)
 		control.text:SetText(name)
 --		control.icon:SetTexture("/esoui/art/icons/heraldrycrests_misc_blank_01.dds")	-- black icon
 		control.icon:SetTexture("EsoUI/Art/Journal/journal_Quest_Selected.dds")
@@ -462,6 +646,14 @@ function CQT_TrackerPanel:InitializeTree()
 			control.pinned:SetHidden(false)
 		else
 			control.pinned:SetHidden(true)
+		end
+		if data.timer then
+			local _, headerTextCenterY = control.text:GetCenter()
+			data.timer.time:SetFont(self:GetAttribute("headerFont"))
+			data.timer.time:SetColor(unpack(self:GetAttribute("headerColor")))
+			data.timer:ClearAnchors()
+			data.timer:SetParent(control)
+			data.timer:SetAnchor(RIGHT, control, TOPRIGHT, 0, headerTextCenterY - control:GetTop())
 		end
 		ZO_IconHeader_Setup(control, tracked, enabled, true, HeaderNodeUpdateSize)
 	end
@@ -599,6 +791,7 @@ function CQT_TrackerPanel:RefreshTree()
 	self.journalIndexToTreeNode = {}
 	self.trackerTree:Reset()
     self.trackerTree:SetSuspendAnimations(false)
+	self.questTimer:DiscardAllTimerLayouts()
 	local questNode = {}
 	local firstNode = nil
 	local previousNode = nil
@@ -725,6 +918,9 @@ function CQT:Initialize()
 		self.svCurrent = self.svCharacter
 	end
 
+	-- quest timer
+	self.questTimer = GetQuestTimerManager()
+
 	-- tracker panel
 	self.trackerPanel = CQT_TrackerPanel:New(CQT_UI_TrackerPanel, self.svCurrent.panelAttributes)
 	self.trackerPanel:RegisterTitleBarButton("SettingBtn", CQT_SettingButton_OnClicked, L(SI_CQT_TITLEBAR_OPEN_SETTINGS_BUTTON_TIPS))
@@ -807,6 +1003,9 @@ function CQT:RegisterEvents()
 			self.isFirstTimePlayerActivated = false
 			self:CreateSettingPanel()
 			SetSetting(SETTING_TYPE_UI, UI_SETTING_SHOW_QUEST_TRACKER, self.svCurrent.hideFocusedQuestTracker and "false" or "true")	-- Override default quest tracker visibility with our save data settings.
+			if ZO_FocusedQuestTrackerPanelTimerAnchor and ZO_FocusedQuestTrackerPanelTimerAnchor.SetHidden then
+				ZO_FocusedQuestTrackerPanelTimerAnchor:SetHidden(self.svCurrent.hideFocusedQuestTracker)	-- Override default quest timer panel visibility with our save data settings.
+			end
 			if initial then	-- --------------------------------- after login
 				-- Check if this is the first login for this character after using this addon.
 				if not self.activityLog.apiVersion then
@@ -831,7 +1030,11 @@ function CQT:RegisterEvents()
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_INTERFACE_SETTING_CHANGED, function(event, settingSystemType, settingId)
 		if settingSystemType == SETTING_TYPE_UI and settingId == UI_SETTING_SHOW_QUEST_TRACKER then
-			self.svCurrent.hideFocusedQuestTracker = not GetSetting_Bool(SETTING_TYPE_UI, UI_SETTING_SHOW_QUEST_TRACKER)
+			local hideDefaultQuestTracker = not GetSetting_Bool(SETTING_TYPE_UI, UI_SETTING_SHOW_QUEST_TRACKER)
+			self.svCurrent.hideFocusedQuestTracker = hideDefaultQuestTracker
+			if ZO_FocusedQuestTrackerPanelTimerAnchor and ZO_FocusedQuestTrackerPanelTimerAnchor.SetHidden then
+				ZO_FocusedQuestTrackerPanelTimerAnchor:SetHidden(hideDefaultQuestTracker)
+			end
 		end
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_COMBAT_STATE, function(event, inCombat)
@@ -917,13 +1120,13 @@ function CQT:RefreshQuestList()
 			qjmQuestIndex = k, 
 			questId = questId, 
 			timestamp = self:GetTimeStamp(questId) or self.sessionStartTime, 
+			timer = self.questTimer:GetTimer(v.questIndex)
 		}
 		if not self:IsIgnoredQuest(questId) and not self:IsUnrecordedQuest(questId) then
 			if self:IsPinnedQuest(questId) then
 				table.insert(pinnedQuestList, t)
 			else
 				table.insert(unpinnedQuestList, t)
-
 			end
 		end
 	end

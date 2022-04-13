@@ -1,3 +1,8 @@
+V1.2.0: [V10200] by Calamath
+Quest timer support:
+- Quests with time limits now display a countdown timer to the right of the quest name.
+- The option to hide the default quest tracker now also affects the standard quest timer panel.
+
 V1.1.6: [V10106] by Calamath
 - Added options to control whether the focused quest changes when the quest is accepted or advanced.
 
