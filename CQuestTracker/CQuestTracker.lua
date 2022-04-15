@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.2.0", 
+	version = "1.2.1", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -447,6 +447,7 @@ function CQT_TrackerPanel:Initialize(control, attrib)
 		conditionChildSpacing = 0, 
 		showOptionalStep = true, 
 		showHintStep = true, 
+		hintFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
 		hintColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
 		titlebarColor = { 0.4, 0.6666667, 1, 0.7 }, 
 		bgColor = { ZO_ColorDef:New(0, 0, 0, 0):UnpackRGBA() }, 
@@ -667,8 +668,10 @@ function CQT_TrackerPanel:InitializeTree()
 	end
 	local function EntryNodeSetup(node, control, data, open, userRequested, enabled)
 		if data.visibility == QUEST_STEP_VISIBILITY_HINT then
+			control.text:SetFont(self:GetAttribute("hintFont"))
 			control.text:SetColor(unpack(self:GetAttribute("hintColor")))
 		else
+			control.text:SetFont(self:GetAttribute("conditionFont"))
 			control.text:SetColor(unpack(self:GetAttribute("conditionColor")))
 		end
 		control.text:SetText(data.text or "")
@@ -687,10 +690,11 @@ function CQT_TrackerPanel:InitializeTree()
 		control:SetDimensions(textWidth + (isValid and textOffsetX or 0), textHeight + (isValid and textOffsetY or 0))
 	end
 	local function ConditionNodeSetup(node, control, data, open, userRequested, enabled)
-		control.text:SetFont(self:GetAttribute("conditionFont"))
 		if data.visibility == QUEST_STEP_VISIBILITY_HINT then
+			control.text:SetFont(self:GetAttribute("hintFont"))
 			control.text:SetColor(unpack(self:GetAttribute("hintColor")))
 		else
+			control.text:SetFont(self:GetAttribute("conditionFont"))
 			control.text:SetColor(unpack(self:GetAttribute("conditionColor")))
 		end
 		control.text:SetDimensionConstraints(0, 0, ConditionNodeLabelMaxWidth(control), 0)
@@ -862,6 +866,7 @@ local CQT_SV_DEFAULT = {
 		conditionFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
 		conditionColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
 		showHintStep = true, 
+		hintFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
 		hintColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
 		titlebarColor = { 0.4, 0.6666667, 1, 0.7 }, 
 		bgColor = { ZO_ColorDef:New(0, 0, 0, 0):UnpackRGBA() }, 
@@ -873,6 +878,12 @@ local CQT_SV_DEFAULT = {
 		[FONT_WEIGHT] = "soft-shadow-thick", 
 	}, 
 	qcFont = {
+		[FONT_TYPE] = "$(BOLD_FONT)", 
+		[FONT_STYLE] = "", 
+		[FONT_SIZE] = "$(KB_15)", 
+		[FONT_WEIGHT] = "soft-shadow-thick", 
+	}, 
+	qkFont = {
 		[FONT_TYPE] = "$(BOLD_FONT)", 
 		[FONT_STYLE] = "", 
 		[FONT_SIZE] = "$(KB_15)", 
@@ -990,8 +1001,10 @@ function CQT:ValidateConfigDataSV(sv)
 	if sv.panelAttributes.compactMode == nil					then sv.panelAttributes.compactMode						= CQT_SV_DEFAULT.panelAttributes.compactMode								end
 	if sv.panelAttributes.clampedToScreen == nil				then sv.panelAttributes.clampedToScreen					= CQT_SV_DEFAULT.panelAttributes.clampedToScreen							end
 	if sv.panelAttributes.headerColorSelected == nil			then sv.panelAttributes.headerColorSelected				= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.headerColorSelected)	end
+	if sv.panelAttributes.hintFont == nil						then sv.panelAttributes.hintFont						= sv.panelAttributes.conditionFont											end		-- Derived from conditionFont and added
 	if sv.panelAttributes.hintColor == nil						then sv.panelAttributes.hintColor						= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.hintColor)				end
 	if sv.panelAttributes.titlebarColor == nil					then sv.panelAttributes.titlebarColor					= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.titlebarColor)			end
+	if sv.qkFont == nil											then sv.qkFont											= ZO_ShallowTableCopy(sv.qcFont)											end		-- Derived from qcFont and added
 	if sv.autoTrackToAddedQuest == nil							then sv.autoTrackToAddedQuest							= CQT_SV_DEFAULT.autoTrackToAddedQuest										end
 	if sv.autoTrackToProgressedQuest == nil						then sv.autoTrackToProgressedQuest						= CQT_SV_DEFAULT.autoTrackToProgressedQuest									end
 end
@@ -2040,6 +2053,66 @@ function CQT:CreateSettingPanel()
 			g = CQT_SV_DEFAULT.panelAttributes.conditionColor[2], 
 			b = CQT_SV_DEFAULT.panelAttributes.conditionColor[3], 
 		}, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "description", 
+		title = "", 
+		text = L(SI_CQT_UI_QUEST_HINT_FONT_SUBHEADER_TEXT), 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "dropdown", 
+		name = L(SI_CQT_UI_COMMON_FONTTYPE_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_QUEST_HINT_FONTTYPE_MENU_TIPS), 
+		choices = fontTypeChoices, 
+		choicesValues = fontTypeChoicesValues, 
+		getFunc = function() return self.svCurrent.qkFont[FONT_TYPE] end, 
+		setFunc = function(typeStr)
+			self.svCurrent.qkFont[FONT_TYPE] = typeStr
+			self:UpdateTrackerPanelAttribute("hintFont", GetFontDescriptor(self.svCurrent.qkFont))
+		end, 
+		scrollable = 15, 
+		default = CQT_SV_DEFAULT.qkFont[FONT_TYPE], 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "dropdown", 
+		name = L(SI_CQT_UI_COMMON_FONTSTYLE_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_QUEST_HINT_FONTSTYLE_MENU_TIPS), 
+		choices = fontStyleChoices, 
+		getFunc = function() return self.svCurrent.qkFont[FONT_STYLE] end, 
+		setFunc = function(styleStr)
+			self.svCurrent.qkFont[FONT_STYLE] = styleStr
+			self:UpdateTrackerPanelAttribute("hintFont", GetFontDescriptor(self.svCurrent.qkFont))
+		end, 
+		scrollable = 15, 
+		disabled = function() return self.svCurrent.qkFont[FONT_TYPE] ~= "custom" end, 
+		default = CQT_SV_DEFAULT.qkFont[FONT_STYLE], 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "dropdown", 
+		name = L(SI_CQT_UI_COMMON_FONTSIZE_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_QUEST_HINT_FONTSIZE_MENU_TIPS), 
+		choices = fontSizeChoices, 
+		choicesValues = fontSizeChoicesValues, 
+		getFunc = function() return self.svCurrent.qkFont[FONT_SIZE] end, 
+		setFunc = function(sizeStr)
+			self.svCurrent.qkFont[FONT_SIZE] = sizeStr
+			self:UpdateTrackerPanelAttribute("hintFont", GetFontDescriptor(self.svCurrent.qkFont))
+		end, 
+		scrollable = 15, 
+		default = CQT_SV_DEFAULT.qkFont[FONT_SIZE], 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "dropdown", 
+		name = L(SI_CQT_UI_COMMON_FONTWEIGHT_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_QUEST_HINT_FONTWEIGHT_MENU_TIPS), 
+		choices = fontWeightChoices, 
+		getFunc = function() return self.svCurrent.qkFont[FONT_WEIGHT] end, 
+		setFunc = function(weightStr)
+			self.svCurrent.qkFont[FONT_WEIGHT] = weightStr
+			self:UpdateTrackerPanelAttribute("hintFont", GetFontDescriptor(self.svCurrent.qkFont))
+		end, 
+		scrollable = 15, 
+		default = CQT_SV_DEFAULT.qkFont[FONT_WEIGHT], 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "colorpicker", 
