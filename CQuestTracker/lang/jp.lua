@@ -22,6 +22,8 @@ SafeAddString(SI_CQT_MOST_LOWER_QUEST, 							"最下位に移動", 1)
 SafeAddString(SI_CQT_QUESTTYPE_ZONE_STORY_QUEST,				"ゾーンストーリー", 1)
 SafeAddString(SI_CQT_QUESTTYPE_SIDE_QUEST,						"サイドクエスト", 1)
 SafeAddString(SI_CQT_QUEST_BACKGROUND_HEADER,					"背景:", 1)
+SafeAddString(SI_CQT_QUEST_REPEATABLE_NEVER_COMPLETED, 			"一度もクリアしたことのない再プレイ可能なクエストです。", 1)
+SafeAddString(SI_CQT_QUEST_REPEATABLE_PREVIOUSLY_COMPLETED,		"以前にクリアしたことのある再プレイ可能なクエストです。", 1)
 SafeAddString(SI_CQT_QUEST_OR_DESCRIPTION, 						"いずれかを完了:", 1)	-- 訳語の修正
 SafeAddString(SI_CQT_QUEST_OPTIONAL_STEPS_DESCRIPTION, 			"サブ目標:", 1)
 SafeAddString(SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION,		"サブ目標（いずれかを完了）:", 1)

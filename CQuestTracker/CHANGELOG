@@ -1,3 +1,8 @@
+V1.2.2: [V10202] by Calamath
+- Adjusted the layout of the quest tooltip.
+- Fixed an issue in the quest tooltip where the detailed descriptions of optional steps were not displayed correctly.
+- Updated Spanish translations.
+
 V1.2.1: [V10201] by Calamath
 - Added options to adjust the quest hint font.
 

@@ -1,7 +1,7 @@
 ------------------------------------------------
 -- CQuestTracker
--- French localization
--- Version 0, 2022-02-23
+-- Spanish localization
+-- Version 0, 2022-04-20
 ------------------------------------------------
 
 --	Localization Strings
@@ -20,8 +20,8 @@ SafeAddString(SI_CQT_PICK_OUT_QUEST, 							"Pick out the quest", 1)
 SafeAddString(SI_CQT_RULE_OUT_QUEST, 							"Rule out the quest", 1)
 SafeAddString(SI_CQT_MOST_LOWER_QUEST, 							"Most lower the quest", 1)
 
-SafeAddString(SI_CQT_QUESTTYPE_ZONE_STORY_QUEST, 				"Quête d'histoire de zone", 1)
-SafeAddString(SI_CQT_QUESTTYPE_SIDE_QUEST, 						"Quête annexe", 1)
+SafeAddString(SI_CQT_QUESTTYPE_ZONE_STORY_QUEST, 				"Misión de historia de zona", 1)
+SafeAddString(SI_CQT_QUESTTYPE_SIDE_QUEST, 						"Misión secundaria", 1)
 SafeAddString(SI_CQT_QUEST_BACKGROUND_HEADER, 					"Background:", 1)
 SafeAddString(SI_CQT_QUEST_REPEATABLE_NEVER_COMPLETED, 			"This is a repeatable quest you have never completed.", 1)
 SafeAddString(SI_CQT_QUEST_REPEATABLE_PREVIOUSLY_COMPLETED,		"This is a repeatable quest you have previously completed.", 1)

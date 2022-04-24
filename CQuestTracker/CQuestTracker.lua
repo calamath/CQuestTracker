@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.2.1", 
+	version = "1.2.2", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -183,6 +183,14 @@ function CQT_QuestCache_Singleton:GetQuestId(journalIndex)
 	return t and t[1] or 0
 end
 
+function CQT_QuestCache_Singleton:HasCompletedQuest(journalIndex)
+	local hasCompleted = false
+	for _, qId in pairs(self:GetQuestIds(journalIndex)) do
+		hasCompleted = hasCompleted or HasCompletedQuest(qId)
+	end
+	return hasCompleted
+end
+
 function CQT_QuestCache_Singleton:RebuildJournalQuestCache()
 	ZO_ClearNumericallyIndexedTable(self.journalQuestCache)
 	for i = 1, MAX_JOURNAL_QUESTS do
@@ -212,6 +220,7 @@ local CQT_QuestCacheManager = CQT_QuestCache_Singleton:New()	-- Never do this mo
 -- global API --
 local GetQuestCacheManager = function() return CQT_QuestCacheManager end
 local GetQuestId = function(journalIndex) return CQT_QuestCacheManager:GetQuestId(journalIndex) end
+local HasCompletedQuestByIndex = function(journalIndex) return CQT_QuestCacheManager:HasCompletedQuest(journalIndex) end
 
 
 -- ---------------------------------------------------------------------------------------
@@ -1361,6 +1370,16 @@ function CQT:LayoutQuestTooltip(tooltip, journalIndex)
 		local _, _, stepType, overrideText = GetJournalQuestStepInfo(journalIndex, stepIndex)
 		return (not overrideText or overrideText == "") and (stepType == QUEST_STEP_TYPE_OR  or stepType == QUEST_STEP_TYPE_AND) and GetNumVisibleQuestConditions(journalIndex, stepIndex) > 2
 	end
+	local function AddRepeatableQuestDetails(journalIndex)
+		local repeatType = GetJournalQuestRepeatType(journalIndex)
+		if repeatType ~= QUEST_REPEAT_NOT_REPEATABLE then
+			if HasCompletedQuestByIndex(journalIndex) then
+				tooltip:AddLine(L(SI_CQT_QUEST_REPEATABLE_PREVIOUSLY_COMPLETED), "ZoFontGameMedium", 0, 1, 1, TOPLEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
+			else
+				tooltip:AddLine(L(SI_CQT_QUEST_REPEATABLE_NEVER_COMPLETED), "ZoFontGameMedium", 0, 1, 0, TOPLEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
+			end
+		end
+	end
 	local function AddQuestConditions(journalIndex, stepIndex)
 		local _, stepVisibility, stepType, overrideText, conditionCount = GetJournalQuestStepInfo(journalIndex, stepIndex)
 		if overrideText and overrideText ~= "" then
@@ -1432,33 +1451,35 @@ function CQT:LayoutQuestTooltip(tooltip, journalIndex)
 		local goalCondition, _, _, _, goalBackgroundText, goalStepText = GetJournalQuestEnding(journalIndex)
 		tooltip:AddLine(L(SI_CQT_QUEST_BACKGROUND_HEADER), "ZoFontGameMedium", titleR, titleG, titleB, LEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_LEFT, true)
 		tooltip:AddLine(goalBackgroundText, "ZoFontGameMedium", ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB())
-		CQT_QuestTooltip_AddDivider(tooltip)
+		tooltip:AddLine(zo_strformat(L(SI_CQT_QUEST_OBJECTIVES_HEADER), 1), "ZoFontGameMedium", titleR, titleG, titleB, LEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_LEFT, true)
 		tooltip:AddLine(goalStepText, "ZoFontGameMedium", ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB())
 		CQT_QuestTooltip_AddDivider(tooltip)
-		tooltip:AddLine(zo_strformat(L(SI_CQT_QUEST_OBJECTIVES_HEADER), 1), "ZoFontGameMedium", titleR, titleG, titleB, LEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_LEFT, true)
 		tooltip:AddLine(goalCondition, "ZoFontGameMedium", ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB())
 	else
 		local objectivesHeader
 		tooltip:AddLine(L(SI_CQT_QUEST_BACKGROUND_HEADER), "ZoFontGameMedium", titleR, titleG, titleB, LEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_LEFT, true)
 		tooltip:AddLine(backgroundText, "ZoFontGameMedium", ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB())
-		CQT_QuestTooltip_AddDivider(tooltip)
-		tooltip:AddLine(activeStepText, "ZoFontGameMedium", ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB())
-		CQT_QuestTooltip_AddDivider(tooltip)
 		if IsOrDescription(journalIndex, QUEST_MAIN_STEP_INDEX) then
 			objectivesHeader = L(SI_CQT_QUEST_OBJECTIVES_OR_HEADER)
 		else
 			objectivesHeader = L(SI_CQT_QUEST_OBJECTIVES_HEADER)
 		end
 		tooltip:AddLine(zo_strformat(objectivesHeader, IsMultipleDescriptions(journalIndex, MAIN_STEP_INDEX) and 2 or 1), "ZoFontGameMedium", titleR, titleG, titleB, LEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_LEFT, true)
+		tooltip:AddLine(activeStepText, "ZoFontGameMedium", ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB())
+		CQT_QuestTooltip_AddDivider(tooltip)
 		AddQuestConditions(journalIndex, QUEST_MAIN_STEP_INDEX)
 	end
 	for stepIndex = QUEST_MAIN_STEP_INDEX + 1, GetJournalQuestNumSteps(journalIndex) do
-		local _, stepVisibility, stepType = GetJournalQuestStepInfo(journalIndex, stepIndex)
+		local optionalStepText, stepVisibility, stepType = GetJournalQuestStepInfo(journalIndex, stepIndex)
 		if stepType ~= QUEST_STEP_TYPE_END and stepVisibility == QUEST_STEP_VISIBILITY_OPTIONAL then
 			if IsOrDescription(journalIndex, stepIndex) then
 				tooltip:AddLine(L(SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION), "ZoFontGameMedium", titleR, titleG, titleB, LEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_LEFT, true)
 			else
 				tooltip:AddLine(L(SI_CQT_QUEST_OPTIONAL_STEPS_DESCRIPTION), "ZoFontGameMedium", titleR, titleG, titleB, LEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_LEFT, true)
+			end
+			if optionalStepText ~= "" then
+				tooltip:AddLine(optionalStepText, "ZoFontGameMedium", ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB())
+				CQT_QuestTooltip_AddDivider(tooltip)
 			end
 			AddQuestConditions(journalIndex, stepIndex)
 		end
@@ -1477,6 +1498,12 @@ function CQT:LayoutQuestTooltip(tooltip, journalIndex)
 				AddQuestConditions(journalIndex, stepIndex)
 			end
 		end
+	end
+	if repeatType ~= QUEST_REPEAT_NOT_REPEATABLE then
+	  if self.currentApiVersion >= 101034 then
+		CQT_QuestTooltip_AddDivider(tooltip)
+		AddRepeatableQuestDetails(journalIndex, repeatType)
+	  end
 	end
 end
 

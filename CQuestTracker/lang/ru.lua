@@ -23,6 +23,8 @@ SafeAddString(SI_CQT_MOST_LOWER_QUEST, 							"Вывести квест в ни
 SafeAddString(SI_CQT_QUESTTYPE_ZONE_STORY_QUEST, 				"Сюжетный квест локации", 1)
 SafeAddString(SI_CQT_QUESTTYPE_SIDE_QUEST, 						"Побочный  квест", 1)
 SafeAddString(SI_CQT_QUEST_BACKGROUND_HEADER, 					"Задачи:", 1)
+SafeAddString(SI_CQT_QUEST_REPEATABLE_NEVER_COMPLETED, 			"This is a repeatable quest you have never completed.", 1)
+SafeAddString(SI_CQT_QUEST_REPEATABLE_PREVIOUSLY_COMPLETED,		"This is a repeatable quest you have previously completed.", 1)
 
 
 SafeAddString(SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION, 		"Опциональные шаги  - выполните один из:", 1)
