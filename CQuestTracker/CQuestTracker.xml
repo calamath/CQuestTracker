@@ -117,6 +117,8 @@
 				</Label>
 			</Controls>
 		</Control>
+		<Control name="CQT_IW_InteractionTimer" virtual="true" hidden="true">
+		</Control>
 		<Button name="CQT_TitleBarButtonTemplate" inherits="ZO_ButtonBehaviorClickSound" mouseOverBlendMode="ADD" virtual="true">
 			<Dimensions x="20" y="20"/>
 			<OnMouseEnter>

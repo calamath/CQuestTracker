@@ -1,3 +1,12 @@
+V1.3.0: [V10300] by Calamath
+Key bindings support:
+- Improved functionality of the "Cycle Focused Quest" key in the standard key bindings to encourage gamepad users.
+- The cycle key could now limit the range of quests to cycle to those currently displayed in the CQuestTracker panel.
+- Holding down a modifier key and tapping the cycle key will cycle in the opposite direction. The default modifier keys are the shift key and the left trigger on the gamepad.
+- Pressing and holding the cycle key now displays the current status of the focused quest in a tooltip.
+- Added options to adjust the above settings.
+- Some code refactoring.
+
 V1.2.2: [V10202] by Calamath
 - Adjusted the layout of the quest tooltip.
 - Fixed an issue in the quest tooltip where the detailed descriptions of optional steps were not displayed correctly.

@@ -1,0 +1,11 @@
+<Bindings>
+	<Layer name="CQT_InteractionSnatcher">
+		<Category name="CQuestTracker">
+			<BlockAction name="ASSIST_NEXT_TRACKED_QUEST" />
+			<Action name="CQT_TOGGLE_TRACKED_QUEST" hideAction="true" holdAndChordInteraction="RUN_ANYWAY">
+				<Down>CQuestTracker:HandleKeybindDown(keybind)</Down>
+				<Up>CQuestTracker:HandleKeybindUp(keybind)</Up>
+			</Action>
+		</Category>
+	</Layer>
+</Bindings>

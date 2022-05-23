@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.2.2", 
+	version = "1.3.0", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -124,7 +124,13 @@ function CQT_QuestCache_Singleton:Initialize()
 		if LibDebugLogger then
 			self.LDL = LibDebugLogger(self.name)
 		else
-			self.LDL = function() end
+			self.LDL = {
+				Verbose = function() end, 
+				Debug = function() end, 
+				Info = function() end, 
+				Warn = function() end, 
+				Error = function() end, 
+			}
 		end
 		self:RebuildJournalQuestCache()
 		self:RebuildQuestIdCache()
@@ -401,6 +407,233 @@ CQT_QuestTimerManager.api.DiscardAllTimerLayouts = function(self)
 end
 -- global API --
 local GetQuestTimerManager = function() return CQT_QuestTimerManager.api end
+
+
+-- ---------------------------------------------------------------------------------------
+-- Interaction Wrapper Class
+-- ---------------------------------------------------------------------------------------
+local supportedModifierKeys = {
+	[KEY_CTRL] = function() return IsControlKeyDown() end, 
+	[KEY_ALT] = function() return IsAltKeyDown() end, 
+	[KEY_SHIFT] = function() return IsShiftKeyDown() end, 
+	[KEY_COMMAND] = function() return IsCommandKeyDown() end, 
+	[KEY_GAMEPAD_LEFT_TRIGGER] = function() return GetGamepadLeftTriggerMagnitude() > 0.2 end, 
+	[KEY_GAMEPAD_RIGHT_TRIGGER] = function() return GetGamepadRightTriggerMagnitude() > 0.2 end, 
+} 
+local CBaseInteractionWrapper = ZO_InitializingObject:Subclass()
+function CBaseInteractionWrapper:Initialize(control, actionName, data)
+	self.control = control
+	if self.control then
+		self.control:SetHidden(true)	-- disable timer
+	end
+	self.interactionType = "base"
+	self.actionName = actionName
+	self:SetKeyDownCallback(data.keyDownCallback)
+	self:SetKeyUpCallback(data.keyUpCallback)
+	self:SetPerformedCallback(data.performedCallback)
+	self:SetCanceledCallback(data.canceledCallback)
+	self:SetEnabled(data.enabled or (data.enabled == nil))
+	self.isStarted = false
+	self.isPerformed = false
+	self.startTime = nil
+	self.endTime = nil
+	self.duration = 0
+	self.targetTime = nil
+end
+function CBaseInteractionWrapper:GetValue(value, ...)
+	if type(value) == "function" then
+		return value(...)
+	else
+		return value
+	end
+end
+function CBaseInteractionWrapper:GetHoldTime()
+	if self.startTime then
+		local endTime = self.endTime or GetFrameTimeMilliseconds()
+		return endTime - self.startTime
+	else
+		return 0
+	end
+end
+function CBaseInteractionWrapper:SetKeyDownCallback(callback)
+	self.keyDownCallback = callback
+end
+function CBaseInteractionWrapper:SetKeyUpCallback(callback)
+	self.keyUpCallback = callback
+end
+function CBaseInteractionWrapper:SetPerformedCallback(callback)
+	self.performedCallback = callback
+end
+function CBaseInteractionWrapper:SetCanceledCallback(callback)
+	self.canceledCallback = callback
+end
+function CBaseInteractionWrapper:SetEnabled(enabled)
+	self.enabled = enabled
+end
+function CBaseInteractionWrapper:EnableTimer()
+	if self.control then
+		self.control:SetHidden(false)
+	end
+end
+function CBaseInteractionWrapper:DisableTimer()
+	if self.control then
+		self.control:SetHidden(true)
+	end
+end
+function CBaseInteractionWrapper:IsModifierKeyDown(keyCode)
+	return supportedModifierKeys[keyCode] and supportedModifierKeys[keyCode]() or false
+end
+function CBaseInteractionWrapper:OnKeyDown()
+-- Should be Overridden
+end
+function CBaseInteractionWrapper:OnKeyUp()
+-- Should be Overridden
+end
+function CBaseInteractionWrapper:OnUpdate()
+-- Should be Overridden
+end
+
+local CHoldInteractionWrapper = CBaseInteractionWrapper:Subclass()
+function CHoldInteractionWrapper:Initialize(control, actionName, data)
+	CBaseInteractionWrapper.Initialize(self, control, actionName, data)
+	self.interactionType = "hold"
+	self.duration = data.holdTime or 200
+	self.control:SetHandler("OnUpdate", function(control, time)
+		self:OnUpdate(control, time)
+	end)
+end
+function CHoldInteractionWrapper:OnKeyDown(actionName, ...)
+	if not self.isPerformed and not self.isStarted then
+		if self:GetValue(self.enabled) then
+			self.isStarted = true
+			self.startTime = GetFrameTimeMilliseconds()
+			self.targetTime = self.startTime + self.duration
+			self:EnableTimer()
+			if self.keyDownCallback then
+				self.keyDownCallback(self, actionName, ...)
+			end
+		end
+	end
+end
+function CHoldInteractionWrapper:OnKeyUp(actionName, ...)
+	if self.isStarted then
+		self.endTime = GetFrameTimeMilliseconds()
+		if self.isPerformed then
+			if self.keyUpCallback then
+				self.keyUpCallback(self, actionName, ...)
+			end
+		else
+			if self.canceledCallback then
+				self.canceledCallback(self)
+			end
+		end
+		self:DisableTimer()
+		self.isStarted = false
+		self.isPerformed = false
+		self.startTime = nil
+		self.endTime = nil
+		self.targetTime = nil
+	end
+end
+function CHoldInteractionWrapper:OnUpdate()
+--	d(GetFrameTimeMilliseconds())	-- debug
+	if self.targetTime and GetFrameTimeMilliseconds() > self.targetTime then
+		self.targetTime = nil
+		if not self.isPerformed then
+			self.isPerformed = true
+			if self.performedCallback then
+				self.performedCallback(self)
+			end
+		end
+	end
+end
+
+local CQT_InteractionWrapperManager_Singleton = ZO_InitializingObject:Subclass()
+function CQT_InteractionWrapperManager_Singleton:Initialize()
+	self.name = "CQT_IWManagerSingleton"
+	self.control = WINDOW_MANAGER:CreateControl("CQT_IW_UI_Root", GuiRoot, CT_CONTROL)
+	self.supportedModifierKeys = supportedModifierKeys
+	self.timers = {}
+	self.interactions = {}
+	self.timerPool = ZO_ControlPool:New("CQT_IW_InteractionTimer", self.control)
+	self.timerPool:SetCustomResetBehavior(function(control)
+		control:SetParent(self.control)
+		control:ClearAnchors()
+		control:SetHidden(true)
+		control:SetHandler("OnUpdate", nil)
+	end)
+	self.wrapperClass = {}
+	self.timerRequired = {}
+
+	if LibDebugLogger then
+		self.LDL = LibDebugLogger(self.name)
+	else
+		self.LDL = {
+			Verbose = function() end, 
+			Debug = function() end, 
+			Info = function() end, 
+			Warn = function() end, 
+			Error = function() end, 
+		}
+	end
+
+	self:RegisterWrapperClass("base", CBaseInteractionWrapper, false)
+	self:RegisterWrapperClass("hold", CHoldInteractionWrapper, true)
+end
+function CQT_InteractionWrapperManager_Singleton:RegisterWrapperClass(interactionType, class, timerRequired)
+	if not self.wrapperClass[interactionType] then
+		self.wrapperClass[interactionType] = class or CBaseInteractionWrapper
+		self.timerRequired[interactionType] = timerRequired or false
+	end
+end
+function CQT_InteractionWrapperManager_Singleton:GetSupportedModifierKeys()
+	local t = {}
+	for keyCode in pairs(self.supportedModifierKeys) do
+		table.insert(t, keyCode)
+	end
+	return t
+end
+function CQT_InteractionWrapperManager_Singleton:AcquireTimer()
+	local timer, key = self.timerPool:AcquireObject()
+	timer.key = key
+	self.timers[key] = timer
+	return timer
+end
+function CQT_InteractionWrapperManager_Singleton:RemoveTimer(key)
+	if self.timers[key] then
+		self.timerPool:ReleaseObject(self.timers[key])
+		self.timers[key] = nil
+	end
+end
+function CQT_InteractionWrapperManager_Singleton:RegisterInteraction(actionName, data)
+	if not actionName then return end
+	if type(data) ~= "table" then return end
+	local interactionType = data.type
+	if not self.wrapperClass[interactionType] then return end
+
+	local timerControl = self.timerRequired[interactionType] and self:AcquireTimer()
+	local interaction = self.wrapperClass[interactionType]:New(timerControl, actionName, data)
+	if not self.interactions[actionName] then
+		self.interactions[actionName] = {}
+	end
+	table.insert(self.interactions[actionName], interaction)
+	return interaction
+end
+function CQT_InteractionWrapperManager_Singleton:HandleKeybindDown(actionName, ...)
+	if self.interactions[actionName] then
+		for _, interaction in ipairs(self.interactions[actionName]) do
+			interaction:OnKeyDown(actionName, ...)
+		end
+	end
+end
+function CQT_InteractionWrapperManager_Singleton:HandleKeybindUp(actionName, ...)
+	if self.interactions[actionName] then
+		for _, interaction in ipairs(self.interactions[actionName]) do
+			interaction:OnKeyUp(actionName, ...)
+		end
+	end
+end
+local CQT_InteractionWrapperManager = CQT_InteractionWrapperManager_Singleton:New()		-- Never do this more than once!
 
 
 -- ---------------------------------------------------------------------------------------
@@ -908,6 +1141,11 @@ local CQT_SV_DEFAULT = {
 		show = true, 
 		anchor = LEFT, 
 	}, 
+	improveKeybinds = true, 
+	cycleAllQuests = false, 
+	cycleBackwardsMod1 = KEY_SHIFT, 
+	cycleBackwardsMod2 = KEY_GAMEPAD_LEFT_TRIGGER, 
+	holdToShowQuestTooltip = true, 
 	autoTrackToAddedQuest = true, 
 	autoTrackToProgressedQuest = false, 
 }
@@ -924,6 +1162,7 @@ function CQT:Initialize()
 	self.forceAssistControl = {}
 
 	self.questList = {}
+	self.circularJournalIndexList = {}
 	self.activityLog = ZO_SavedVars:NewCharacterIdSettings("CQuestTrackerLog", 1, nil, { quest = {}, }, GetWorldName())
 
 	-- CQuestTracker Config
@@ -986,6 +1225,20 @@ function CQT:Initialize()
 	})
 
 	self:RegisterEvents()
+
+	-- keybinds and interactions
+	self:InitializeKeybinds()
+	self:RegisterInteractions()
+	self.trackerPanel:GetFragment():RegisterCallback("StateChange", function(oldState, newState)
+		if newState == SCENE_FRAGMENT_SHOWING then
+			if self.svCurrent.improveKeybinds then
+				PushActionLayerByName("CQT_InteractionSnatcher")
+			end
+		elseif newState == SCENE_FRAGMENT_HIDING then
+			RemoveActionLayerByName("CQT_InteractionSnatcher")
+		end
+	end)
+
 	self.isInitialized = true
 	self.LDL:Debug("Initialized: ", self.lang)
 end
@@ -1014,6 +1267,11 @@ function CQT:ValidateConfigDataSV(sv)
 	if sv.panelAttributes.hintColor == nil						then sv.panelAttributes.hintColor						= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.hintColor)				end
 	if sv.panelAttributes.titlebarColor == nil					then sv.panelAttributes.titlebarColor					= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.titlebarColor)			end
 	if sv.qkFont == nil											then sv.qkFont											= ZO_ShallowTableCopy(sv.qcFont)											end		-- Derived from qcFont and added
+	if sv.improveKeybinds == nil								then sv.improveKeybinds									= CQT_SV_DEFAULT.improveKeybinds											end
+	if sv.cycleAllQuests == nil									then sv.cycleAllQuests									= CQT_SV_DEFAULT.cycleAllQuests												end
+	if sv.cycleBackwardsMod1 == nil								then sv.cycleBackwardsMod1								= CQT_SV_DEFAULT.cycleBackwardsMod1											end
+	if sv.cycleBackwardsMod2 == nil								then sv.cycleBackwardsMod2								= CQT_SV_DEFAULT.cycleBackwardsMod2											end
+	if sv.holdToShowQuestTooltip == nil							then sv.holdToShowQuestTooltip							= CQT_SV_DEFAULT.holdToShowQuestTooltip										end
 	if sv.autoTrackToAddedQuest == nil							then sv.autoTrackToAddedQuest							= CQT_SV_DEFAULT.autoTrackToAddedQuest										end
 	if sv.autoTrackToProgressedQuest == nil						then sv.autoTrackToProgressedQuest						= CQT_SV_DEFAULT.autoTrackToProgressedQuest									end
 end
@@ -1105,6 +1363,95 @@ function CQT:RegisterEvents()
 	end)
 end
 
+function CQT:RegisterInteractions()
+	self.interactions = self.interactions or {}
+	self.interactions["CQT_TOGGLE_TRACKED_QUEST"] = CQT_InteractionWrapperManager:RegisterInteraction("CQT_TOGGLE_TRACKED_QUEST", {
+		type = "hold", 
+		enabled = function()
+			return self.trackerPanel:GetFragment():IsShowing()
+		end, 
+		holdTime = 300, 
+		keyUpCallback = function()
+			if self:IsQuestTooltipShown() then
+				self:HideQuestTooltip()
+			end
+		end, 
+		performedCallback = function()
+			if self.svCurrent.holdToShowQuestTooltip then
+				local focusedQuestIndex = QUEST_JOURNAL_MANAGER:GetFocusedQuestIndex()
+				if self:IsQuestTooltipShown() then
+					self:HideQuestTooltip()
+				end
+				if focusedQuestIndex then
+					InitializeTooltip(CQT_QuestTooltip, GuiRoot, CENTER, 0, 0, CENTER)
+					self:LayoutQuestTooltip(CQT_QuestTooltip, focusedQuestIndex)
+					self.isQuestTooltipShown = true
+				end
+			end
+		end, 
+		canceledCallback = function(interaction)
+			local isModifierKeyDown = interaction:IsModifierKeyDown(self.svCurrent.cycleBackwardsMod1) or interaction:IsModifierKeyDown(self.svCurrent.cycleBackwardsMod2)
+			if self.svCurrent.cycleAllQuests then
+				if isModifierKeyDown then
+					self:AssistPrevious()
+				else
+					FOCUSED_QUEST_TRACKER:AssistNext()
+				end
+			else
+				if isModifierKeyDown then
+					self:ToggleFocusedQuestToPreviousInTheDisplayed()
+				else
+					self:ToggleFocusedQuestToNextInTheDisplayed()
+				end
+			end
+		end, 
+	})
+end
+
+function CQT:CopyKeybinds(sourceActionName, destActionName)
+	local layer, category, action = GetActionIndicesFromName(destActionName)
+	if layer and category and action then
+		if IsProtectedFunction("UnbindAllKeysFromAction") then
+			CallSecureProtected("UnbindAllKeysFromAction", layer, category, action)
+		else
+			UnbindAllKeysFromAction(layer, category, action)
+		end
+	else
+		return
+	end
+	layer, category, action = GetActionIndicesFromName(sourceActionName)
+	if layer and category and action then
+		for i = 1, GetMaxBindingsPerAction() do
+			local key, mod1, mod2, mod3, mod4 = GetActionBindingInfo(layer, category, action, i)
+			CreateDefaultActionBind(destActionName, key, mod1, mod2, mod3, mod4)
+		end
+	else
+		return
+	end
+	if self.keybinds then
+		self.keybinds[sourceActionName] = destActionName
+	end
+	return true
+end
+
+function CQT:InitializeKeybinds()
+	self.keybinds = self.keybinds or {}
+	self:CopyKeybinds("ASSIST_NEXT_TRACKED_QUEST", "CQT_TOGGLE_TRACKED_QUEST")
+	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_KEYBINDING_CLEARED, function(event, layerIndex, categoryIndex, actionIndex, bindingIndex)
+		local actionName = GetActionInfo(layerIndex, categoryIndex, actionIndex)
+		if self.keybinds[actionName] then
+			self:CopyKeybinds(actionName, self.keybinds[actionName])	-- Rebuild due to setting changes
+		end
+	end)
+	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_KEYBINDING_SET, function(event, layerIndex, categoryIndex, actionIndex, bindingIndex)
+		local actionName = GetActionInfo(layerIndex, categoryIndex, actionIndex)
+		if self.keybinds[actionName] then
+			self:CopyKeybinds(actionName, self.keybinds[actionName])	-- Rebuild due to setting changes
+		end
+	end)
+end
+
+
 function CQT:InitializeFocusedQuestControlTable()
 	ZO_ClearTable(self.forceAssistControl)
 	if FOCUSED_QUEST_TRACKER and FOCUSED_QUEST_TRACKER.ForceAssist then
@@ -1127,6 +1474,47 @@ function CQT:UpdateFocusedQuestByEvent(event, journalIndex)
 			FOCUSED_QUEST_TRACKER:UpdateAssistedVisibility()
 		end
 	end
+end
+
+function CQT:ToggleFocusedQuestToNextInTheDisplayed()
+-- Toggle focused quest to the next quest in the displayed.
+	if #self.questList == 0 then return end
+	local nextJournalIndex
+	local focusedQuestIndex = QUEST_JOURNAL_MANAGER:GetFocusedQuestIndex()
+	if self.circularJournalIndexList[focusedQuestIndex] then
+		nextJournalIndex = self.circularJournalIndexList[focusedQuestIndex].nextJournalIndex
+	else
+		nextJournalIndex = self.questList[1].journalIndex
+	end
+	FOCUSED_QUEST_TRACKER:ForceAssist(nextJournalIndex)
+end
+
+function CQT:ToggleFocusedQuestToPreviousInTheDisplayed()
+	if #self.questList == 0 then return end
+	local previousJournalIndex
+	local focusedQuestIndex = QUEST_JOURNAL_MANAGER:GetFocusedQuestIndex()
+	if self.circularJournalIndexList[focusedQuestIndex] then
+		previousJournalIndex = self.circularJournalIndexList[focusedQuestIndex].prevJournalIndex
+	else
+		previousJournalIndex = self.questList[1].journalIndex
+	end
+	FOCUSED_QUEST_TRACKER:ForceAssist(previousJournalIndex)
+end
+
+function CQT:AssistPrevious()
+-- Toggle focused quest to the previous in the QJM sorted quest list. oppositte of the FOCUSED_QUEST_TRACKER:AssistNext().
+	local questList = QUEST_JOURNAL_MANAGER:GetQuestList()
+	local numQuestList = #questList
+	if numQuestList == 0 then return end
+	local focusedQuestIndex = QUEST_JOURNAL_MANAGER:GetFocusedQuestIndex()
+	local previousQuest
+	for i, quest in ipairs(questList) do
+		if quest.questIndex == focusedQuestIndex then
+			previousQuest = (i == 1) and numQuestList or (i - 1)
+			break
+		end
+	end
+	FOCUSED_QUEST_TRACKER:ForceAssist(questList[previousQuest].questIndex)
 end
 
 function CQT:RefreshQuestList()
@@ -1180,6 +1568,24 @@ function CQT:RefreshQuestList()
 		if numEntry >= self.svCurrent.maxNumDisplay then break end
 		table.insert(self.questList, v)
 		numEntry = numEntry + 1
+	end
+
+	ZO_ClearTable(self.circularJournalIndexList)
+	local numQuestListEntry = #self.questList
+	if numQuestListEntry > 0 then
+		local prevIndex = self.questList[numQuestListEntry].journalIndex
+		for k, v in ipairs(self.questList) do
+			local t = {
+				questListIndex = k, 
+				prevJournalIndex = prevIndex, 
+			}
+			self.circularJournalIndexList[v.journalIndex] = t
+			if self.circularJournalIndexList[prevIndex] then
+				self.circularJournalIndexList[prevIndex].nextJournalIndex = v.journalIndex
+			end
+			prevIndex = v.journalIndex
+		end
+		self.circularJournalIndexList[prevIndex].nextJournalIndex = self.questList[1].journalIndex
 	end
 	CALLBACK_MANAGER:FireCallbacks("CQT-QuestListUpdated", self.questList)
 end
@@ -1715,7 +2121,7 @@ function CQT:CreateSettingPanel()
 		registerForRefresh = true, 
 		registerForDefaults = true, 
 	}
-	self.settingPanel = LAM:RegisterAddonPanel("CQuestTracker", panelData)
+	self.settingPanel = LAM:RegisterAddonPanel("CQuestTracker_Options", panelData)
 
 	local optionsData = {}
 	optionsData[#optionsData + 1] = {
@@ -2240,6 +2646,89 @@ function CQT:CreateSettingPanel()
 	optionsData[#optionsData + 1] = {
 		type = "description", 
 		title = "", 
+		text = L(SI_CQT_UI_KEYBINDS_INTERACTION_HEADER1_TEXT), 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_KEYBINDS_IMPROVEMENT_MENU_NAME), 
+		getFunc = function() return self.svCurrent.improveKeybinds end, 
+		setFunc = function(newValue)
+			self.svCurrent.improveKeybinds = newValue
+			if newValue then
+				PushActionLayerByName("CQT_InteractionSnatcher")
+			else
+				RemoveActionLayerByName("CQT_InteractionSnatcher")
+			end
+		end, 
+		tooltip = L(SI_CQT_UI_KEYBINDS_IMPROVEMENT_MENU_TIPS), 
+		width = "full", 
+		default = CQT_SV_DEFAULT.improveKeybinds, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_CYCLE_DISPLAYED_QUESTS_MENU_NAME), 
+		getFunc = function() return not self.svCurrent.cycleAllQuests end, 
+		setFunc = function(newValue)
+			self.svCurrent.cycleAllQuests = not newValue
+		end, 
+		tooltip = L(SI_CQT_UI_CYCLE_DISPLAYED_QUESTS_MENU_TIPS), 
+		width = "full", 
+		disabled = function() return not self.svCurrent.improveKeybinds end, 
+		default = not CQT_SV_DEFAULT.cycleAllQuests, 
+	}
+
+	local modifierKeyChoices = {}
+	local modifierKeyChoicesValues = CQT_InteractionWrapperManager:GetSupportedModifierKeys()
+	for k, v in pairs(modifierKeyChoicesValues) do
+		table.insert(modifierKeyChoices, GetKeyName(v) .. " " .. ZO_Keybindings_GenerateIconKeyMarkup(v, 125))
+	end
+	table.insert(modifierKeyChoices, GetKeyName(KEY_INVALID))
+	table.insert(modifierKeyChoicesValues, KEY_INVALID)
+	optionsData[#optionsData + 1] = {
+		type = "dropdown", 
+		name = L(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY1_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY_MENU_TIPS), 
+		choices = modifierKeyChoices, 
+		choicesValues = modifierKeyChoicesValues, 
+		sort = "value-up", 
+		getFunc = function() return self.svCurrent.cycleBackwardsMod1 end, 
+		setFunc = function(keyCode)
+			self.svCurrent.cycleBackwardsMod1 = keyCode
+		end, 
+		scrollable = 15, 
+		disabled = function() return not self.svCurrent.improveKeybinds end, 
+		default = CQT_SV_DEFAULT.cycleBackwardsMod1, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "dropdown", 
+		name = L(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY2_MENU_NAME), 
+		tooltip = L(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY_MENU_TIPS), 
+		choices = modifierKeyChoices, 
+		choicesValues = modifierKeyChoicesValues, 
+		sort = "value-up", 
+		getFunc = function() return self.svCurrent.cycleBackwardsMod2 end, 
+		setFunc = function(keyCode)
+			self.svCurrent.cycleBackwardsMod2 = keyCode
+		end, 
+		scrollable = 15, 
+		disabled = function() return not self.svCurrent.improveKeybinds end, 
+		default = CQT_SV_DEFAULT.cycleBackwardsMod2, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_HOLD_TO_DISPLAY_QUEST_TOOLTIP_NAME), 
+		getFunc = function() return self.svCurrent.holdToShowQuestTooltip end, 
+		setFunc = function(newValue)
+			self.svCurrent.holdToShowQuestTooltip = newValue
+		end, 
+		tooltip = L(SI_CQT_UI_HOLD_TO_DISPLAY_QUEST_TOOLTIP_TIPS), 
+		width = "full", 
+		disabled = function() return not self.svCurrent.improveKeybinds end, 
+		default = CQT_SV_DEFAULT.holdToShowQuestTooltip, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "description", 
+		title = "", 
 		text = L(SI_CQT_UI_FOCUSED_QUEST_CONTROL_HEADER1_TEXT), 
 	}
 	optionsData[#optionsData + 1] = {
@@ -2267,7 +2756,7 @@ function CQT:CreateSettingPanel()
 		default = CQT_SV_DEFAULT.autoTrackToProgressedQuest, 
 	}
 
-	LAM:RegisterOptionControls("CQuestTracker", optionsData)
+	LAM:RegisterOptionControls("CQuestTracker_Options", optionsData)
 
 	local function OnLAMPanelControlsCreated(panel)
 		if panel ~= self.settingPanel then return end
@@ -2302,6 +2791,16 @@ EVENT_MANAGER:RegisterForEvent(CQT.name, EVENT_ADD_ON_LOADED, function(event, ad
 	CQT:Initialize()
 end)
 
+
+-- ---------------------------------------------------------------------------------------
+-- Bindings
+-- ---------------------------------------------------------------------------------------
+CQuestTracker.HandleKeybindDown = function(self, actionName, ...)
+	return CQT_InteractionWrapperManager:HandleKeybindDown(actionName, ...)
+end
+CQuestTracker.HandleKeybindUp = function(self, actionName, ...)
+	return CQT_InteractionWrapperManager:HandleKeybindUp(actionName, ...)
+end
 
 -- ---------------------------------------------------------------------------------------
 -- XML Handlers
