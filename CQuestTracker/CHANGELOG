@@ -1,3 +1,7 @@
+V1.3.1: [V10301] by Calamath
+- The quest tooltip now displays additional information about the past completion status of repeatable quests.
+- Updated API version to 101034 (ESO 8.0.x : High Isle)
+
 V1.3.0: [V10300] by Calamath
 Key bindings support:
 - Improved functionality of the "Cycle Focused Quest" key in the standard key bindings to encourage gamepad users.

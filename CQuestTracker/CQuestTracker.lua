@@ -28,7 +28,7 @@ if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return en
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.3.0", 
+	version = "1.3.1", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -1906,10 +1906,8 @@ function CQT:LayoutQuestTooltip(tooltip, journalIndex)
 		end
 	end
 	if repeatType ~= QUEST_REPEAT_NOT_REPEATABLE then
-	  if self.currentApiVersion >= 101034 then
 		CQT_QuestTooltip_AddDivider(tooltip)
 		AddRepeatableQuestDetails(journalIndex, repeatType)
-	  end
 	end
 end
 
