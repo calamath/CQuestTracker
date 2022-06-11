@@ -10,6 +10,7 @@
 -- This addon works that uses the library LibAddonMenu-2.0 by sirinsidiator, Seerah, released under the Artistic License 2.0
 -- This addon works that uses the library LibCustomMenu by votan.
 -- This addon works that uses the library LibMediaProvider-1.0 by Seerah, released under the LGPL-2.1 license.
+-- This addon works that uses the library LibCInteraction by Calamath, released under the Artistic License 2.0
 -- You will need to obtain the above libraries separately.
 --
 
@@ -21,14 +22,15 @@ local LMP = LibMediaProvider
 if not LMP then d("[CQuestTracker] Error : 'LibMediaProvider' not found.") return end
 local LAM = LibAddonMenu2
 if not LAM then d("[CQuestTracker] Error : 'LibAddonMenu' not found.") return end
-
+local LibCInteraction = LibCInteraction
+if not LibCInteraction then d("[CQuestTracker] Error : 'LibCInteraction' not found.") return end
 
 -- ---------------------------------------------------------------------------------------
 -- Name Space
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.3.2", 
+	version = "1.4.0", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -407,233 +409,6 @@ CQT_QuestTimerManager.api.DiscardAllTimerLayouts = function(self)
 end
 -- global API --
 local GetQuestTimerManager = function() return CQT_QuestTimerManager.api end
-
-
--- ---------------------------------------------------------------------------------------
--- Interaction Wrapper Class
--- ---------------------------------------------------------------------------------------
-local supportedModifierKeys = {
-	[KEY_CTRL] = function() return IsControlKeyDown() end, 
-	[KEY_ALT] = function() return IsAltKeyDown() end, 
-	[KEY_SHIFT] = function() return IsShiftKeyDown() end, 
-	[KEY_COMMAND] = function() return IsCommandKeyDown() end, 
-	[KEY_GAMEPAD_LEFT_TRIGGER] = function() return GetGamepadLeftTriggerMagnitude() > 0.2 end, 
-	[KEY_GAMEPAD_RIGHT_TRIGGER] = function() return GetGamepadRightTriggerMagnitude() > 0.2 end, 
-} 
-local CBaseInteractionWrapper = ZO_InitializingObject:Subclass()
-function CBaseInteractionWrapper:Initialize(control, actionName, data)
-	self.control = control
-	if self.control then
-		self.control:SetHidden(true)	-- disable timer
-	end
-	self.interactionType = "base"
-	self.actionName = actionName
-	self:SetKeyDownCallback(data.keyDownCallback)
-	self:SetKeyUpCallback(data.keyUpCallback)
-	self:SetPerformedCallback(data.performedCallback)
-	self:SetCanceledCallback(data.canceledCallback)
-	self:SetEnabled(data.enabled or (data.enabled == nil))
-	self.isStarted = false
-	self.isPerformed = false
-	self.startTime = nil
-	self.endTime = nil
-	self.duration = 0
-	self.targetTime = nil
-end
-function CBaseInteractionWrapper:GetValue(value, ...)
-	if type(value) == "function" then
-		return value(...)
-	else
-		return value
-	end
-end
-function CBaseInteractionWrapper:GetHoldTime()
-	if self.startTime then
-		local endTime = self.endTime or GetFrameTimeMilliseconds()
-		return endTime - self.startTime
-	else
-		return 0
-	end
-end
-function CBaseInteractionWrapper:SetKeyDownCallback(callback)
-	self.keyDownCallback = callback
-end
-function CBaseInteractionWrapper:SetKeyUpCallback(callback)
-	self.keyUpCallback = callback
-end
-function CBaseInteractionWrapper:SetPerformedCallback(callback)
-	self.performedCallback = callback
-end
-function CBaseInteractionWrapper:SetCanceledCallback(callback)
-	self.canceledCallback = callback
-end
-function CBaseInteractionWrapper:SetEnabled(enabled)
-	self.enabled = enabled
-end
-function CBaseInteractionWrapper:EnableTimer()
-	if self.control then
-		self.control:SetHidden(false)
-	end
-end
-function CBaseInteractionWrapper:DisableTimer()
-	if self.control then
-		self.control:SetHidden(true)
-	end
-end
-function CBaseInteractionWrapper:IsModifierKeyDown(keyCode)
-	return supportedModifierKeys[keyCode] and supportedModifierKeys[keyCode]() or false
-end
-function CBaseInteractionWrapper:OnKeyDown()
--- Should be Overridden
-end
-function CBaseInteractionWrapper:OnKeyUp()
--- Should be Overridden
-end
-function CBaseInteractionWrapper:OnUpdate()
--- Should be Overridden
-end
-
-local CHoldInteractionWrapper = CBaseInteractionWrapper:Subclass()
-function CHoldInteractionWrapper:Initialize(control, actionName, data)
-	CBaseInteractionWrapper.Initialize(self, control, actionName, data)
-	self.interactionType = "hold"
-	self.duration = data.holdTime or 200
-	self.control:SetHandler("OnUpdate", function(control, time)
-		self:OnUpdate(control, time)
-	end)
-end
-function CHoldInteractionWrapper:OnKeyDown(actionName, ...)
-	if not self.isPerformed and not self.isStarted then
-		if self:GetValue(self.enabled) then
-			self.isStarted = true
-			self.startTime = GetFrameTimeMilliseconds()
-			self.targetTime = self.startTime + self.duration
-			self:EnableTimer()
-			if self.keyDownCallback then
-				self.keyDownCallback(self, actionName, ...)
-			end
-		end
-	end
-end
-function CHoldInteractionWrapper:OnKeyUp(actionName, ...)
-	if self.isStarted then
-		self.endTime = GetFrameTimeMilliseconds()
-		if self.isPerformed then
-			if self.keyUpCallback then
-				self.keyUpCallback(self, actionName, ...)
-			end
-		else
-			if self.canceledCallback then
-				self.canceledCallback(self)
-			end
-		end
-		self:DisableTimer()
-		self.isStarted = false
-		self.isPerformed = false
-		self.startTime = nil
-		self.endTime = nil
-		self.targetTime = nil
-	end
-end
-function CHoldInteractionWrapper:OnUpdate()
---	d(GetFrameTimeMilliseconds())	-- debug
-	if self.targetTime and GetFrameTimeMilliseconds() > self.targetTime then
-		self.targetTime = nil
-		if not self.isPerformed then
-			self.isPerformed = true
-			if self.performedCallback then
-				self.performedCallback(self)
-			end
-		end
-	end
-end
-
-local CQT_InteractionWrapperManager_Singleton = ZO_InitializingObject:Subclass()
-function CQT_InteractionWrapperManager_Singleton:Initialize()
-	self.name = "CQT_IWManagerSingleton"
-	self.control = WINDOW_MANAGER:CreateControl("CQT_IW_UI_Root", GuiRoot, CT_CONTROL)
-	self.supportedModifierKeys = supportedModifierKeys
-	self.timers = {}
-	self.interactions = {}
-	self.timerPool = ZO_ControlPool:New("CQT_IW_InteractionTimer", self.control)
-	self.timerPool:SetCustomResetBehavior(function(control)
-		control:SetParent(self.control)
-		control:ClearAnchors()
-		control:SetHidden(true)
-		control:SetHandler("OnUpdate", nil)
-	end)
-	self.wrapperClass = {}
-	self.timerRequired = {}
-
-	if LibDebugLogger then
-		self.LDL = LibDebugLogger(self.name)
-	else
-		self.LDL = {
-			Verbose = function() end, 
-			Debug = function() end, 
-			Info = function() end, 
-			Warn = function() end, 
-			Error = function() end, 
-		}
-	end
-
-	self:RegisterWrapperClass("base", CBaseInteractionWrapper, false)
-	self:RegisterWrapperClass("hold", CHoldInteractionWrapper, true)
-end
-function CQT_InteractionWrapperManager_Singleton:RegisterWrapperClass(interactionType, class, timerRequired)
-	if not self.wrapperClass[interactionType] then
-		self.wrapperClass[interactionType] = class or CBaseInteractionWrapper
-		self.timerRequired[interactionType] = timerRequired or false
-	end
-end
-function CQT_InteractionWrapperManager_Singleton:GetSupportedModifierKeys()
-	local t = {}
-	for keyCode in pairs(self.supportedModifierKeys) do
-		table.insert(t, keyCode)
-	end
-	return t
-end
-function CQT_InteractionWrapperManager_Singleton:AcquireTimer()
-	local timer, key = self.timerPool:AcquireObject()
-	timer.key = key
-	self.timers[key] = timer
-	return timer
-end
-function CQT_InteractionWrapperManager_Singleton:RemoveTimer(key)
-	if self.timers[key] then
-		self.timerPool:ReleaseObject(self.timers[key])
-		self.timers[key] = nil
-	end
-end
-function CQT_InteractionWrapperManager_Singleton:RegisterInteraction(actionName, data)
-	if not actionName then return end
-	if type(data) ~= "table" then return end
-	local interactionType = data.type
-	if not self.wrapperClass[interactionType] then return end
-
-	local timerControl = self.timerRequired[interactionType] and self:AcquireTimer()
-	local interaction = self.wrapperClass[interactionType]:New(timerControl, actionName, data)
-	if not self.interactions[actionName] then
-		self.interactions[actionName] = {}
-	end
-	table.insert(self.interactions[actionName], interaction)
-	return interaction
-end
-function CQT_InteractionWrapperManager_Singleton:HandleKeybindDown(actionName, ...)
-	if self.interactions[actionName] then
-		for _, interaction in ipairs(self.interactions[actionName]) do
-			interaction:OnKeyDown(actionName, ...)
-		end
-	end
-end
-function CQT_InteractionWrapperManager_Singleton:HandleKeybindUp(actionName, ...)
-	if self.interactions[actionName] then
-		for _, interaction in ipairs(self.interactions[actionName]) do
-			interaction:OnKeyUp(actionName, ...)
-		end
-	end
-end
-local CQT_InteractionWrapperManager = CQT_InteractionWrapperManager_Singleton:New()		-- Never do this more than once!
 
 
 -- ---------------------------------------------------------------------------------------
@@ -1365,13 +1140,13 @@ end
 
 function CQT:RegisterInteractions()
 	self.interactions = self.interactions or {}
-	self.interactions["CQT_TOGGLE_TRACKED_QUEST"] = CQT_InteractionWrapperManager:RegisterInteraction("CQT_TOGGLE_TRACKED_QUEST", {
+	self.interactions["CQT_TOGGLE_TRACKED_QUEST"] = LibCInteraction:RegisterInteraction("CQT_TOGGLE_TRACKED_QUEST", {
 		type = "hold", 
 		enabled = function()
 			return self.trackerPanel:GetFragment():IsShowing()
 		end, 
 		holdTime = 300, 
-		keyUpCallback = function()
+		endedCallback = function()
 			if self:IsQuestTooltipShown() then
 				self:HideQuestTooltip()
 			end
@@ -2676,7 +2451,7 @@ function CQT:CreateSettingPanel()
 	}
 
 	local modifierKeyChoices = {}
-	local modifierKeyChoicesValues = CQT_InteractionWrapperManager:GetSupportedModifierKeys()
+	local modifierKeyChoicesValues = LibCInteraction:GetSupportedModifierKeys()
 	for k, v in pairs(modifierKeyChoicesValues) do
 		table.insert(modifierKeyChoices, GetKeyName(v) .. " " .. ZO_Keybindings_GenerateIconKeyMarkup(v, 125))
 	end
@@ -2789,16 +2564,6 @@ EVENT_MANAGER:RegisterForEvent(CQT.name, EVENT_ADD_ON_LOADED, function(event, ad
 	CQT:Initialize()
 end)
 
-
--- ---------------------------------------------------------------------------------------
--- Bindings
--- ---------------------------------------------------------------------------------------
-CQuestTracker.HandleKeybindDown = function(self, actionName, ...)
-	return CQT_InteractionWrapperManager:HandleKeybindDown(actionName, ...)
-end
-CQuestTracker.HandleKeybindUp = function(self, actionName, ...)
-	return CQT_InteractionWrapperManager:HandleKeybindUp(actionName, ...)
-end
 
 -- ---------------------------------------------------------------------------------------
 -- XML Handlers

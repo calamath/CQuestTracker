@@ -1,0 +1,15 @@
+
+V0.9.0: [V900] by Calamath
+- Refactoring to promote code commonality.
+- Added multipleInput option to enable only first-arrival input from multiple actions.
+- Updated API version to 101034 (ESO 8.0.x : High Isle)
+
+[COMPATIBILITY-BREAKING CHANGE]
+- Changed keyUpCallback and keyDownCallback specifications to unconditionally pass through handled input events.
+- Added new startedCallback to be executed at the start of an interaction.
+- Added new endedCallback to be executed at the end of an interaction.
+
+V0.8.0: [V800] by Calamath
+- initial release
+
+

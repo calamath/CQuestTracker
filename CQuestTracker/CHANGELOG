@@ -1,3 +1,7 @@
+V1.4.0: [V10400] by Calamath
+- Bundled LibCInteraction library.
+- LibCInteraction add-on library is now used for "Cycle Focused Quest" key interaction.
+
 V1.3.2: [V10302] by Calamath
 - Updated French translations. Special thanks to: lexo1000
 

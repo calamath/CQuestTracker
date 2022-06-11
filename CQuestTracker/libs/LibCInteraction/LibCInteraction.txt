@@ -1,13 +1,12 @@
-## Title: Calamath's Quest Tracker
-## Description: Traditional MMORPG style multiple quest tracker
-## Version: 1.4.0
-## AddOnVersion: 10400
+## Title: LibCInteraction
+## Description: A library to provide versatile interaction events to bound actions
+## Version: 0.9.0
+## AddOnVersion: 900
 ## Author: Calamath
 ## License: Artistic License 2.0
+## IsLibrary: true
 ## APIVersion: 101034
-## DependsOn: LibAddonMenu-2.0>=34 LibCustomMenu>=713 LibMediaProvider-1.0>=20 LibCInteraction>=900
 ## OptionalDependsOn: LibDebugLogger>=220
-## SavedVariables: CQuestTrackerSV CQuestTrackerLog
 
 ; This Add-on is not created by, affiliated with or sponsored by ZeniMax 
 ; Media Inc. or its affiliates. The Elder Scrolls® and related logos are 
@@ -15,8 +14,5 @@
 ; States and/or other countries. All rights reserved.
 ; You can read the full terms at https://account.elderscrollsonline.com/add-on-terms
 
-lang/strings.lua
-lang/$(language).lua
-CQuestTracker.xml
-CQuestTracker.lua
-Bindings.xml
+CInteractionWrapper.xml
+CInteractionWrapper.lua
