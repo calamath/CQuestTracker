@@ -1,3 +1,8 @@
+V1.4.1: [V10401] by Calamath
+- Simplified Chinese language mode support.
+- Updated bundled LibCInteraction version to 0.9.2 (AddOnVersion: 902).
+- Updated API version to 101036 (ESO 8.2.x : Firesong)
+
 V1.4.0: [V10400] by Calamath
 - Bundled LibCInteraction library.
 - LibCInteraction add-on library is now used for "Cycle Focused Quest" key interaction.

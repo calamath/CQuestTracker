@@ -14,7 +14,7 @@ if LibCInteraction then return end
 -- ---------------------------------------------------------------------------------------
 local CInteractionWrapper = {
 	name = "LibCInteraction", 
-	version = "0.9.0", 
+	version = "0.9.2", 
 	author = "Calamath", 
 	authority = {2973583419,210970542}, 
 	external = {}, 

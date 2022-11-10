@@ -30,7 +30,7 @@ if not LibCInteraction then d("[CQuestTracker] Error : 'LibCInteraction' not fou
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.4.0", 
+	version = "1.4.1", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 

@@ -1,3 +1,8 @@
+V0.9.2: [V902] by Calamath
+- Updated API version to 101036 (ESO 8.2.x : Firesong)
+
+V0.9.1: [V901] by Calamath
+- Updated API version to 101035 (ESO 8.1.x : Lost Depths)
 
 V0.9.0: [V900] by Calamath
 - Refactoring to promote code commonality.
