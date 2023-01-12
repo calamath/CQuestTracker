@@ -7,13 +7,14 @@ local strings = {
 	SI_CQT_QUEST_REPEATABLE_TEXT =					L(SI_QUEST_JOURNAL_REPEATABLE_TEXT).."|t16:16:EsoUI/Art/Journal/journal_Quest_Repeat.dds|t", 
 
 --	Localization Strings
+	SI_BINDING_NAME_CQT_TOGGLE_TRACKER_PANEL_VISIBILITY =		"Toggle Tracker Panel", 
+
 	SI_CQT_WELCOME_TEXT1 =							"Welcome to CQuestTracker add-on !", 
 	SI_CQT_WELCOME_TEXT2 =							" This quest tracker will automatically update the displayed list and show recent ongoing quests with higher priority.", 
 	SI_CQT_WELCOME_TEXT3 =							" Initially, only the tracked quest is displayed. If you want to display additional quests immediately, do the following.", 
 	SI_CQT_WELCOME_TEXT4 =							" Opening the quest list menu from the upper left corner of the tracker window and pick out your favorite quest by left-clicking on the quest name. You can also pin a specific quest to show all the time, or ignore to hide.", 
 	SI_CQT_TITLEBAR_QUEST_LIST_BUTTON_TIPS =		"Quest List", 
 	SI_CQT_TITLEBAR_OPEN_SETTINGS_BUTTON_TIPS =		"Open settings", 
-	
 	SI_CQT_QUESTLIST_MENU_HEADER =					"Quest List: (<<1>>/<<2>>)", 
 	SI_CQT_ENABLE_PINNING_QUEST =					"Pin the quest", 
 	SI_CQT_DISABLE_PINNING_QUEST =					"Unpin the quest", 

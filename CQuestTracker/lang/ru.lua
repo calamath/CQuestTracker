@@ -5,6 +5,8 @@
 ------------------------------------------------
 
 --	Localization Strings
+SafeAddString(SI_BINDING_NAME_CQT_TOGGLE_TRACKER_PANEL_VISIBILITY, 		 "Toggle Tracker Panel", 1)
+
 SafeAddString(SI_CQT_WELCOME_TEXT1, 							" Добро пожаловать в аддон CQuestTracker!", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT2, 							" Этот аддон автоматически обновляет лист отображаемых квестов и показывает последние из них с большим приоритетом.", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT3, 							" Изначально, отображается только отслеживаемый квест. Если вы хотите отображать дополнительные квесты сразу, сделайте следующее: ", 1)

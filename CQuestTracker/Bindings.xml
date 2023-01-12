@@ -8,4 +8,11 @@
 			</Action>
 		</Category>
 	</Layer>
+	<Layer name="SI_KEYBINDINGS_LAYER_GENERAL">
+		<Category name="CQuestTracker">
+			<Action name="CQT_TOGGLE_TRACKER_PANEL_VISIBILITY">
+				<Down>CQT_ToggleTrackerPanelVisibility_OnKeybindDown()</Down>
+			</Action>
+		</Category>
+	</Layer>
 </Bindings>

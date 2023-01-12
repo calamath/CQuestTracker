@@ -5,6 +5,8 @@
 ------------------------------------------------
 
 --	Localization Strings
+SafeAddString(SI_BINDING_NAME_CQT_TOGGLE_TRACKER_PANEL_VISIBILITY, 		 "Toggle Tracker Panel", 1)
+
 SafeAddString(SI_CQT_WELCOME_TEXT1, 							"Willkommen beim CQuestTracker AddOn !", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT2, 							" Dieser Quest Tracker wird die angezeigte Liste automatisch aktualisieren und aktuell laufende Quests mit höherer Priorität anzeigen.", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT3, 							" Zum Start wird nur die verfogte Quest angezeigt. Wenn du weitere Questst sofort anzeigen möchtest, musst du folgendes tun:", 1)

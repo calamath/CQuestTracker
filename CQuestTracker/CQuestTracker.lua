@@ -30,7 +30,7 @@ if not LibCInteraction then d("[CQuestTracker] Error : 'LibCInteraction' not fou
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.4.1", 
+	version = "1.4.2", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -1875,8 +1875,22 @@ function CQT:UpdateTrackerPanelVisibility()
 		trackerPanelFragment:SetHiddenForReason("DisabledInCombat", (not self.svCurrent.panelBehavior.showInCombat) and IsUnitInCombat("player"), 0, 0)
 		trackerPanelFragment:SetHiddenForReason("DisabledInBattlegrounds", (not self.svCurrent.panelBehavior.showInBattleground) and IsActiveWorldBattleground(), 0, 0)
 		trackerPanelFragment:SetHiddenForReason("DisabledWhileKeybindingsSettings", KEYBINDINGS_FRAGMENT:IsShowing(), 0, 0)
-		trackerPanelFragment:SetHiddenForReason("DisabledBySetting", self.svCurrent.hideCQuestTracker, 0, 0)
+		trackerPanelFragment:SetHiddenForReason("DisabledBySetting", self:GetTrackerPanelHideSetting(), 0, 0)
 	end
+end
+
+function CQT:GetTrackerPanelHideSetting()
+	return self.svCurrent.hideCQuestTracker
+end
+
+function CQT:SetTrackerPanelHideSetting(newValue)
+	self.svCurrent.hideCQuestTracker = newValue
+	self:UpdateSettingPanel()
+	self:UpdateTrackerPanelVisibility()
+end
+
+function CQT:ToggleTrackerPanelHideSetting()
+	self:SetTrackerPanelHideSetting(not self:GetTrackerPanelHideSetting())
 end
 
 
@@ -1931,14 +1945,14 @@ function CQT:CreateSettingPanel()
 	optionsData[#optionsData + 1] = {
 		type = "checkbox",
 		name = L(SI_CQT_UI_HIDE_QUEST_TRACKER_OP_NAME), 
-		getFunc = function() return self.svCurrent.hideCQuestTracker end, 
+		getFunc = function() return self:GetTrackerPanelHideSetting() end, 
 		setFunc = function(newValue)
-			self.svCurrent.hideCQuestTracker = newValue
-			self:UpdateTrackerPanelVisibility()
+			self:SetTrackerPanelHideSetting(newValue)
 		end, 
 --		tooltip = L(SI_CQT_UI_HIDE_QUEST_TRACKER_OP_TIPS), 
 		width = "full", 
 		default = CQT_SV_DEFAULT.hideCQuestTracker, 
+		reference = "CQT_UI_OptionsPanel_HideQuestTrackerCheckBox", 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "checkbox",
@@ -1950,7 +1964,9 @@ function CQT:CreateSettingPanel()
 		end, 
 		tooltip = L(SI_CQT_UI_SHOW_IN_COMBAT_OP_TIPS), 
 		width = "full", 
+		disabled = function() return self:GetTrackerPanelHideSetting() end, 
 		default = CQT_SV_DEFAULT.panelBehavior.showInCombat, 
+		reference = "CQT_UI_OptionsPanel_ShowInCombatCheckBox", 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "checkbox",
@@ -1966,7 +1982,9 @@ function CQT:CreateSettingPanel()
 		end, 
 		tooltip = L(SI_CQT_UI_SHOW_IN_GAMEMENU_SCENE_OP_TIPS), 
 		width = "full", 
+		disabled = function() return self:GetTrackerPanelHideSetting() end, 
 		default = CQT_SV_DEFAULT.panelBehavior.showInGameMenuScene, 
+		reference = "CQT_UI_OptionsPanel_ShowInGameMenuSceneCheckBox", 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "checkbox",
@@ -1978,7 +1996,9 @@ function CQT:CreateSettingPanel()
 		end, 
 		tooltip = L(SI_CQT_UI_HIDE_IN_BATTLEGROUNDS_OP_TIPS), 
 		width = "full", 
+		disabled = function() return self:GetTrackerPanelHideSetting() end, 
 		default = not CQT_SV_DEFAULT.panelBehavior.showInBattleground, 
+		reference = "CQT_UI_OptionsPanel_HideInBattlegroundCheckBox", 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "header", 
@@ -2553,6 +2573,23 @@ function CQT:OpenSettingPanel()
 	end
 end
 
+function CQT:UpdateSettingPanel()
+	if self.isSettingPanelShown then
+		if CQT_UI_OptionsPanel_HideQuestTrackerCheckBox then
+			CQT_UI_OptionsPanel_HideQuestTrackerCheckBox:UpdateValue()		-- Note : When called with no arguments, getFunc will be called, and setFunc will NOT be called.
+		end
+		if CQT_UI_OptionsPanel_ShowInCombatCheckBox and CQT_UI_OptionsPanel_ShowInCombatCheckBox.UpdateDisabled then
+			CQT_UI_OptionsPanel_ShowInCombatCheckBox:UpdateDisabled()
+		end
+		if CQT_UI_OptionsPanel_ShowInGameMenuSceneCheckBox and CQT_UI_OptionsPanel_ShowInGameMenuSceneCheckBox.UpdateDisabled then
+			CQT_UI_OptionsPanel_ShowInGameMenuSceneCheckBox:UpdateDisabled()
+		end
+		if CQT_UI_OptionsPanel_HideInBattlegroundCheckBox and CQT_UI_OptionsPanel_HideInBattlegroundCheckBox.UpdateDisabled then
+			CQT_UI_OptionsPanel_HideInBattlegroundCheckBox:UpdateDisabled()
+		end
+	end
+end
+
 function CQT:ShowWelcomeMessageDialog()
 	ZO_Dialogs_ShowDialog(self.name .. "_WELCOME_MESSAGE")
 end
@@ -2676,7 +2713,9 @@ function CQT_SettingButton_OnClicked(control, button)
 		CQT:OpenSettingPanel()
 	end
 end
-
+function CQT_ToggleTrackerPanelVisibility_OnKeybindDown()
+	CQT:ToggleTrackerPanelHideSetting()
+end
 
 -- ---------------------------------------------------------------------------------------
 -- Chat commands

@@ -5,6 +5,8 @@
 ------------------------------------------------
 
 --	Localization Strings
+SafeAddString(SI_BINDING_NAME_CQT_TOGGLE_TRACKER_PANEL_VISIBILITY, 		 "Toggle Tracker Panel", 1)
+
 SafeAddString(SI_CQT_WELCOME_TEXT1, 							"Fonctionnement du module de suivi des quêtes", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT2, 							" La fenêtre de suivi des quêtes se met automatiquement à jour avec une priorité plus élevée pour les quêtes récentes en cours.", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT3, 							" Par défaut, seule la quête suivie est affichée. Pour afficher des quêtes supplémentaires, il faut", 1)

@@ -4,6 +4,8 @@
 ------------------------------------------------
 
 --	Localization Strings
+SafeAddString(SI_BINDING_NAME_CQT_TOGGLE_TRACKER_PANEL_VISIBILITY, 		 "トラッカーパネルの表示/非表示", 1)
+
 SafeAddString(SI_CQT_WELCOME_TEXT1, 							"CQuestTrackerアドオンへようこそ！", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT2, 							"　このクエストトラッカーは、表示されているリストを自動的に更新し、最近進行中のクエストをより高い優先度で表示します。", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT3, 							"　初期状態では、フォーカス中のクエストのみが表示されます。すぐに追加のクエストを表示したい場合は、以下のようにしてください。", 1)

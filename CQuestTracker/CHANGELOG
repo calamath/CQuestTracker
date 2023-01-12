@@ -1,3 +1,6 @@
+V1.4.2: [V10402] by Calamath
+- Added keybinding to toggle visibility for the quest tracker panel.
+
 V1.4.1: [V10401] by Calamath
 - Simplified Chinese language mode support.
 - Updated bundled LibCInteraction version to 0.9.2 (AddOnVersion: 902).
