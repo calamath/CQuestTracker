@@ -30,10 +30,11 @@ if not LibCInteraction then d("[CQuestTracker] Error : 'LibCInteraction' not fou
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.4.2", 
+	version = "1.5.0", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
+	activityLogVersion = 2, 
 	authority = {2973583419,210970542}, 
 	isInitialized = false, 
 	external = {}
@@ -118,8 +119,9 @@ local CQT_QuestCache_Singleton = ZO_InitializingObject:Subclass()
 
 function CQT_QuestCache_Singleton:Initialize()
 	self.name = "CQT-QuestCacheSingleton"
+	self.questIdBreadcrumbs = {}
 	self.journalQuestCache = {}
-	self.questIdCache = {}
+	self.journalQuestIdCache = {}
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_ADD_ON_LOADED, function(_, addonName)
 		if addonName ~= CQT.name then return end
 		EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_ADD_ON_LOADED)
@@ -134,41 +136,44 @@ function CQT_QuestCache_Singleton:Initialize()
 				Error = function() end, 
 			}
 		end
+		self:RebuildQuestIdBreadcrumbs()
 		self:RebuildJournalQuestCache()
-		self:RebuildQuestIdCache()
+		self:RebuildJournalQuestIdCache()
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_QUEST_ADDED, function(_, journalIndex, questName)
 		self:UpdateJournalQuestCache(journalIndex, questName)
+		self:UpdateJournalQuestIdCache(journalIndex, questName)
 --		self.LDL:Debug("EVENT_QUEST_ADDED :")
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_QUEST_LIST_UPDATED, function()
 		self:RebuildJournalQuestCache()
+		self:RebuildJournalQuestIdCache()
 --		self.LDL:Debug("EVENT_QUEST_LIST_UPDATED :")
 	end)
 end
 
-function CQT_QuestCache_Singleton:RebuildQuestIdCache()
+function CQT_QuestCache_Singleton:RebuildQuestIdBreadcrumbs()
 	local name, zId
-	ZO_ClearTable(self.questIdCache)
+	ZO_ClearTable(self.questIdBreadcrumbs)
 	for i = 1, UPPER_LIMIT_OF_ASSUMED_QUEST_ID do
 		name = GetQuestName(i)
 		if name ~= "" then
-			zId = GetParentZoneId(GetQuestZoneId(i))
-			if not self.questIdCache[zId] then
-				self.questIdCache[zId] = {}
+			zId = GetQuestZoneId(i)
+			if not self.questIdBreadcrumbs[zId] then
+				self.questIdBreadcrumbs[zId] = {}
 			end
-			if not self.questIdCache[zId][name] then
-				self.questIdCache[zId][name] = { i }
+			if not self.questIdBreadcrumbs[zId][name] then
+				self.questIdBreadcrumbs[zId][name] = { i }
 			else
-				table.insert(self.questIdCache[zId][name], i)
+				table.insert(self.questIdBreadcrumbs[zId][name], i)
 			end
 		end
 	end
 end
 
-function CQT_QuestCache_Singleton:GetNumQuestIdCache()
+function CQT_QuestCache_Singleton:GetNumQuestIdBreadcrumbs()
 	local num = 0
-	for z, v in pairs(self.questIdCache) do
+	for z, v in pairs(self.questIdBreadcrumbs) do
 		for n, ids in pairs(v) do
 			if #ids > 1 then
 --				self.LDL:Debug("zoneId=%d, num=%d, name=%s", z, #ids, n)
@@ -182,13 +187,17 @@ end
 
 function CQT_QuestCache_Singleton:GetQuestIds(journalIndex)
 	local name, zId = self:GetJournalQuestCache(journalIndex)
-	local pzId = GetParentZoneId(zId)
-	return self.questIdCache[pzId] and self.questIdCache[pzId][name] or { 0 }
+	return self.questIdBreadcrumbs[zId] and self.questIdBreadcrumbs[zId][name] or { 0 }
+end
+
+function CQT_QuestCache_Singleton:GetQuestMainId(journalIndex)
+-- This method returns the smallest ID number as a representative number when there are multiple with the same quest name.
+	local t = self:GetQuestIds(journalIndex)
+	return t and t[1] or 0
 end
 
 function CQT_QuestCache_Singleton:GetQuestId(journalIndex)
-	local t = self:GetQuestIds(journalIndex)
-	return t and t[1] or 0
+	return self:GetJournalQuestIdCache(journalIndex)
 end
 
 function CQT_QuestCache_Singleton:HasCompletedQuest(journalIndex)
@@ -203,30 +212,55 @@ function CQT_QuestCache_Singleton:RebuildJournalQuestCache()
 	ZO_ClearNumericallyIndexedTable(self.journalQuestCache)
 	for i = 1, MAX_JOURNAL_QUESTS do
 		local name = GetJournalQuestName(i)
-		local _, _, z = GetJournalQuestLocationInfo(i)
+		local zoneName, _, zoneIndex = GetJournalQuestLocationInfo(i)
 		table.insert(self.journalQuestCache, {
 			index = i, 
 			name = name, 
-			zoneId = GetZoneId(z), 
+			zoneId = zoneName ~= "" and GetZoneId(GetJournalQuestStartingZone(i)) or 0, 
+			zoneIndex = zoneIndex, 
 		})
 	end
 end
 
 function CQT_QuestCache_Singleton:UpdateJournalQuestCache(journalIndex, name)
-	local _, _, z = GetJournalQuestLocationInfo(journalIndex)
+	local zoneName, _, zoneIndex = GetJournalQuestLocationInfo(journalIndex)
 	self.journalQuestCache[journalIndex].index = journalIndex
 	self.journalQuestCache[journalIndex].name = name
-	self.journalQuestCache[journalIndex].zoneId = GetZoneId(z)
+	self.journalQuestCache[journalIndex].zoneId = zoneName ~= "" and GetZoneId(GetJournalQuestStartingZone(journalIndex)) or 0
+	self.journalQuestCache[journalIndex].zoneIndex = zoneIndex
 end
 
 function CQT_QuestCache_Singleton:GetJournalQuestCache(journalIndex)
 	return self.journalQuestCache[journalIndex].name, self.journalQuestCache[journalIndex].zoneId
 end
 
+function CQT_QuestCache_Singleton:RebuildJournalQuestIdCache()
+	ZO_ClearNumericallyIndexedTable(self.journalQuestIdCache)
+	for i = 1, MAX_JOURNAL_QUESTS do
+		self:UpdateJournalQuestIdCache(i)
+	end
+end
+
+function CQT_QuestCache_Singleton:UpdateJournalQuestIdCache(journalIndex)
+	local questId = 0
+	for _, qId in pairs(self:GetQuestIds(journalIndex)) do
+		if HasQuest(qId) then
+			questId = qId
+			break
+		end
+	end
+	self.journalQuestIdCache[journalIndex] = questId
+end
+
+function CQT_QuestCache_Singleton:GetJournalQuestIdCache(journalIndex)
+	return self.journalQuestIdCache[journalIndex] or 0
+end
+
 local CQT_QuestCacheManager = CQT_QuestCache_Singleton:New()	-- Never do this more than once!
 
 -- global API --
 local GetQuestCacheManager = function() return CQT_QuestCacheManager end
+local GetQuestMainId = function(journalIndex) return CQT_QuestCacheManager:GetQuestMainId(journalIndex) end
 local GetQuestId = function(journalIndex) return CQT_QuestCacheManager:GetQuestId(journalIndex) end
 local HasCompletedQuestByIndex = function(journalIndex) return CQT_QuestCacheManager:HasCompletedQuest(journalIndex) end
 
@@ -611,6 +645,10 @@ function CQT_TrackerPanel:ClearAllTreeNodeOpenStatus()
 	ZO_ClearTable(self.trackerTree.treeNodeOpenStatus)
 end
 
+function CQT_TrackerPanel:GetTreeNodeOpenStatus(questId)
+	return self.trackerTree.treeNodeOpenStatus[questId]
+end
+
 function CQT_TrackerPanel:SetTreeNodeOpenStatus(questId, userRequestedOpen)
 	self.trackerTree.treeNodeOpenStatus[questId] = userRequestedOpen
 end
@@ -732,7 +770,7 @@ end
 
 function CQT_TrackerPanel:RefreshTree()
 	local function ShouldOpenQuestHeader(questInfo)
-		local userRequestedOpen = self.trackerTree.treeNodeOpenStatus[questInfo.questId]
+		local userRequestedOpen = self:GetTreeNodeOpenStatus(questInfo.questId)
 		if userRequestedOpen == nil then
 			if self:GetAttribute("compactMode") then
 				local tracked = select(7, GetJournalQuestInfo(questInfo.journalIndex))
@@ -1072,6 +1110,7 @@ function CQT:RegisterEvents()
 					self.LDL:Debug("detected api version up")
 				end
 			else	-- ----------------------------------------- after reloadui
+				self:ValidateActivityLogFormat()
 				self:RefreshQuestList()
 			end
 		else
@@ -1122,7 +1161,8 @@ function CQT:RegisterEvents()
 		self:RefreshQuestList()
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_QUEST_LIST_UPDATED, function(event)
-		self:ValidateActivityLog()
+		self:ValidateActivityLogFormat()
+		self:CheckUnrecordedQuest()
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_QUEST_OPTIONAL_STEP_ADVANCED, function(event, text)
 		self:RefreshQuestList()
@@ -1494,6 +1534,15 @@ function CQT:DeleteTimeStamp(questId)
 	end
 end
 
+function CQT:CopyTimeStamp(srcQuestId, destQuestId)
+	if self.activityLog.quest[srcQuestId] then
+		self.trackerPanel:SetTreeNodeOpenStatus(destQuestId, self.trackerPanel:GetTreeNodeOpenStatus(srcQuestId))	-- copy tree node status
+		self.activityLog.quest[destQuestId] = {}
+		ZO_ShallowTableCopy(self.activityLog.quest[srcQuestId], self.activityLog.quest[destQuestId])
+	end
+end
+
+
 function CQT:GetTimeStampByIndex(journalIndex)
 	return self.activityLog[GetQuestId(journalIndex)]
 end
@@ -1501,12 +1550,12 @@ function CQT:GetTimeStamp(questId)
 	return self.activityLog.quest[questId]
 end
 
-function CQT:ValidateActivityLog()
+function CQT:CheckUnrecordedQuest()
 	for i = 1, MAX_JOURNAL_QUESTS do
 		if IsValidQuestIndex(i) then
 			local questId = GetQuestId(i)
 			if not self:IsValidTimeStamp(questId) then
-				-- If the player had accepted an unrecorded quest in the activity log, 
+				-- If the player had accepted an unrecorded quest in the activity log.
 				if select(7, GetJournalQuestInfo(i)) then
 					self:UpdateTimeStamp(questId, nil, i)
 				else
@@ -1514,6 +1563,64 @@ function CQT:ValidateActivityLog()
 				end
 			end
 		end
+	end
+end
+
+function CQT:ValidateActivityLogFormat()
+-- validate and convert activity log format if needed.
+	if self.activityLog.format == self.activityLogVersion then return end
+
+	-- check to see if the save data is new.
+	if self.activityLog.format == nil then
+		if next(self.activityLog.quest) then
+			self.LDL:Debug("Detected: quest activity log entry")
+			self.activityLog.format = 1		-- at least one entry found in the activity log means previous format version 1.
+		else
+			self.LDL:Debug("Detected: new save data")
+			self.activityLog.format = self.activityLogVersion
+		end
+	end
+
+	-- convert format version to 2 if needed.
+	if self.activityLog.format == nil or self.activityLog.format < 2 then
+		self.LDL:Debug("Detected: quest activity log format v1")
+		if self.activityLog.quest[0] then
+			self.LDL:Debug("Detected: quest activity log id 0")
+			-- fixed the questId zero issue
+			local invalidQuests = {
+				[5342] = true, -- Planemeld Obverse
+				[5431] = true, -- Pledge: White-Gold Tower
+				[5136] = true, -- Summary Execution
+				[5382] = true, -- Pledge: Imperial City Prison
+			}
+			local offset = 0
+			for qId in pairs(invalidQuests) do
+				if HasQuest(qId) then
+					self:CopyTimeStamp(0, qId)
+					-- Added an offset to the timestamp if you have more than one eligible quest.
+					self.activityLog.quest[qId][2] = self.activityLog.quest[qId][2] + offset
+					self.LDL:Debug("Copied: quest activity log ID 0 -> ID %s", tostring(qId))
+					offset = offset + 1
+				end
+			end
+			self:DeleteTimeStamp(0)
+			self.LDL:Debug("Deleted: quest activity log ID 0")
+		end
+		for i = 1, MAX_JOURNAL_QUESTS do
+			if IsValidQuestIndex(i) then
+				local qId = GetQuestId(i)
+				local mainId = GetQuestMainId(i)
+				if qId ~= 0 and mainId ~= 0 and qId ~= mainId then
+					if self.activityLog.quest[mainId] then
+						self:CopyTimeStamp(mainId, qId)
+						self.LDL:Debug("Copied: quest activity log ID %s -> ID %s", tostring(mainId), tostring(qId))
+						self:DeleteTimeStamp(mainId)
+						self.LDL:Debug("Deleted: quest activity log ID %s", tostring(mainId))
+					end
+				end
+			end
+		end
+		self.activityLog.format = 2
 	end
 end
 
