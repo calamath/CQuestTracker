@@ -1504,9 +1504,6 @@ function CQT:UpdateTimeStamp(questId, arg1, arg2)
 	self.activityLog.quest[questId][2] = arg2 or GetGameTimeMilliseconds()
 end
 
-function CQT:SetPinnedStatusTimeStampByIndex(journalIndex, arg3)
-	return self:SetPinnedStatusTimeStamp(GetQuestId(journalIndex), arg3)
-end
 function CQT:SetPinnedStatusTimeStamp(questId, arg3)
 	self.trackerPanel:SetTreeNodeOpenStatus(questId, nil)	-- clear previous status
 	if self.activityLog.quest[questId] then
