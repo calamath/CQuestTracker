@@ -30,7 +30,7 @@ if not LibCInteraction then d("[CQuestTracker] Error : 'LibCInteraction' not fou
 -- ---------------------------------------------------------------------------------------
 local CQT = {
 	name = "CQuestTracker", 
-	version = "1.5.0", 
+	version = "1.5.1", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -1438,16 +1438,19 @@ function CQT:EnablePinningQuestByIndex(journalIndex)
 	return self:EnablePinningQuest(GetQuestId(journalIndex))
 end
 function CQT:EnablePinningQuest(questId)
-	CQT:SetPinnedStatusTimeStamp(questId)
-	CQT:RefreshQuestList()
+	if self:IsUnrecordedQuest(questId) then
+		self:UpdateTimeStamp(questId)
+	end
+	self:SetPinnedStatusTimeStamp(questId)
+	self:RefreshQuestList()
 end
 
 function CQT:DisablePinningQuestByIndex(journalIndex)
 	return self:DisablePinningQuest(GetQuestId(journalIndex))
 end
 function CQT:DisablePinningQuest(questId)
-	CQT:ResetPinnedStatusTimeStamp(questId)
-	CQT:RefreshQuestList()
+	self:ResetPinnedStatusTimeStamp(questId)
+	self:RefreshQuestList()
 end
 
 function CQT:IsPinnedQuestByIndex(journalIndex)
@@ -1461,6 +1464,9 @@ function CQT:EnableIgnoringQuestByIndex(journalIndex)
 	return self:EnableIgnoringQuest(GetQuestId(journalIndex))
 end
 function CQT:EnableIgnoringQuest(questId)
+	if self:IsUnrecordedQuest(questId) then
+		self:UpdateTimeStamp(questId, 0 - GetTimeStamp(), 0 - GetGameTimeMilliseconds())
+	end
 	self:SetPinnedStatusTimeStamp(questId, 0 - GetTimeStamp())
 	self:RefreshQuestList()
 end
