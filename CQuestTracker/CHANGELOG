@@ -1,3 +1,11 @@
+V2.0.0: [V20000] by Calamath
+- Refactored the add-on framework based on our common template classes, to reduce future maintenance costs.
+- Revamped the code base to subdivide the file structure.
+- Updated bundled LibCInteraction version to 1.0.0 (AddOnVersion: 10000).
+- Since the 'Automatic Quest Tracking' setting was added to the vanilla UI in Update 38, the same setting items in the add-on now work together. 
+- Updated API version to 101038 (ESO 9.0.x : Necrom)
+
+
 V1.5.1: [V10501] by Calamath
 - Fixed an issue where the quest you accepted while the CQuestTracker addon was not running, and had never been yet shown in the tracker panel, would not display as intended when pinning from the quest list menu. Special thanks to: FetchKFF
 

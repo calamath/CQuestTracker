@@ -1,3 +1,9 @@
+V1.0.0: [V10000] by Calamath
+- Refactored the add-on framework based on our common template classes, to reduce future maintenance costs.
+- Revamped the code base to provide services from the initialization phase before EVENT_ADD_ON_LOADED.
+- Updated API version to 101038 (ESO 9.0.x : Necrom)
+
+
 V0.9.2: [V902] by Calamath
 - Updated API version to 101036 (ESO 8.2.x : Firesong)
 

@@ -1,5 +1,5 @@
 --
--- CInteractionWrapper [CIW] : (LibCInteraction)
+-- CInteractionWrapperManager [CIWM] : (LibCInteraction)
 --
 -- Copyright (c) 2022 Calamath
 --
@@ -7,31 +7,250 @@
 -- https://opensource.org/licenses/Artistic-2.0
 --
 
-if LibCInteraction then return end
+-- ---------------------------------------------------------------------------------------
+-- CT_SimpleAddonFramework: Simple Add-on Framework Template Class              rel.1.0.10
+-- ---------------------------------------------------------------------------------------
+local CT_SimpleAddonFramework = ZO_Object:Subclass()
+function CT_SimpleAddonFramework:New(...)
+	local newObject = setmetatable({}, self)
+	newObject:Initialize(...)
+	newObject:OnInitialized(...)
+	return newObject
+end
+function CT_SimpleAddonFramework:Initialize(name, attributes)
+	if type(name) ~= "string" or name == "" then return end
+	self._name = name
+	self._isInitialized = false
+	if type(attributes) == "table" then
+		for k, v in pairs(attributes) do
+			if self[k] == nil then
+				self[k] = v
+			end
+		end
+	end
+	self.authority = self.authority or {}
+	self._class = {}
+	self._shared = nil
+	self._external = {
+		name = self.name or self._name, 
+		version = self.version, 
+		author = self.author, 
+		RegisterClassObject = function(_, ...) self:RegisterClassObject(...) end, 
+	}
+	assert(not _G[name], name .. " is already loaded.")
+	_G[name] = self._external
+	self:ConfigDebug()
+	EVENT_MANAGER:RegisterForEvent(self._name, EVENT_ADD_ON_LOADED, function(event, addonName)
+		if addonName ~= self._name then return end
+		EVENT_MANAGER:UnregisterForEvent(self._name, EVENT_ADD_ON_LOADED)
+		self:OnAddOnLoaded(event, addonName)
+		self._isInitialized = true
+	end)
+end
+function CT_SimpleAddonFramework:ConfigDebug(arg)
+	local debugMode = false
+	local key = HashString(GetDisplayName())
+	if LibDebugLogger then
+		for _, v in pairs(arg or self.authority or {}) do
+			if key == v then debugMode = true end
+		end
+	end
+	if debugMode then
+		self._logger = self._logger or LibDebugLogger(self._name)
+		self.LDL = self._logger
+	else
+		self.LDL = {
+			Verbose = function() end, 
+			Debug = function() end, 
+			Info = function() end, 
+			Warn = function() end, 
+			Error = function() end, 
+		}
+	end
+end
+function CT_SimpleAddonFramework:RegisterClassObject(className, classObject)
+	if className and classObject and not self._class[className] then
+		self._class[className] = classObject
+		return true
+	else
+		return false
+	end
+end
+function CT_SimpleAddonFramework:HasAvailableClass(className)
+	if className then
+		return self._class[className] ~= nil
+	end
+end
+function CT_SimpleAddonFramework:CreateClassObject(className, ...)
+	if className and self._class[className] then
+		return self._class[className]:New(...)
+	end
+end
+function CT_SimpleAddonFramework:OnInitialized(name, attributes)
+--  Available when overridden in an inherited class
+end
+function CT_SimpleAddonFramework:OnAddOnLoaded(event, addonName)
+--  Should be Overridden
+end
+
 
 -- ---------------------------------------------------------------------------------------
--- Name Space
+-- CInteractionWrapperManager (LibCInteraction)
 -- ---------------------------------------------------------------------------------------
-local CInteractionWrapper = {
-	name = "LibCInteraction", 
-	version = "0.9.2", 
-	author = "Calamath", 
-	authority = {2973583419,210970542}, 
-	external = {}, 
-	supportedModifierKeys = {
-		[KEY_CTRL] = function() return IsControlKeyDown() end, 
-		[KEY_ALT] = function() return IsAltKeyDown() end, 
-		[KEY_SHIFT] = function() return IsShiftKeyDown() end, 
-		[KEY_COMMAND] = function() return IsCommandKeyDown() end, 
-		[KEY_GAMEPAD_LEFT_TRIGGER] = function() return GetGamepadLeftTriggerMagnitude() > 0.2 end, 
-		[KEY_GAMEPAD_RIGHT_TRIGGER] = function() return GetGamepadRightTriggerMagnitude() > 0.2 end, 
-	}, 
+local IsModifierKeyDown = {
+	[KEY_CTRL] = function() return IsControlKeyDown() end, 
+	[KEY_ALT] = function() return IsAltKeyDown() end, 
+	[KEY_SHIFT] = function() return IsShiftKeyDown() end, 
+	[KEY_COMMAND] = function() return IsCommandKeyDown() end, 
+	[KEY_GAMEPAD_LEFT_TRIGGER] = function() return GetGamepadLeftTriggerMagnitude() > 0.2 end, 
+	[KEY_GAMEPAD_RIGHT_TRIGGER] = function() return GetGamepadRightTriggerMagnitude() > 0.2 end, 
 }
-local CIW = CInteractionWrapper
-LibCInteraction = CIW.external
-LibCInteraction.name = CIW.name
-LibCInteraction.version = CIW.version
-LibCInteraction.author = CIW.author
+local CInteractionWrapperManager = CT_SimpleAddonFramework:Subclass()
+function CInteractionWrapperManager:OnInitialized()
+	self.timerLender = WINDOW_MANAGER:CreateControl("CIWM_UI_TimerLender", GuiRoot, CT_CONTROL)
+	self.timers = {}
+	self.interactions = {}	-- Numerically indexed table of interaction wrapper class objects registered by action name.　(self.interactions["Action Name"] = { [1] = interaction1, [2] = interactino2, ... })
+	self.timerPool = ZO_ControlPool:New("CIWM_InteractionTimer", self.timerLender)
+	self.timerPool:SetCustomResetBehavior(function(control)
+		control:SetParent(self.timerLender)
+		control:ClearAnchors()
+		control:SetHidden(true)
+		control:SetHandler("OnUpdate", nil)
+	end)
+	self.timerRequired = {}
+
+	self.supportedModifierKeys = {}
+	for keyCode in pairs(IsModifierKeyDown) do
+		self.supportedModifierKeys[keyCode] = true
+	end
+
+	self:InitializeAPI()
+end
+
+function CInteractionWrapperManager:RegisterInteractionWrapperClass(interactionType, class, timerRequired)
+	local result = CT_SimpleAddonFramework.RegisterClassObject(self, interactionType, class)
+	if result then
+		self.timerRequired[interactionType] = timerRequired or false
+	end
+end
+
+function CInteractionWrapperManager:GetSupportedModifierKeys()
+	local t = {}
+	for keyCode in pairs(self.supportedModifierKeys) do
+		table.insert(t, keyCode)
+	end
+	return t
+end
+
+function CInteractionWrapperManager:IsSupportedModifierKey(keyCode)
+	return self.supportedModifierKeys[keyCode] ~= nil
+end
+
+function CInteractionWrapperManager:AcquireTimer()
+	local timer, key = self.timerPool:AcquireObject()
+	timer.key = key
+	self.timers[key] = timer
+	return timer
+end
+
+function CInteractionWrapperManager:RemoveTimer(key)
+	if self.timers[key] then
+		self.timerPool:ReleaseObject(self.timers[key])
+		self.timers[key] = nil
+	end
+end
+
+function CInteractionWrapperManager:RegisterInteraction(actionNameOrNames, data)
+	if type(actionNameOrNames) == "table" then
+		return self:RegisterInteractionForMultipleActions(actionNameOrNames, data)
+	end
+	local actionName = type(actionNameOrNames) == "string" and actionNameOrNames
+	local interactionType = type(data) == "table" and data.type
+	if actionName and interactionType and self:HasAvailableClass(interactionType) then
+		local timerControl = self.timerRequired[interactionType] and self:AcquireTimer()
+		local interaction = self:CreateClassObject(interactionType, timerControl, actionName, data)
+		if not self.interactions[actionName] then
+			self.interactions[actionName] = {}
+		end
+		table.insert(self.interactions[actionName], interaction)
+		return interaction
+	end
+end
+
+function CInteractionWrapperManager:RegisterInteractionForMultipleActions(actionNameTable, data)
+	local interactionType = type(data) == "table" and data.type
+	if type(actionNameTable) == "table" and interactionType and self:HasAvailableClass(interactionType) then
+		local timerControl = self.timerRequired[interactionType] and self:AcquireTimer()
+		local interaction = self:CreateClassObject(interactionType, timerControl, actionNameTable, data)
+		for _, actionName in ipairs(actionNameTable) do
+			if not self.interactions[actionName] then
+				self.interactions[actionName] = {}
+			end
+			table.insert(self.interactions[actionName], interaction)
+		end
+		return interaction
+	end
+end
+
+function CInteractionWrapperManager:HandleKeybindDown(actionName, ...)
+	if self.interactions[actionName] then
+		for _, interaction in ipairs(self.interactions[actionName]) do
+			interaction:OnKeyDown(actionName, ...)
+		end
+	end
+end
+
+function CInteractionWrapperManager:HandleKeybindUp(actionName, ...)
+	if self.interactions[actionName] then
+		for _, interaction in ipairs(self.interactions[actionName]) do
+			interaction:OnKeyUp(actionName, ...)
+		end
+	end
+end
+
+function CInteractionWrapperManager:InitializeAPI()
+	-- Removing unnecessary APIs
+	self._external.RegisterClassObject = nil
+
+--
+-- ---- LibCInteraction API Reference
+--
+-- * LibCInteraction:GetSupportedModifierKeys()
+-- ** _Returns:_ *table* _keyCodeList_
+	self._external.GetSupportedModifierKeys = function()
+		return self:GetSupportedModifierKeys()
+	end
+
+-- * LibCInteraction:IsSupportedModifierKey(*[KeyCode|#KeyCode]* _keyCode_)
+-- ** _Returns:_ *bool* _isSupported_
+	self._external.IsSupportedModifierKey = function(_, keyCode)
+		return self:IsSupportedModifierKey(keyCode)
+	end
+
+-- * LibCInteraction:RegisterInteraction([*string* or *table*] _actionNameOrNames_, *table* _interactionDataTable_)
+-- ** _Returns:_ *object:nilable* _interactionWrapperObject_
+	self._external.RegisterInteraction = function(_, actionNameOrNames, data)
+		return self:RegisterInteraction(actionNameOrNames, data)
+	end
+
+-- * LibCInteraction:HandleKeybindDown(*string* _actionName_)
+	self._external.HandleKeybindDown = function(_, actionName, ...)
+		return self:HandleKeybindDown(actionName, ...)
+	end
+
+-- * LibCInteraction:HandleKeybindUp(*string* _actionName_)
+	self._external.HandleKeybindUp = function(_, actionName, ...)
+		return self:HandleKeybindUp(actionName, ...)
+	end
+end
+
+local INTERACTION_WRAPPER_MANAGER = CInteractionWrapperManager:New("LibCInteraction", {
+	name = "LibCInteraction", 
+	version = "1.0.0", 
+	author = "Calamath", 
+--	authority = {2973583419,210970542}, 
+})
+
 
 -- ---------------------------------------------------------------------------------------
 -- Interaction Wrapper Base Class
@@ -43,7 +262,7 @@ function CBaseInteractionWrapper:Initialize(control, actionName, data)
 		self.control:SetHidden(true)	-- disable timer
 	end
 	self.interactionType = "base"
-	self.actionName = actionName
+	self.actionName = actionName	-- string of action name or numerically indexed table of action names.
 	self:SetKeyDownCallback(data.keyDownCallback)
 	self:SetKeyUpCallback(data.keyUpCallback)
 	self:SetStartedCallback(data.startedCallback)
@@ -111,7 +330,7 @@ function CBaseInteractionWrapper:DisableTimer()
 	end
 end
 function CBaseInteractionWrapper:IsModifierKeyDown(keyCode)
-	return CIW.supportedModifierKeys[keyCode] and CIW.supportedModifierKeys[keyCode]() or false
+	return keyCode and IsModifierKeyDown[keyCode] and IsModifierKeyDown[keyCode]() or false
 end
 function CBaseInteractionWrapper:Reset()
 -- Should be Overridden
@@ -144,6 +363,8 @@ end
 function CBaseInteractionWrapper:OnUpdate()
 --  Should be Overridden
 end
+
+INTERACTION_WRAPPER_MANAGER:RegisterInteractionWrapperClass("base", CBaseInteractionWrapper, false)
 
 
 -- ---------------------------------------------------------------------------------------
@@ -192,6 +413,8 @@ function CDefaultInteractionWrapper:OnEnded(actionName, ...)
 	end
 end
 
+INTERACTION_WRAPPER_MANAGER:RegisterInteractionWrapperClass("default", CDefaultInteractionWrapper, false)
+
 
 -- ---------------------------------------------------------------------------------------
 -- Press Interaction Wrapper Class
@@ -204,6 +427,8 @@ end
 function CPressInteractionWrapper:PrerequisiteForEnding(actionName)
 	return self.isStarted and not (self.multipleInput and self.currentAction ~= actionName)
 end
+
+INTERACTION_WRAPPER_MANAGER:RegisterInteractionWrapperClass("press", CPressInteractionWrapper, false)
 
 
 -- ---------------------------------------------------------------------------------------
@@ -251,181 +476,6 @@ function CHoldInteractionWrapper:OnUpdate()
 	end
 end
 
-
--- ---------------------------------------------------------------------------------------
--- Interaction Wrapper Manager Class
--- ---------------------------------------------------------------------------------------
-local CInteractionWrapperManager_Singleton = ZO_InitializingObject:Subclass()
-
-function CInteractionWrapperManager_Singleton:Initialize()
-	self.name = "CIWManagerSingleton"
-	self.control = WINDOW_MANAGER:CreateControl("CIW_UI_Root", GuiRoot, CT_CONTROL)
-	self.supportedModifierKeys = CIW.supportedModifierKeys
-	self.timers = {}
-	self.interactions = {}
-	self.timerPool = ZO_ControlPool:New("CIW_InteractionTimer", self.control)
-	self.timerPool:SetCustomResetBehavior(function(control)
-		control:SetParent(self.control)
-		control:ClearAnchors()
-		control:SetHidden(true)
-		control:SetHandler("OnUpdate", nil)
-	end)
-	self.wrapperClass = {}
-	self.timerRequired = {}
-
-	self.LDL = {
-		Verbose = function() end, 
-		Debug = function() end, 
-		Info = function() end, 
-		Warn = function() end, 
-		Error = function() end, 
-	}
-
-	self:RegisterWrapperClass("base", CBaseInteractionWrapper, false)
-	self:RegisterWrapperClass("default", CDefaultInteractionWrapper, false)
-	self:RegisterWrapperClass("press", CPressInteractionWrapper, false)
-	self:RegisterWrapperClass("hold", CHoldInteractionWrapper, true)
-end
-
-function CInteractionWrapperManager_Singleton:RegisterWrapperClass(interactionType, class, timerRequired)
-	if not self.wrapperClass[interactionType] then
-		self.wrapperClass[interactionType] = class or CBaseInteractionWrapper
-		self.timerRequired[interactionType] = timerRequired or false
-	end
-end
-
-function CInteractionWrapperManager_Singleton:GetSupportedModifierKeys()
-	local t = {}
-	for keyCode in pairs(self.supportedModifierKeys) do
-		table.insert(t, keyCode)
-	end
-	return t
-end
-
-function CInteractionWrapperManager_Singleton:IsSupportedModifierKey(keyCode)
-	return self.supportedModifierKeys[keyCode] ~= nil
-end
-
-function CInteractionWrapperManager_Singleton:AcquireTimer()
-	local timer, key = self.timerPool:AcquireObject()
-	timer.key = key
-	self.timers[key] = timer
-	return timer
-end
-
-function CInteractionWrapperManager_Singleton:RemoveTimer(key)
-	if self.timers[key] then
-		self.timerPool:ReleaseObject(self.timers[key])
-		self.timers[key] = nil
-	end
-end
-
-function CInteractionWrapperManager_Singleton:RegisterInteraction(actionName, data)
-	if not actionName then return end
-	if type(data) ~= "table" then return end
-	local interactionType = data.type
-	if not self.wrapperClass[interactionType] then return end
-
-	local timerControl = self.timerRequired[interactionType] and self:AcquireTimer()
-	local interaction = self.wrapperClass[interactionType]:New(timerControl, actionName, data)
-
-	if type(actionName) == "table" then
-		for _, action in pairs(actionName) do
-			if not self.interactions[action] then
-				self.interactions[action] = {}
-			end
-			table.insert(self.interactions[action], interaction)
-		end
-	else
-		if not self.interactions[actionName] then
-			self.interactions[actionName] = {}
-		end
-		table.insert(self.interactions[actionName], interaction)
-	end
-	return interaction
-end
-
-function CInteractionWrapperManager_Singleton:HandleKeybindDown(actionName, ...)
-	if self.interactions[actionName] then
-		for _, interaction in ipairs(self.interactions[actionName]) do
-			interaction:OnKeyDown(actionName, ...)
-		end
-	end
-end
-
-function CInteractionWrapperManager_Singleton:HandleKeybindUp(actionName, ...)
-	if self.interactions[actionName] then
-		for _, interaction in ipairs(self.interactions[actionName]) do
-			interaction:OnKeyUp(actionName, ...)
-		end
-	end
-end
+INTERACTION_WRAPPER_MANAGER:RegisterInteractionWrapperClass("hold", CHoldInteractionWrapper, true)
 
 
--- ---------------------------------------------------------------------------------------
--- CInteractionWrapper
--- ---------------------------------------------------------------------------------------
-function CIW:Initialize()
-	self:ConfigDebug()
-	self.internal = CInteractionWrapperManager_Singleton:New()	-- Never do this more than once!
-	self.internal.LDL = self.LDL
-	self:RegisterAPI()
-end
-
-function CIW:ConfigDebug(arg)
-	local debugMode = false
-	local key = HashString(GetDisplayName())
-	local dummy = function() end
-	if LibDebugLogger then
-		for _, v in pairs(arg or self.authority or {}) do
-			if key == v then debugMode = true end
-		end
-	end
-	if debugMode then
-		self.LDL = LibDebugLogger(self.name)
-	else
-		self.LDL = { Verbose = dummy, Debug = dummy, Info = dummy, Warn = dummy, Error = dummy, }
-	end
-	if self.shared then
-		self.shared.LDL = self.LDL
-	end
-end
-
-function CIW:RegisterAPI()
---
--- ---- LibCInteraction API
---
--- * LibCInteraction:GetSupportedModifierKeys()
--- ** _Returns:_ *table* _keyCodeList_
-	CIW.external.GetSupportedModifierKeys = function(LCI)
-		return CIW.internal:GetSupportedModifierKeys()
-	end
-
--- * LibCInteraction:IsSupportedModifierKey(*[KeyCode|#KeyCode]* _keyCode_)
--- ** _Returns:_ *bool* _isSupported_
-	CIW.external.IsSupportedModifierKey = function(LCI, keyCode)
-		return CIW.internal:IsSupportedModifierKey(keyCode)
-	end
-
--- * LibCInteraction:RegisterInteraction(*string* _actionName_. *table* _interactionDataTable_)
--- ** _Returns:_ *object:nilable* _interactionWrapperObject_
-	CIW.external.RegisterInteraction = function(LCI, actionName, data)
-		return CIW.internal:RegisterInteraction(actionName, data)
-	end
-
--- * LibCInteraction:HandleKeybindDown(*string* _actionName_)
-	CIW.external.HandleKeybindDown = function(LCI, actionName, ...)
-		return CIW.internal:HandleKeybindDown(actionName, ...)
-	end
-
--- * LibCInteraction:HandleKeybindUp(*string* _actionName_)
-	CIW.external.HandleKeybindUp = function(LCI, actionName, ...)
-		return CIW.internal:HandleKeybindUp(actionName, ...)
-	end
-end
-
-EVENT_MANAGER:RegisterForEvent(CIW.name, EVENT_ADD_ON_LOADED, function(_, addonName)
-	if addonName ~= CIW.name then return end
-	EVENT_MANAGER:UnregisterForEvent(CIW.name, EVENT_ADD_ON_LOADED)
-	CIW:Initialize()
-end)

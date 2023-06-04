@@ -1,12 +1,12 @@
 ## Title: LibCInteraction
 ## Description: A library to provide versatile interaction events to bound actions
-## Version: 0.9.2
-## AddOnVersion: 902
+## Version: 1.0.0
+## AddOnVersion: 10000
 ## Author: Calamath
 ## License: Artistic License 2.0
 ## IsLibrary: true
-## APIVersion: 101036
-## OptionalDependsOn: LibDebugLogger>=220
+## APIVersion: 101037 101038
+## OptionalDependsOn: LibDebugLogger>=262
 
 ; This Add-on is not created by, affiliated with or sponsored by ZeniMax 
 ; Media Inc. or its affiliates. The Elder Scrolls® and related logos are 
