@@ -1,3 +1,6 @@
+V2.0.1: [V20001] by Calamath
+- Changed the maximum number of quests that can be displayed on the tracker panel to be selectable from 1 to 15.
+
 V2.0.0: [V20000] by Calamath
 - Refactored the add-on framework based on our common template classes, to reduce future maintenance costs.
 - Revamped the code base to subdivide the file structure.

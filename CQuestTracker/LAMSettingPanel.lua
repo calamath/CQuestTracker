@@ -140,8 +140,8 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		type = "slider", 
 		name = L(SI_CQT_UI_MAX_NUM_QUEST_DISPLAYED_OP_NAME), 
 		tooltip = L(SI_CQT_UI_MAX_NUM_QUEST_DISPLAYED_OP_TIPS), 
-		min = 2, 
-		max = 10, 
+		min = 1, 
+		max = 15, 
 		step = 1, 
 		getFunc = function() return self.svCurrent.maxNumDisplay end, 
 		setFunc = function(newValue)
