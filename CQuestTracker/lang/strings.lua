@@ -4,7 +4,7 @@ local strings = {
 	SI_CQT_QUEST_LIST_CHECKED_FORMATTER =			"|c00FF00|t75%:75%:EsoUI/Art/Miscellaneous/check_icon_32.dds:inheritcolor|t|r <<1>>", 
 	SI_CQT_QUEST_LIST_PINNED_FORMATTER =			"|cFFD040|t75%:75%:EsoUI/Art/Miscellaneous/status_locked.dds:inheritcolor|t|r <<1>>", 
 	SI_CQT_QUEST_LIST_IGNORED_FORMATTER =			"|cFF0000|t75%:75%:Esoui/Art/Castbar/forbiddenaction.dds:inheritcolor|t|r <<1>>", 
-	SI_CQT_QUEST_REPEATABLE_TEXT =					L(SI_QUEST_JOURNAL_REPEATABLE_TEXT).."|t16:16:EsoUI/Art/Journal/journal_Quest_Repeat.dds|t", 
+	SI_CQT_QUEST_REPEATABLE_TEXT =					L(SI_QUEST_JOURNAL_REPEATABLE_TEXT).."|t16:16:EsoUI/Art/Notifications/notificationicon_campaignqueue.dds|t", 
 
 --	Localization Strings
 	SI_BINDING_NAME_CQT_TOGGLE_TRACKER_PANEL_VISIBILITY =		"Toggle Tracker Panel", 

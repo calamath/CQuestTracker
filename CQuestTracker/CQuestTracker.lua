@@ -274,7 +274,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.0.1", 
+	version = "2.0.2", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -388,6 +388,11 @@ function CQT:OnAddOnLoaded()
 	self.trackerPanel:GetTitleBarFragment():RegisterCallback("StateChange", function(oldState, newState)
 		if newState == SCENE_FRAGMENT_HIDING then
 			self.questTooltip:HideQuestTooltip()
+		end
+	end)
+	GAME_MENU_SCENE:RegisterCallback("StateChange", function(oldState, newState)
+		if newState == SCENE_FRAGMENT_SHOWING or newState == SCENE_FRAGMENT_HIDING then
+			self:UpdateTrackerPanelVisibility()
 		end
 	end)
 	KEYBINDINGS_FRAGMENT:RegisterCallback("StateChange", function(oldState, newState)
