@@ -1,12 +1,12 @@
 ## Title: Calamath's Quest Tracker
 ## Description: Traditional MMORPG style multiple quest tracker
-## Version: 2.0.2
-## AddOnVersion: 20002
+## Version: 2.1.0
+## AddOnVersion: 20100
 ## Author: Calamath
 ## License: Artistic License 2.0
-## APIVersion: 101038
-## DependsOn: LibAddonMenu-2.0>=34 LibCustomMenu>=721 LibMediaProvider-1.0>=24 LibCInteraction>=10000
-## OptionalDependsOn: LibDebugLogger>=262
+## APIVersion: 101040
+## DependsOn: LibAddonMenu-2.0>=34 LibCustomMenu>=721 LibMediaProvider-1.0>=27 LibCInteraction>=10001
+## OptionalDependsOn: LibDebugLogger>=263
 ## SavedVariables: CQuestTrackerSV CQuestTrackerLog
 
 ; This Add-on is not created by, affiliated with or sponsored by ZeniMax 
@@ -20,9 +20,11 @@ lang/$(language).lua
 CQuestTracker.xml
 CQuestTracker.lua
 CTemplates.lua
+CWorldMapUtility.lua
 QuestCacheManager.lua
 QuestTimerManager.xml
 QuestTimerManager.lua
+QuestPingManager.lua
 QuestTooltip.xml
 QuestTooltip.lua
 TrackerPanel.xml

@@ -131,10 +131,10 @@ end
 
 function CQT_QuestTooltip_Controller:LayoutQuestTooltip(journalIndex)
 	local titleR, titleG, titleB = ZO_SELECTED_TEXT:UnpackRGB()
-	local questName, backgroundText, activeStepText, activeStepType, activeStepTrackerOverrideText, completed, tracked, questLevel, pushed, questType, instanceDisplayType = GetJournalQuestInfo(journalIndex)
+	local questName, backgroundText, activeStepText, activeStepType, activeStepTrackerOverrideText, completed, tracked, questLevel, pushed, questType, zoneDisplayType = GetJournalQuestInfo(journalIndex)
 	local zoneName, _, pz = GetJournalQuestLocationInfo(journalIndex)
 	local repeatType = GetJournalQuestRepeatType(journalIndex)
-	local questIcon = QUEST_JOURNAL_KEYBOARD:GetIconTexture(questType, instanceDisplayType)
+	local questIcon = QUEST_JOURNAL_KEYBOARD:GetIconTexture(questType, zoneDisplayType)
 	local bgTexture = GetZoneStoryKeyboardBackground(GetZoneId(pz))
 	if self.bg then
 		self.bg:SetTexture(bgTexture)
@@ -145,7 +145,7 @@ function CQT_QuestTooltip_Controller:LayoutQuestTooltip(journalIndex)
 	end
 	local questTypeName
 	if questType == QUEST_TYPE_NONE and zoneName ~= "" then
-		if instanceDisplayType == INSTANCE_DISPLAY_TYPE_ZONE_STORY then
+		if zoneDisplayType == ZONE_DISPLAY_TYPE_ZONE_STORY then
 			questTypeName = L(SI_CQT_QUESTTYPE_ZONE_STORY_QUEST)
 		else
 			questTypeName = L(SI_CQT_QUESTTYPE_SIDE_QUEST)

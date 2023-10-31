@@ -46,19 +46,49 @@
 		</Control>
 		<Control name="CQT_MouseBehaviorPropagationToParentNode" mouseEnabled="true" virtual="true">
 			<OnMouseUp>
-				CQT_PropagateHandlerToParentNode("OnMouseUp", ...)
+				local suppressPropagation
+				if self.OnMouseUp then
+					suppressPropagation = self.OnMouseUp(...)
+				end
+				if not suppressPropagation then
+					CQT_PropagateHandlerToParentNode("OnMouseUp", ...)
+				end
 			</OnMouseUp>
 			<OnMouseDown>
-				CQT_PropagateHandlerToParentNode("OnMouseDown", ...)
+				local suppressPropagation
+				if self.OnMouseDown then
+					suppressPropagation = self.OnMouseDown(...)
+				end
+				if not suppressPropagation then
+					CQT_PropagateHandlerToParentNode("OnMouseDown", ...)
+				end
 			</OnMouseDown>
 			<OnMouseEnter>
-				CQT_PropagateHandlerToParentNode("OnMouseEnter", ...)
+				local suppressPropagation
+				if self.OnMouseEnter then
+					suppressPropagation = self.OnMouseEnter(...)
+				end
+				if not suppressPropagation then
+					CQT_PropagateHandlerToParentNode("OnMouseEnter", ...)
+				end
 			</OnMouseEnter>
 			<OnMouseExit>
-				CQT_PropagateHandlerToParentNode("OnMouseExit", ...)
+				local suppressPropagation
+				if self.OnMouseExit then
+					suppressPropagation = self.OnMouseExit(...)
+				end
+				if not suppressPropagation then
+					CQT_PropagateHandlerToParentNode("OnMouseExit", ...)
+				end
 			</OnMouseExit>
 			<OnMouseDoubleClick>
-				CQT_PropagateHandlerToParentNode("OnMouseDoubleClick", ...)
+				local suppressPropagation
+				if self.OnMouseDoubleClick then	
+					suppressPropagation = self.OnMouseDoubleClick(...)
+				end
+				if not suppressPropagation then
+					CQT_PropagateHandlerToParentNode("OnMouseDoubleClick", ...)
+				end
 			</OnMouseDoubleClick>
 		</Control>
 	</Controls>

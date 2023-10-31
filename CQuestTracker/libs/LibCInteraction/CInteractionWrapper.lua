@@ -8,7 +8,7 @@
 --
 
 -- ---------------------------------------------------------------------------------------
--- CT_SimpleAddonFramework: Simple Add-on Framework Template Class              rel.1.0.10
+-- CT_SimpleAddonFramework: Simple Add-on Framework Template Class              rel.1.0.11
 -- ---------------------------------------------------------------------------------------
 local CT_SimpleAddonFramework = ZO_Object:Subclass()
 function CT_SimpleAddonFramework:New(...)
@@ -67,6 +67,7 @@ function CT_SimpleAddonFramework:ConfigDebug(arg)
 			Error = function() end, 
 		}
 	end
+	self._isDebugMode = debugMode
 end
 function CT_SimpleAddonFramework:RegisterClassObject(className, classObject)
 	if className and classObject and not self._class[className] then
@@ -246,7 +247,7 @@ end
 
 local INTERACTION_WRAPPER_MANAGER = CInteractionWrapperManager:New("LibCInteraction", {
 	name = "LibCInteraction", 
-	version = "1.0.0", 
+	version = "1.0.1", 
 	author = "Calamath", 
 --	authority = {2973583419,210970542}, 
 })

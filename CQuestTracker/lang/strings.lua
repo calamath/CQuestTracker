@@ -111,7 +111,12 @@ local strings = {
 	SI_CQT_UI_AUTO_TRACK_ADDED_QUEST_OP_TIPS =		"Turning this setting on will automatically change the focused quest to added quest. The standard setting is on.", 
 	SI_CQT_UI_AUTO_TRACK_PROGRESSED_QUEST_OP_NAME =	"|u25:0::|uAuto track to the progressed quest", 
 	SI_CQT_UI_AUTO_TRACK_PROGRESSED_QUEST_OP_TIPS =	"Turning this setting on will automatically change the focused quest as the quest progresses. The standard setting is off.", 
-
+	SI_CQT_UI_QUEST_PING_NAVIGATION_HEADER1_TEXT =	"Quest PING Navigation", 
+	SI_CQT_UI_QUEST_PING_NAVIGATION_HEADER1_TIPS =	"In the CQuestTracker panel, when you click on the quest condition content of the focused quest or select Show on Map from the right-click menu, it will highlight your destination on the map with ping animations. That means you will have a clearer sense of where you should go than ever before.", 
+	SI_CQT_UI_ENABLE_QUEST_PING_OP_NAME =			"|u25:0::|uEnable Quest PING Navigation", 
+	SI_CQT_UI_ENABLE_QUEST_PING_OP_TIPS =			"Show ping animation to focused quest destination on world map to make it easier to find quest destinations.\n Note that limit to the quest listed on the tracker panel only. The standard setting is on.", 
+	SI_CQT_UI_QUEST_PING_ON_FOCUS_CHANGE_OP_NAME =	"|u25:0::|uAuto show quest PING on focused quest changes", 
+	SI_CQT_UI_QUEST_PING_ON_FOCUS_CHANGE_OP_TIPS =	"Turning this setting on will automatically show the quest pings on the map when you change the focused quest.\n Note that limit to the quest listed on the tracker panel only. The standard setting is on.", 
 }
 
 for stringId, stringToAdd in pairs(strings) do

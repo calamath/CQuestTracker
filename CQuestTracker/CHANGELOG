@@ -1,3 +1,8 @@
+V2.1.0: [V20100] by Calamath
+- Added Quest Ping Navigation feature. You will see quest ping animations on the world map to make it easier to find quest destinations.
+- Updated bundled LibCInteraction version to 1.0.1 (AddOnVersion: 10001).
+- Updated API version to 101040 (ESO 9.2.x : Update 40)
+
 V2.0.2: [V20002] by Calamath
 - Fixed an issue where the option to display or hide the tracker panel on the game menu screen was not working properly.
 - Adjusted quest tooltip display for repeatable quests.

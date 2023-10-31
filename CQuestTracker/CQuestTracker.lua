@@ -28,7 +28,7 @@ end
 
 
 -- ---------------------------------------------------------------------------------------
--- CT_SimpleAddonFramework: Simple Add-on Framework Template Class              rel.1.0.10
+-- CT_SimpleAddonFramework: Simple Add-on Framework Template Class              rel.1.0.11
 -- ---------------------------------------------------------------------------------------
 local CT_SimpleAddonFramework = ZO_Object:Subclass()
 function CT_SimpleAddonFramework:New(...)
@@ -87,6 +87,7 @@ function CT_SimpleAddonFramework:ConfigDebug(arg)
 			Error = function() end, 
 		}
 	end
+	self._isDebugMode = debugMode
 end
 function CT_SimpleAddonFramework:RegisterClassObject(className, classObject)
 	if className and classObject and not self._class[className] then
@@ -114,7 +115,7 @@ function CT_SimpleAddonFramework:OnAddOnLoaded(event, addonName)
 end
 
 -- ---------------------------------------------------------------------------------------
--- CT_AddonFramework: Add-on Framework Template Class for multiple modules      rel.1.0.10
+-- CT_AddonFramework: Add-on Framework Template Class for multiple modules      rel.1.0.11
 -- ---------------------------------------------------------------------------------------
 local CT_AddonFramework = CT_SimpleAddonFramework:Subclass()
 function CT_AddonFramework:Initialize(name, attributes)
@@ -127,6 +128,7 @@ function CT_AddonFramework:Initialize(name, attributes)
 		LDL = self.LDL, 
 		HasAvailableClass = function(_, ...) return self:HasAvailableClass(...) end, 
 		CreateClassObject = function(_, ...) return self:CreateClassObject(...) end, 
+		RegisterGlobalObject = function(_, ...) return self:RegisterGlobalObject(...) end, 
 		RegisterSharedObject = function(_, ...) return self:RegisterSharedObject(...) end, 
 		RegisterCallback = function(_, ...) return self:RegisterCallback(...) end, 
 		UnregisterCallback = function(_, ...) return self:UnregisterCallback(...) end, 
@@ -165,15 +167,22 @@ function CT_AddonFramework:CreateCustomEnvironment(t, parent)	-- helper function
 	return setmetatable(type(t) == "table" and t or {}, { __index = type(parent) == "table" and parent or getfenv and type(getfenv) == "function" and getfenv(2) or _ENV or _G, })
 end
 function CT_AddonFramework:EnableCustomEnvironment(t, stackLevel)	-- helper function
--- This method is intended to be called in the main chunk and should not be called inside functions.
-	local stackLevel = type(stackLevel) == "number" and stackLevel > 1 and stackLevel or 2
+	local stackLevel = type(stackLevel) == "number" and stackLevel > 1 and stackLevel or type(ZO_GetCallstackFunctionNames) == "function" and #(ZO_GetCallstackFunctionNames()) + 1 or 2
 	local env = type(t) == "table" and t or type(self._env) == "table" and self._env
 	if env then
 		if setfenv and type(setfenv) == "function" then
-			setfenv(stackLevel, env)	-- [Main Chunk]: self:EnableCustomEnvironment(t, nil) -> [HERE]: setfenv(2, t)
+			setfenv(stackLevel, env)
 		else
 			_ENV = env
 		end
+	end
+end
+function CT_AddonFramework:RegisterGlobalObject(objectName, globalObject)
+	if objectName and globalObject and _G[objectName] == nil then
+		_G[objectName] = globalObject
+		return true
+	else
+		return false
 	end
 end
 function CT_AddonFramework:RegisterSharedObject(objectName, sharedObject)
@@ -270,11 +279,38 @@ local _SHARED_DEFINITIONS = {
 	FONT_SIZE		= 3, 
 	FONT_WEIGHT		= 4, 
 	UPPER_LIMIT_OF_ASSUMED_QUEST_ID = 50000, 
+	UPPER_LIMIT_OF_ASSUMED_POI_ID = 5000, 
+
+	INVALID_ZONE_INDEX = 1, 
+	INVALID_ZONE_ID = 2, 
+
+	-- PointOfInterest Database Type
+	-- This is a superset of ZoneCompletionType.
+	POI_DB_TYPE_NONE					= ZONE_COMPLETION_TYPE_NONE, 					-- 0
+	POI_DB_TYPE_PRIORITY_QUEST			= ZONE_COMPLETION_TYPE_PRIORITY_QUESTS, 		-- 1
+	POI_DB_TYPE_POINTS_OF_INTEREST		= ZONE_COMPLETION_TYPE_POINTS_OF_INTEREST, 		-- 2
+	POI_DB_TYPE_FEATURED_ACHIEVEMENT	= ZONE_COMPLETION_TYPE_FEATURED_ACHIEVEMENTS, 	-- 3
+	POI_DB_TYPE_WAYSHRINE				= ZONE_COMPLETION_TYPE_WAYSHRINES, 				-- 4	(node POI)
+	POI_DB_TYPE_DELVE					= ZONE_COMPLETION_TYPE_DELVES, 					-- 5
+	POI_DB_TYPE_GROUP_DELVE				= ZONE_COMPLETION_TYPE_GROUP_DELVES, 			-- 6
+	POI_DB_TYPE_SKYSHARD				= ZONE_COMPLETION_TYPE_SKYSHARDS, 				-- 7
+	POI_DB_TYPE_WORLD_EVENT				= ZONE_COMPLETION_TYPE_WORLD_EVENTS, 			-- 8
+	POI_DB_TYPE_GROUP_BOSS				= ZONE_COMPLETION_TYPE_GROUP_BOSSES, 			-- 9
+	POI_DB_TYPE_STRIKING_LOCALE			= ZONE_COMPLETION_TYPE_STRIKING_LOCALES, 		-- 10
+	POI_DB_TYPE_MAGES_GUILD_BOOK		= ZONE_COMPLETION_TYPE_MAGES_GUILD_BOOKS, 		-- 11
+	POI_DB_TYPE_MUNDUS_STONE			= ZONE_COMPLETION_TYPE_MUNDUS_STONES, 			-- 12
+	POI_DB_TYPE_PUBLIC_DUNGEON			= ZONE_COMPLETION_TYPE_PUBLIC_DUNGEONS, 		-- 13
+	POI_DB_TYPE_SET_STATION				= ZONE_COMPLETION_TYPE_SET_STATIONS, 			-- 14
+	POI_DB_TYPE_NODE					= 100,  -- (node POI)
+	POI_DB_TYPE_ARENA_DUNGEON			= 101,  -- (node POI)
+	POI_DB_TYPE_GROUP_DUNGEON			= 102,  -- (node POI)
+	POI_DB_TYPE_TRIAL_DUNGEON			= 103,  -- (node POI)
+	POI_DB_TYPE_HOUSE					= 104,  -- (node POI)
 }
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.0.2", 
+	version = "2.1.0", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -338,6 +374,10 @@ local CQT_SV_DEFAULT = {
 		show = true, 
 		anchor = LEFT, 
 	}, 
+	qPingAttributes = {
+		pingingEnabled = true, 
+		pingingOnFocusChange = true, 
+	}, 
 	improveKeybinds = true, 
 	cycleAllQuests = false, 
 	cycleBackwardsMod1 = KEY_SHIFT, 
@@ -373,6 +413,16 @@ function CQT:OnAddOnLoaded()
 
 	-- quest timer
 	self.questTimer = GetQuestTimerManager()
+
+	-- quest ping
+	self.questPingManager = GetQuestPingManager and GetQuestPingManager()
+	if self.questPingManager then
+		self.questPingManager:RegisterOverriddenAttributeTable(self.svCurrent.qPingAttributes)
+		self.questPingManager:SetShouldShowOnFocusChangeCallback(function()
+			local focusedQuestIndex = QUEST_JOURNAL_MANAGER:GetFocusedQuestIndex()
+			return self:IsTrackedQuestByIndex(focusedQuestIndex)
+		end)
+	end
 
 	-- quest tooltip
 	self.questTooltip = GetQuestTooltipManager()
@@ -447,6 +497,9 @@ function CQT:OnAddOnLoaded()
 		end
 	end)
 
+	-- shared api
+	self:RegisterSharedAPI()
+
 	self.LDL:Debug("Initialized: ", self.lang)
 end
 
@@ -458,6 +511,7 @@ function CQT:ValidateConfigDataSV(sv)
 	if sv.panelAttributes.hintColor == nil						then sv.panelAttributes.hintColor						= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.hintColor)				end
 	if sv.panelAttributes.titlebarColor == nil					then sv.panelAttributes.titlebarColor					= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.titlebarColor)			end
 	if sv.qkFont == nil											then sv.qkFont											= ZO_ShallowTableCopy(sv.qcFont)											end		-- Derived from qcFont and added
+	if sv.qPingAttributes == nil								then sv.qPingAttributes									= ZO_ShallowTableCopy(CQT_SV_DEFAULT.qPingAttributes)						end
 	if sv.improveKeybinds == nil								then sv.improveKeybinds									= CQT_SV_DEFAULT.improveKeybinds											end
 	if sv.cycleAllQuests == nil									then sv.cycleAllQuests									= CQT_SV_DEFAULT.cycleAllQuests												end
 	if sv.cycleBackwardsMod1 == nil								then sv.cycleBackwardsMod1								= CQT_SV_DEFAULT.cycleBackwardsMod1											end
@@ -782,6 +836,22 @@ function CQT:RefreshQuestList()
 	self:FireCallbacks("TrackerPanelQuestListUpdated", self.questList)
 end
 
+
+function CQT:IsTrackedQuestByIndex(journalIndex)
+-- Returns whether or not the quest is being tracked by CQuestTracker
+	return self.trackerPanel:IsTrackedQuestByIndex(journalIndex)
+end
+function CQT:IsTrackedQuest(questId)
+	-- TODO: should use self.masterQuestList instead
+	local foundIndex
+	for _, v in ipairs(self.questList) do
+		if v.questId == questId then
+			foundIndex = v.journalIndex
+			break
+		end
+	end
+	return foundIndex and self:IsTrackedQuestByIndex(foundIndex) or false
+end
 
 function CQT:PickOutQuestByIndex(journalIndex)
 	return self:PickOutQuest(GetQuestId(journalIndex))
@@ -1188,17 +1258,70 @@ function CQT:OnAddOnSettingsChanged(settingCategories)
 		self:InitializeFocusedQuestControlTable()
 		return
 	end
+	if settingCategories == "questPing" then
+		if self.questPingManager then
+			self.questPingManager:RefreshWorldMapQuestPings()
+			return
+		end
+	end
+end
+
+function CQT:RegisterSharedAPI()
+--
+-- ---- CQT shared API Reference
+--
+-- * CQT:IsTrackedQuestByIndex(journalIndex)
+	self._shared.IsTrackedQuestByIndex = function(_, journalIndex)
+		return self:IsTrackedQuestByIndex(journalIndex)
+	end
+
+-- * CQT:PickOutQuestByIndex(journalIndex)
+	self._shared.PickOutQuestByIndex = function(_, journalIndex)
+		return self:PickOutQuestByIndex(journalIndex)
+	end
+
+-- * CQT:RuleOutQuestByIndex(journalIndex)
+	self._shared.RuleOutQuestByIndex = function(_, journalIndex)
+		return self:RuleOutQuestByIndex(journalIndex)
+	end
+
+-- * CQT:EnablePinningQuestByIndex(journalIndex)
+	self._shared.EnablePinningQuestByIndex = function(_, journalIndex)
+		return self:EnablePinningQuestByIndex(journalIndex)
+	end
+
+-- * CQT:DisablePinningQuestByIndex(journalIndex)
+	self._shared.DisablePinningQuestByIndex = function(_, journalIndex)
+		return self:DisablePinningQuestByIndex(journalIndex)
+	end
+
+-- * CQT:IsPinnedQuestByIndex(journalIndex)
+-- ** _Returns:_ *bool* _isPinned_
+	self._shared.IsPinnedQuestByIndex = function(_, journalIndex)
+		return self:IsPinnedQuestByIndex(journalIndex)
+	end
+
+-- * CQT:EnableIgnoringQuestByIndex(journalIndex)
+	self._shared.EnableIgnoringQuestByIndex = function(_, journalIndex)
+		return self:EnableIgnoringQuestByIndex(journalIndex)
+	end
+
+-- * CQT:DisableIgnoringQuestByIndex(journalIndex)
+	self._shared.DisableIgnoringQuestByIndex = function(_, journalIndex)
+		return self:DisableIgnoringQuestByIndex(journalIndex)
+	end
+
+-- * CQT:IsIgnoredQuestByIndex(journalIndex)
+-- ** _Returns:_ *bool* _isIgnored_
+	self._shared.IsIgnoredQuestByIndex = function(_, journalIndex)
+		return self:IsIgnoredQuestByIndex(journalIndex)
+	end
+
 end
 
 -- ---------------------------------------------------------------------------------------
 -- XML Handlers
 -- ---------------------------------------------------------------------------------------
-function CQT:RegisterGlobalObject(objectName, globalObject)
-	if objectName and globalObject and _G[objectName] == nil then
-		_G[objectName] = globalObject
-	end
-end
-
 function CQT_QuestHeaderTemplate_OnInitialized(control)
 	ZO_IconHeader_OnInitialized(control)
 	control.status = control:GetNamedChild("StatusIcon")
@@ -1218,6 +1341,7 @@ CQT:RegisterGlobalObject("CQT_EntryTemplate_OnInitialized", CQT_EntryTemplate_On
 function CQT_QuestConditionTemplate_OnInitialized(control)
 	CQT_EntryTemplate_OnInitialized(control)
 	control.status = control:GetNamedChild("StatusIcon")
+	control.OnMouseUp = CQT_QuestCondition_OnMouseUp
 end
 CQT:RegisterGlobalObject("CQT_QuestConditionTemplate_OnInitialized", CQT_QuestConditionTemplate_OnInitialized)
 
@@ -1272,7 +1396,21 @@ function CQT_QuestHeader_OnMouseUp(control, button, upInside)
 				end)
 			end
 			AddCustomMenuItem(L(SI_QUEST_TRACKER_MENU_SHOW_ON_MAP), function()
-				ZO_WorldMap_ShowQuestOnMap(control.journalIndex)
+				if CQT.svCurrent.qPingAttributes.pingingEnabled then
+					if CQT.questPingManager then
+						if not CQT.questPingManager:IsShowingQuestPingPins(control.journalIndex) then
+							CQT.questPingManager:SetWorldMapQuestPingPins(control.journalIndex)
+						end
+					end
+					if CQT_WORLD_MAP_UTILITY then
+						local result = CQT_WORLD_MAP_UTILITY:ShowQuestOnMap(control.journalIndex)
+						CQT.LDL:Debug("ShowQuestOnMap: result=%s", tostring(result))
+					else
+						ZO_WorldMap_ShowQuestOnMap(control.journalIndex)
+					end
+				else
+					ZO_WorldMap_ShowQuestOnMap(control.journalIndex)
+				end
 			end)
 			if GetJournalQuestType(control.journalIndex) ~= QUEST_TYPE_MAIN_STORY then
 				AddCustomMenuItem(L(SI_QUEST_TRACKER_MENU_ABANDON), function()
@@ -1305,6 +1443,36 @@ function CQT_QuestHeader_OnMouseDoubleClick(control, button)
 	end
 end
 CQT:RegisterGlobalObject("CQT_QuestHeader_OnMouseDoubleClick", CQT_QuestHeader_OnMouseDoubleClick)
+
+function CQT_QuestCondition_OnMouseUp(control, button, upInside)
+	if upInside then
+		if button == MOUSE_BUTTON_INDEX_LEFT then
+			if control.node:GetTree():IsEnabled() then
+				local data = control.node.data
+				local journalIndex, stepIndex, conditionIndex = data.journalIndex, data.stepIndex, data.conditionIndex
+				if select(7, GetJournalQuestInfo(journalIndex)) then
+					-- focused quest only 
+					CQT.LDL:Debug("questCondition_leftClick: %s-%s-%s", tostring(journalIndex), tostring(stepIndex), tostring(conditionIndex))
+					if CQT.svCurrent.qPingAttributes.pingingEnabled then
+						if CQT.questPingManager then
+							if not CQT.questPingManager:IsShowingQuestPingPins(journalIndex) then
+								CQT.questPingManager:SetWorldMapQuestPingPins(journalIndex)
+							end
+						end
+						if CQT_WORLD_MAP_UTILITY then
+							local result = CQT_WORLD_MAP_UTILITY:ShowQuestOnMap(journalIndex, stepIndex, conditionIndex)
+							CQT.LDL:Debug("ShowQuestOnMap: result=%s", tostring(result))
+						end
+					end
+					return true	-- suppress event propagation regardless of the pingingEnabled attribute.
+				end
+			end
+		elseif button == MOUSE_BUTTON_INDEX_RIGHT then
+			CQT.LDL:Debug("questCondition_rightClick:")
+		end
+	end
+end
+CQT:RegisterGlobalObject("CQT_QuestCondition_OnMouseUp", CQT_QuestCondition_OnMouseUp)
 
 function CQT_QuestListButton_OnClicked(control, button)
 	if button == MOUSE_BUTTON_INDEX_LEFT then

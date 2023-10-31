@@ -97,7 +97,7 @@ function CQT_TrackerPanel:Initialize(control, overriddenAttrib)
 		self:RefreshTree()
 	end)
 	FOCUSED_QUEST_TRACKER:RegisterCallback("QuestTrackerAssistStateChanged", function(unassistedData, assistedData)
-		if assistedData and assistedData.arg1 then
+		if assistedData and assistedData:GetJournalIndex() then
 			self:RefreshTree()
 		end
 	end)
@@ -197,7 +197,7 @@ function CQT_TrackerPanel:InitializeTree()
 		end
 	end
 	local function HeaderNodeSetup(node, control, data, open, userRequested, enabled)
-		local name, _, _, _, _, completed, tracked, _, _, questType, instanceDisplayType = GetJournalQuestInfo(data.journalIndex)
+		local name, _, _, _, _, completed, tracked, _, _, questType, zoneDisplayType = GetJournalQuestInfo(data.journalIndex)
 		local timerWidth = data.timer and data.timer:GetWidth() or 0
 		control.journalIndex = data.journalIndex
 		control.questId = data.questId
@@ -345,12 +345,12 @@ function CQT_TrackerPanel:RefreshTree()
 					end
 				end
 			end
-			firstNode = tree:AddNode("CQT_QuestCondition", { text = overrideText, visibility = stepVisibility, isChecked = checked }, parentNode, sound, open)
+			firstNode = tree:AddNode("CQT_QuestCondition", { journalIndex = journalIndex, stepIndex = stepIndex, text = overrideText, visibility = stepVisibility, isChecked = checked }, parentNode, sound, open)
 		else
 			for conditionIndex = 1, conditionCount do
 				local conditionText, curCount, maxCount, isFailCondition, isComplete, isGroupCreditShared, isVisible, conditionType = GetJournalQuestConditionInfo(journalIndex, stepIndex, conditionIndex)
 				if (not isFailCondition) and (conditionText ~= "") and isVisible then
-					local taskNode = tree:AddNode("CQT_QuestCondition", { text = conditionText, visibility = stepVisibility, isChecked = isComplete or (curCount == maxCount) }, parentNode, sound, open)
+					local taskNode = tree:AddNode("CQT_QuestCondition", { journalIndex = journalIndex, stepIndex = stepIndex, conditionIndex = conditionIndex, text = conditionText, visibility = stepVisibility, isChecked = isComplete or (curCount == maxCount) }, parentNode, sound, open)
 					firstNode = firstNode or taskNode
 					if previousNode then
 						previousNode.nextNode = taskNode
@@ -408,6 +408,10 @@ function CQT_TrackerPanel:RefreshTree()
 			end
 		end
 	end
+end
+
+function CQT_TrackerPanel:IsTrackedQuestByIndex(journalIndex)
+	return self.journalIndexToTreeNode[journalIndex] ~= nil
 end
 
 CQuestTracker:RegisterClassObject("CQT_TrackerPanel", CQT_TrackerPanel)

@@ -677,6 +677,37 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		width = "full", 
 		default = self.SV_DEFAULT.autoTrackToProgressedQuest, 
 	}
+	optionsData[#optionsData + 1] = {
+		type = "description", 
+		title = "", 
+		text = L(SI_CQT_UI_QUEST_PING_NAVIGATION_HEADER1_TEXT), 
+		tooltip = L(SI_CQT_UI_QUEST_PING_NAVIGATION_HEADER1_TIPS), 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_ENABLE_QUEST_PING_OP_NAME), 
+		getFunc = function() return self.svCurrent.qPingAttributes.pingingEnabled end, 
+		setFunc = function(newValue)
+			self.svCurrent.qPingAttributes.pingingEnabled = newValue
+			self:FireCallbacks("AddOnSettingsChanged", "questPing")
+		end, 
+		tooltip = L(SI_CQT_UI_ENABLE_QUEST_PING_OP_TIPS), 
+		width = "full", 
+		default = self.SV_DEFAULT.qPingAttributes.pingingEnabled, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_QUEST_PING_ON_FOCUS_CHANGE_OP_NAME), 
+		getFunc = function() return self.svCurrent.qPingAttributes.pingingOnFocusChange end, 
+		setFunc = function(newValue)
+			self.svCurrent.qPingAttributes.pingingOnFocusChange = newValue
+			self:FireCallbacks("AddOnSettingsChanged", "questPing")
+		end, 
+		tooltip = L(SI_CQT_UI_QUEST_PING_ON_FOCUS_CHANGE_OP_TIPS), 
+		width = "full", 
+		disabled = function() return not self.svCurrent.qPingAttributes.pingingEnabled end, 
+		default = self.SV_DEFAULT.qPingAttributes.pingingOnFocusChange, 
+	}
 	LAM:RegisterOptionControls(self.panelId, optionsData)
 end
 
