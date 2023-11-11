@@ -134,7 +134,7 @@ function CQT_QuestTooltip_Controller:LayoutQuestTooltip(journalIndex)
 	local questName, backgroundText, activeStepText, activeStepType, activeStepTrackerOverrideText, completed, tracked, questLevel, pushed, questType, zoneDisplayType = GetJournalQuestInfo(journalIndex)
 	local zoneName, _, pz = GetJournalQuestLocationInfo(journalIndex)
 	local repeatType = GetJournalQuestRepeatType(journalIndex)
-	local questIcon = QUEST_JOURNAL_KEYBOARD:GetIconTexture(questType, zoneDisplayType)
+	local questIcon = GetZoneDisplayTypeIcon(zoneDisplayType)
 	local bgTexture = GetZoneStoryKeyboardBackground(GetZoneId(pz))
 	if self.bg then
 		self.bg:SetTexture(bgTexture)

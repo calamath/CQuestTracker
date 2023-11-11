@@ -190,7 +190,58 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		type = "header", 
 		name = L(SI_CQT_UI_TRACKER_VISUAL_HEADER1_TEXT), 
 	}
-	
+	optionsData[#optionsData + 1] = {
+		type = "description", 
+		title = "", 
+		text = L(SI_CQT_UI_QUEST_HEADER_ICON_SUBHEADER_TEXT), 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_SHOW_FOCUSED_QUEST_ICON_OP_NAME), 
+		getFunc = function() return self.svCurrent.panelAttributes.showFocusIcon end, 
+		setFunc = function(newValue)
+			self:SetTrackerPanelAttribute("showFocusIcon", newValue)
+		end, 
+		tooltip = L(SI_CQT_UI_SHOW_FOCUSED_QUEST_ICON_OP_TIPS), 
+		width = "full", 
+		default = not self.SV_DEFAULT.panelAttributes.showFocusIcon, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_SHOW_QUEST_TYPE_ICON_OP_NAME), 
+		getFunc = function() return self.svCurrent.panelAttributes.showTypeIcon end, 
+		setFunc = function(newValue)
+			self:SetTrackerPanelAttribute("showTypeIcon", newValue)
+		end, 
+		tooltip = L(SI_CQT_UI_SHOW_QUEST_TYPE_ICON_OP_TIPS), 
+		width = "full", 
+		default = not self.SV_DEFAULT.panelAttributes.showTypeIcon, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_QUEST_TYPE_ICON_COLOR_OP_NAME), 
+		getFunc = function() return self.svCurrent.panelAttributes.enableTypeIconColoring end, 
+		setFunc = function(newValue)
+			self:SetTrackerPanelAttribute("enableTypeIconColoring", newValue)
+		end, 
+		tooltip = L(SI_CQT_UI_QUEST_TYPE_ICON_COLOR_OP_TIPS), 
+		width = "full", 
+		disabled = function() return not self.svCurrent.panelAttributes.showTypeIcon end, 
+		default = not self.SV_DEFAULT.panelAttributes.enableTypeIconColoring, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_SHOW_REPEATABLE_QUEST_ICON_OP_NAME), 
+		getFunc = function() return self.svCurrent.panelAttributes.showRepeatableQuestIcon end, 
+		setFunc = function(newValue)
+			self:SetTrackerPanelAttribute("showRepeatableQuestIcon", newValue)
+		end, 
+		tooltip = L(SI_CQT_UI_SHOW_REPEATABLE_QUEST_ICON_OP_TIPS), 
+		width = "full", 
+		disabled = function() return not self.svCurrent.panelAttributes.showTypeIcon end, 
+		default = not self.SV_DEFAULT.panelAttributes.showRepeatableQuestIcon, 
+	}
+
 	local fontTypeChoices = {
 		"Bold Font", 
 		"Chat Font", 

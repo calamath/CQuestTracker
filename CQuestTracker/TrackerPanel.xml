@@ -1,30 +1,35 @@
 <GuiXml>
 	<Controls>
-		<Control name="CQT_QuestHeader" inherits="ZO_IconHeader CQT_MouseBehavior" virtual="true" >
+		<Control name="CQT_T_QuestHeaderA" inherits="CQT_MouseBehavior" mouseEnabled="true" virtual="true" >
 			<OnInitialized>
-				CQT_QuestHeaderTemplate_OnInitialized(self)
+				CQT_T_QuestHeaderTemplate_OnInitialized(self)
 			</OnInitialized>
 			<Controls>
-				<Label name="$(parent)Text" override="true" inherits="ZO_SelectableLabel CQT_MouseBehaviorPropagationToParent" font="$(BOLD_FONT)|$(KB_18)|soft-shadow-thick" maxLineCount="1" wrapMode="ELLIPSIS">
-					<Anchor point="TOPLEFT" offsetX="28" offsetY="12"/>
+				<Label name="$(parent)Text" inherits="ZO_SelectableLabel CQT_MouseBehaviorPropagationToParent" override="true" font="$(BOLD_FONT)|$(KB_18)|soft-shadow-thick" maxLineCount="1" wrapMode="ELLIPSIS">
+					<Anchor point="TOPLEFT" offsetX="36" offsetY="12"/>
 				</Label>
-				<Texture name="$(parent)Icon" override="true" scale="1" level="1">
+				<Texture name="$(parent)Icon" inherits="CQT_MouseBehaviorPropagationToParent" level="1">
 					<Dimensions x="24" y="24"/>
-					<Anchor point="CENTER" relativeTo="$(parent)Text" relativePoint="LEFT" offsetX="-20"/>
+					<Anchor point="CENTER" relativeTo="$(parent)Text" relativePoint="LEFT" offsetX="-12"/>
 				</Texture>
-				<Texture name="$(parent)StatusIcon" level="2">
-					<Dimensions x="16" y="16"/>
-					<Anchor point="RIGHT" relativeTo="$(parent)Text" relativePoint="LEFT"/>
+				<Texture name="$(parent)StatusIcon" inherits="CQT_MouseBehaviorPropagationToParent" textureFile="EsoUI/Art/Quest/conditioncomplete.dds" color="00FF00" alpha="1" level="2">
+					<Dimensions x="20" y="20"/>
+					<Anchor point="CENTER" relativeTo="$(parent)Icon" relativePoint="CENTER"/>
 				</Texture>
-				<Texture name="$(parent)PinnedIcon" level="3">
-					<Dimensions x="16" y="16"/>
-					<Anchor point="TOP" relativeTo="$(parent)StatusIcon" relativePoint="BOTTOM" offsetY="2"/>
+				<Texture name="$(parent)PinnedIcon" textureFile="EsoUI/Art/Login/authentication_public_up.dds" level="3">
+					<Dimensions x="20" y="20"/>
+					<Anchor point="TOP" relativeTo="$(parent)StatusIcon" relativePoint="BOTTOM" offsetY="0"/>
+					<TextureCoords left="0.125" right="0.875" top="0.125" bottom="0.875"/>
+				</Texture>
+				<Texture name="$(parent)FocusIcon" textureFile="EsoUI/Art/Journal/journal_Quest_Selected.dds" level="1">
+					<Dimensions x="24" y="24"/>
+					<Anchor point="CENTER" relativeTo="$(parent)StatusIcon" relativePoint="LEFT" offsetX="-6"/>
 				</Texture>
 			</Controls>
 		</Control>
-		<Control name="CQT_Entry" inherits="CQT_MouseBehaviorPropagationToParentNode" virtual="true" >
+		<Control name="CQT_T_Entry" inherits="CQT_MouseBehaviorPropagationToParentNode" virtual="true" >
 			<OnInitialized>
-				CQT_EntryTemplate_OnInitialized(self)
+				CQT_T_EntryTemplate_OnInitialized(self)
 			</OnInitialized>
 			<Controls>
 				<Label name="$(parent)Text" inherits="CQT_MouseBehaviorPropagationToParent" font="$(BOLD_FONT)|$(KB_15)|soft-shadow-thick" verticalAlignment="CENTER" wrapMode="ELLIPSIS">
@@ -32,15 +37,15 @@
 				</Label>
 			</Controls>
 		</Control>
-		<Control name="CQT_QuestCondition" inherits="CQT_Entry" virtual="true" >
+		<Control name="CQT_T_QuestConditionA" inherits="CQT_T_Entry" virtual="true" >
 			<OnInitialized>
-				CQT_QuestConditionTemplate_OnInitialized(self)
+				CQT_T_QuestConditionTemplate_OnInitialized(self)
 			</OnInitialized>
 			<Controls>
 				<Label name="$(parent)Text" override="true">
 					<Anchor point="TOPLEFT" offsetX="16" offsetY="0"/>
 				</Label>
-				<Texture name="$(parent)StatusIcon">
+				<Texture name="$(parent)StatusIcon" textureFile="EsoUI/Art/Miscellaneous/check_icon_32.dds" color="00FF00" alpha="1">
 					<Dimensions x="16" y="16"/>
 					<Anchor point="RIGHT" relativeTo="$(parent)Text" relativePoint="LEFT"/>
 				</Texture>

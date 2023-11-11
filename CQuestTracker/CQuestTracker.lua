@@ -310,7 +310,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.1.0", 
+	version = "2.1.1", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -343,8 +343,12 @@ local CQT_SV_DEFAULT = {
 		showHintStep = true, 
 		hintFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
 		hintColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
+		showFocusIcon = true, 
+		showTypeIcon = true, 
+		enableTypeIconColoring = true, 
+		showRepeatableQuestIcon = true, 
 		titlebarColor = { 0.4, 0.6666667, 1, 0.7 }, 
-		bgColor = { ZO_ColorDef:New(0, 0, 0, 0):UnpackRGBA() }, 
+		bgColor = { 0, 0, 0, 0 }, 
 	}, 
 	qhFont = {
 		[FONT_TYPE] = "$(BOLD_FONT)", 
@@ -510,6 +514,10 @@ function CQT:ValidateConfigDataSV(sv)
 	if sv.panelAttributes.hintFont == nil						then sv.panelAttributes.hintFont						= sv.panelAttributes.conditionFont											end		-- Derived from conditionFont and added
 	if sv.panelAttributes.hintColor == nil						then sv.panelAttributes.hintColor						= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.hintColor)				end
 	if sv.panelAttributes.titlebarColor == nil					then sv.panelAttributes.titlebarColor					= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.titlebarColor)			end
+	if sv.panelAttributes.showFocusIcon == nil					then sv.panelAttributes.showFocusIcon					= CQT_SV_DEFAULT.panelAttributes.showFocusIcon								end
+	if sv.panelAttributes.showTypeIcon == nil					then sv.panelAttributes.showTypeIcon					= CQT_SV_DEFAULT.panelAttributes.showTypeIcon								end
+	if sv.panelAttributes.enableTypeIconColoring == nil			then sv.panelAttributes.enableTypeIconColoring			= CQT_SV_DEFAULT.panelAttributes.enableTypeIconColoring						end
+	if sv.panelAttributes.showRepeatableQuestIcon == nil		then sv.panelAttributes.showRepeatableQuestIcon			= CQT_SV_DEFAULT.panelAttributes.showRepeatableQuestIcon					end
 	if sv.qkFont == nil											then sv.qkFont											= ZO_ShallowTableCopy(sv.qcFont)											end		-- Derived from qcFont and added
 	if sv.qPingAttributes == nil								then sv.qPingAttributes									= ZO_ShallowTableCopy(CQT_SV_DEFAULT.qPingAttributes)						end
 	if sv.improveKeybinds == nil								then sv.improveKeybinds									= CQT_SV_DEFAULT.improveKeybinds											end
@@ -1188,6 +1196,23 @@ function CQT:ShowQuestListManagementMenu(owner, initialRefCount, menuType)
 	end
 end
 
+function CQT:ShowQuestPingOnMap(journalIndex, stepIndex, conditionIndex)
+	local result = nil
+	journalIndex = journalIndex or 0
+	if self.svCurrent.qPingAttributes.pingingEnabled then
+		if self.questPingManager then
+			if not self.questPingManager:IsShowingQuestPingPins(journalIndex) then
+				self.questPingManager:SetWorldMapQuestPingPins(journalIndex)
+			end
+		end
+		if CQT_WORLD_MAP_UTILITY then
+			result = CQT_WORLD_MAP_UTILITY:ShowQuestOnMap(journalIndex, stepIndex, conditionIndex)
+			self.LDL:Debug("ShowQuestOnMap: result=%s", tostring(result))
+		end
+	end
+	return result
+end
+
 function CQT:AddTrackerPanelFragmentToGameMenuScene()
 	if self.trackerPanel then
 		local trackerPanelFragment= self.trackerPanel:GetFragment()
@@ -1271,6 +1296,7 @@ function CQT:RegisterSharedAPI()
 -- ---- CQT shared API Reference
 --
 -- * CQT:IsTrackedQuestByIndex(journalIndex)
+-- ** _Returns:_ *bool* _isTracked_
 	self._shared.IsTrackedQuestByIndex = function(_, journalIndex)
 		return self:IsTrackedQuestByIndex(journalIndex)
 	end
@@ -1317,35 +1343,17 @@ function CQT:RegisterSharedAPI()
 		return self:IsIgnoredQuestByIndex(journalIndex)
 	end
 
+-- * CQT:ShowQuestPingOnMap(journalIndex, stepIndex, conditionIndex)
+-- ** _Returns:_ *[SetMapResultCode|#SetMapResultCode]:nilable* _setMapResult_
+-- **  NOTE: A return value of nil means finished without displaying the map.
+	self._shared.ShowQuestPingOnMap = function(_, journalIndex, stepIndex, conditionIndex)
+		return self:ShowQuestPingOnMap(journalIndex, stepIndex, conditionIndex)
+	end
 end
 
 -- ---------------------------------------------------------------------------------------
 -- XML Handlers
 -- ---------------------------------------------------------------------------------------
-function CQT_QuestHeaderTemplate_OnInitialized(control)
-	ZO_IconHeader_OnInitialized(control)
-	control.status = control:GetNamedChild("StatusIcon")
-	control.pinned = control:GetNamedChild("PinnedIcon")
-	control.OnMouseUp = CQT_QuestHeader_OnMouseUp
-	control.OnMouseEnter = CQT_QuestHeader_OnMouseEnter
-	control.OnMouseExit = CQT_QuestHeader_OnMouseExit
---	control.OnMouseDoubleClick = CQT_QuestHeader_OnMouseDoubleClick
-end
-CQT:RegisterGlobalObject("CQT_QuestHeaderTemplate_OnInitialized", CQT_QuestHeaderTemplate_OnInitialized)
-
-function CQT_EntryTemplate_OnInitialized(control)
-	control.text = control:GetNamedChild("Text")
-end
-CQT:RegisterGlobalObject("CQT_EntryTemplate_OnInitialized", CQT_EntryTemplate_OnInitialized)
-
-function CQT_QuestConditionTemplate_OnInitialized(control)
-	CQT_EntryTemplate_OnInitialized(control)
-	control.status = control:GetNamedChild("StatusIcon")
-	control.OnMouseUp = CQT_QuestCondition_OnMouseUp
-end
-CQT:RegisterGlobalObject("CQT_QuestConditionTemplate_OnInitialized", CQT_QuestConditionTemplate_OnInitialized)
-
-
 -- For when you want to propagate to the parent node control without breaking self out of the args
 -- CQT_PropagateHandlerToParentNode("OnMouseUp", ...)
 function CQT_PropagateHandlerToParentNode(handlerName, control, ...)
@@ -1357,122 +1365,6 @@ function CQT_PropagateHandlerToParentNode(handlerName, control, ...)
 	end
 end
 CQT:RegisterGlobalObject("CQT_PropagateHandlerToParentNode", CQT_PropagateHandlerToParentNode)
-
-function CQT_QuestHeader_OnMouseUp(control, button, upInside)
-	if upInside then
-		if button == MOUSE_BUTTON_INDEX_LEFT then
-			if control.enabled and control.node:GetTree():IsEnabled() then
-				if select(7, GetJournalQuestInfo(control.journalIndex)) then
-					control.node:GetTree().treeNodeOpenStatus[control.questId] = not control.node:IsOpen()
-				else
-					control.node:GetTree().treeNodeOpenStatus[control.questId] = nil
-				end
-				control.node:GetTree():ToggleNode(control.node)
-				FOCUSED_QUEST_TRACKER:ForceAssist(control.journalIndex)
-			end
-		elseif button == MOUSE_BUTTON_INDEX_RIGHT then
-			ClearMenu()
-			if CQT:IsPinnedQuestByIndex(control.journalIndex) then
-				AddCustomMenuItem(L(SI_CQT_DISABLE_PINNING_QUEST), function()
-					CQT:DisablePinningQuestByIndex(control.journalIndex)
-				end)
-			else
-				AddCustomMenuItem(L(SI_CQT_ENABLE_PINNING_QUEST), function()
-					CQT:EnablePinningQuestByIndex(control.journalIndex)
-				end)
-			end
-			if not CQT:IsIgnoredQuestByIndex(control.journalIndex) then
-				AddCustomMenuItem(L(SI_CQT_ENABLE_IGNORING_QUEST), function()
-					CQT:EnableIgnoringQuestByIndex(control.journalIndex)
-				end)
-			end
-			AddCustomMenuItem(L(SI_QUEST_TRACKER_MENU_SHOW_IN_JOURNAL), function()
-				SYSTEMS:GetObject("questJournal"):FocusQuestWithIndex(control.journalIndex)
-				SCENE_MANAGER:Show(SYSTEMS:GetObject("questJournal"):GetSceneName())
-			end)
-			if GetIsQuestSharable(control.journalIndex) and IsUnitGrouped("player") then
-				AddCustomMenuItem(L(SI_QUEST_TRACKER_MENU_SHARE), function()
-					ShareQuest(control.journalIndex)
-				end)
-			end
-			AddCustomMenuItem(L(SI_QUEST_TRACKER_MENU_SHOW_ON_MAP), function()
-				if CQT.svCurrent.qPingAttributes.pingingEnabled then
-					if CQT.questPingManager then
-						if not CQT.questPingManager:IsShowingQuestPingPins(control.journalIndex) then
-							CQT.questPingManager:SetWorldMapQuestPingPins(control.journalIndex)
-						end
-					end
-					if CQT_WORLD_MAP_UTILITY then
-						local result = CQT_WORLD_MAP_UTILITY:ShowQuestOnMap(control.journalIndex)
-						CQT.LDL:Debug("ShowQuestOnMap: result=%s", tostring(result))
-					else
-						ZO_WorldMap_ShowQuestOnMap(control.journalIndex)
-					end
-				else
-					ZO_WorldMap_ShowQuestOnMap(control.journalIndex)
-				end
-			end)
-			if GetJournalQuestType(control.journalIndex) ~= QUEST_TYPE_MAIN_STORY then
-				AddCustomMenuItem(L(SI_QUEST_TRACKER_MENU_ABANDON), function()
-					AbandonQuest(control.journalIndex)
-			 	end)
-			end
-			ShowMenu(control)
-		end
-	end
-end
-CQT:RegisterGlobalObject("CQT_QuestHeader_OnMouseUp", CQT_QuestHeader_OnMouseUp)
-
-function CQT_QuestHeader_OnMouseEnter(control)
-	ZO_IconHeader_OnMouseEnter(control)
-	control.text:SetDesaturation(-1.5)
-	CQT.questTooltip:ShowQuestTooltipNextToControl(control.journalIndex, control:GetOwningWindow())
-end
-CQT:RegisterGlobalObject("CQT_QuestHeader_OnMouseEnter", CQT_QuestHeader_OnMouseEnter)
-
-function CQT_QuestHeader_OnMouseExit(control)
-	ZO_IconHeader_OnMouseExit(control)
-	control.text:SetDesaturation(0)
-	CQT.questTooltip:HideQuestTooltip()
-end
-CQT:RegisterGlobalObject("CQT_QuestHeader_OnMouseExit", CQT_QuestHeader_OnMouseExit)
-
-function CQT_QuestHeader_OnMouseDoubleClick(control, button)
-	if button == MOUSE_BUTTON_INDEX_LEFT then
-		CQT:ShowQuestListManagementMenu(control)
-	end
-end
-CQT:RegisterGlobalObject("CQT_QuestHeader_OnMouseDoubleClick", CQT_QuestHeader_OnMouseDoubleClick)
-
-function CQT_QuestCondition_OnMouseUp(control, button, upInside)
-	if upInside then
-		if button == MOUSE_BUTTON_INDEX_LEFT then
-			if control.node:GetTree():IsEnabled() then
-				local data = control.node.data
-				local journalIndex, stepIndex, conditionIndex = data.journalIndex, data.stepIndex, data.conditionIndex
-				if select(7, GetJournalQuestInfo(journalIndex)) then
-					-- focused quest only 
-					CQT.LDL:Debug("questCondition_leftClick: %s-%s-%s", tostring(journalIndex), tostring(stepIndex), tostring(conditionIndex))
-					if CQT.svCurrent.qPingAttributes.pingingEnabled then
-						if CQT.questPingManager then
-							if not CQT.questPingManager:IsShowingQuestPingPins(journalIndex) then
-								CQT.questPingManager:SetWorldMapQuestPingPins(journalIndex)
-							end
-						end
-						if CQT_WORLD_MAP_UTILITY then
-							local result = CQT_WORLD_MAP_UTILITY:ShowQuestOnMap(journalIndex, stepIndex, conditionIndex)
-							CQT.LDL:Debug("ShowQuestOnMap: result=%s", tostring(result))
-						end
-					end
-					return true	-- suppress event propagation regardless of the pingingEnabled attribute.
-				end
-			end
-		elseif button == MOUSE_BUTTON_INDEX_RIGHT then
-			CQT.LDL:Debug("questCondition_rightClick:")
-		end
-	end
-end
-CQT:RegisterGlobalObject("CQT_QuestCondition_OnMouseUp", CQT_QuestCondition_OnMouseUp)
 
 function CQT_QuestListButton_OnClicked(control, button)
 	if button == MOUSE_BUTTON_INDEX_LEFT then

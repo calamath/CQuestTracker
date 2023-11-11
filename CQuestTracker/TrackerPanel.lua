@@ -29,7 +29,7 @@ function CQT_TrackerPanel:Initialize(control, overriddenAttrib)
 		headerFont = "$(BOLD_FONT)|$(KB_18)|soft-shadow-thick", 
 		headerColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_NORMAL) }, 
 		headerColorSelected = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
-		headerChildIndent = 30, 
+		headerChildIndent = 36, 
 		headerChildSpacing = 0, 
 		conditionFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
 		conditionColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
@@ -39,8 +39,12 @@ function CQT_TrackerPanel:Initialize(control, overriddenAttrib)
 		showHintStep = true, 
 		hintFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
 		hintColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
+		showFocusIcon = true, 
+		showTypeIcon = true, 
+		enableTypeIconColoring = true, 
+		showRepeatableQuestIcon = true, 
 		titlebarColor = { 0.4, 0.6666667, 1, 0.7 }, 
-		bgColor = { ZO_ColorDef:New(0, 0, 0, 0):UnpackRGBA() }, 
+		bgColor = { 0, 0, 0, 0 }, 
 	}
 	CT_AdjustableInitializingObject.Initialize(self, overriddenAttrib)
 	self.panelControl = control
@@ -198,6 +202,7 @@ function CQT_TrackerPanel:InitializeTree()
 	end
 	local function HeaderNodeSetup(node, control, data, open, userRequested, enabled)
 		local name, _, _, _, _, completed, tracked, _, _, questType, zoneDisplayType = GetJournalQuestInfo(data.journalIndex)
+		local repeatType = GetJournalQuestRepeatType(data.journalIndex)
 		local timerWidth = data.timer and data.timer:GetWidth() or 0
 		control.journalIndex = data.journalIndex
 		control.questId = data.questId
@@ -206,20 +211,35 @@ function CQT_TrackerPanel:InitializeTree()
 		control.text:RefreshTextColor()
 		control.text:SetDimensionConstraints(0, 0, HeaderNodeLabelMaxWidth(control) - timerWidth, 0)
 		control.text:SetText(name)
---		control.icon:SetTexture("/esoui/art/icons/heraldrycrests_misc_blank_01.dds")	-- black icon
-		control.icon:SetTexture("EsoUI/Art/Journal/journal_Quest_Selected.dds")
-		control.icon:SetHidden(not tracked)
-		control.iconHighlight:SetTexture("EsoUI/Art/Journal/journal_Quest_Selected.dds")
-        control.iconHighlight:SetHidden(not tracked)
-		control.status:SetTexture("EsoUI/Art/Quest/conditioncomplete.dds")
-		control.status:SetColor(0, 1, 0, 1)
-		control.status:SetHidden(not completed)
-		if data.timestamp[3] then
-			control.pinned:SetTexture("EsoUI/Art/Miscellaneous/locked_up.dds")
-			control.pinned:SetHidden(false)
+		if self:GetAttribute("showTypeIcon") then
+			local questTypeIconTexture = GetZoneDisplayTypeIcon(zoneDisplayType)
+			if questTypeIconTexture then
+				control.icon:SetTexture(questTypeIconTexture)
+				if self:GetAttribute("enableTypeIconColoring") and repeatType ~= QUEST_REPEAT_NOT_REPEATABLE then
+					control.icon:SetColor(0.44, 0.71, 0.69, 1)
+				else
+					control.icon:SetColor(1, 1, 1, 1)
+				end
+				control.icon:SetHidden(false)
+			else
+				if self:GetAttribute("showRepeatableQuestIcon") and repeatType ~= QUEST_REPEAT_NOT_REPEATABLE then
+					control.icon:SetTexture("EsoUI/Art/Journal/Gamepad/gp_questTypeIcon_repeatable.dds")
+					control.icon:SetHidden(false)
+				else
+					control.icon:SetHidden(true)
+				end
+			end
 		else
-			control.pinned:SetHidden(true)
+			control.icon:SetHidden(true)
 		end
+		control.statusIcon:SetHidden(not completed)
+		if data.timestamp[3] then
+			control.pinnedIcon:SetHidden(false)
+		else
+			control.pinnedIcon:SetHidden(true)
+		end
+		local showFocusIcon = self:GetAttribute("showFocusIcon") and tracked
+		control.focusIcon:SetHidden(not showFocusIcon)
 		if data.timer then
 			local _, headerTextCenterY = control.text:GetCenter()
 			data.timer.time:SetFont(self:GetAttribute("headerFont"))
@@ -228,12 +248,13 @@ function CQT_TrackerPanel:InitializeTree()
 			data.timer:SetParent(control)
 			data.timer:SetAnchor(RIGHT, control, TOPRIGHT, 0, headerTextCenterY - control:GetTop())
 		end
-		ZO_IconHeader_Setup(control, tracked, enabled, true, HeaderNodeUpdateSize)
+		CQT_T_QuestHeader_Setup(control, tracked, enabled, true)
+		HeaderNodeUpdateSize(control)
 	end
 	local function HeaderNodeEquality(left, right)
 		return left.questId == right.questId
 	end
-	self.trackerTree:AddTemplate("CQT_QuestHeader", HeaderNodeSetup, nil, HeaderNodeEquality, self:GetAttribute("headerChildIndent"), self:GetAttribute("headerChildSpacing"))
+	self.trackerTree:AddTemplate("CQT_T_QuestHeaderA", HeaderNodeSetup, nil, HeaderNodeEquality, self:GetAttribute("headerChildIndent"), self:GetAttribute("headerChildSpacing"))
 
 	local function EntryNodeUpdateSize(control)
 		control:SetDimensions(control.text:GetTextWidth(), control.text:GetTextHeight())
@@ -249,7 +270,7 @@ function CQT_TrackerPanel:InitializeTree()
 		control.text:SetText(data.text or "")
 		EntryNodeUpdateSize(control)
 	end
-	self.trackerTree:AddTemplate("CQT_Entry", EntryNodeSetup)
+	self.trackerTree:AddTemplate("CQT_T_Entry", EntryNodeSetup)
 
 	local function ConditionNodeLabelMaxWidth(control)
 		local node = control.node
@@ -271,20 +292,43 @@ function CQT_TrackerPanel:InitializeTree()
 		end
 		control.text:SetDimensionConstraints(0, 0, ConditionNodeLabelMaxWidth(control), 0)
 		control.text:SetText(data.text or "unknown")
-		control.status:SetTexture("EsoUI/Art/Miscellaneous/check_icon_32.dds")
-		control.status:SetColor(0, 1, 0, 1)
-		control.status:SetHidden(not data.isChecked)
+		control.statusIcon:SetHidden(not data.isChecked)
 		ConditionNodeUpdateSize(control)
 	end
 	local function ConditionNodeEquality(left, right)
 		return left.text == right.text
 	end
-	self.trackerTree:AddTemplate("CQT_QuestCondition", ConditionNodeSetup, nil, ConditionNodeEquality, self:GetAttribute("conditionChildIndent"), self:GetAttribute("conditionChildSpacing"))
+	self.trackerTree:AddTemplate("CQT_T_QuestConditionA", ConditionNodeSetup, nil, ConditionNodeEquality, self:GetAttribute("conditionChildIndent"), self:GetAttribute("conditionChildSpacing"))
 	self.trackerTree:SetExclusive(false)
 	self.trackerTree:SetOpenAnimation("ZO_TreeOpenAnimation")
 	self.trackerTree.treeNodeOpenStatus = {}
 end
 
+
+local function GetNumVisibleQuestConditions(journalIndex, stepIndex)
+	local visibleConditionCount = 0
+	for conditionIndex = 1, GetJournalQuestNumConditions(journalIndex, stepIndex) do
+		local _, _, _, _, _, isVisible = GetJournalQuestConditionValues(journalIndex, stepIndex, conditionIndex)
+		if isVisible then
+			visibleConditionCount = visibleConditionCount + 1
+		end
+	end
+	return visibleConditionCount
+end
+local function GetNumVisibleQuestHintSteps(journalIndex)
+	local visibleHintCount = 0
+	for stepIndex = QUEST_MAIN_STEP_INDEX + 1, GetJournalQuestNumSteps(journalIndex) do
+		local _, stepVisibility, stepType = GetJournalQuestStepInfo(journalIndex, stepIndex)
+		if stepType ~= QUEST_STEP_TYPE_END and stepVisibility == QUEST_STEP_VISIBILITY_HINT then
+			visibleHintCount = visibleHintCount + GetNumVisibleQuestConditions(journalIndex, stepIndex)
+		end
+	end
+	return visibleHintCount
+end
+local function IsOrDescription(journalIndex, stepIndex)
+	local _, _, stepType, overrideText = GetJournalQuestStepInfo(journalIndex, stepIndex)
+	return (not overrideText or overrideText == "") and stepType == QUEST_STEP_TYPE_OR and GetNumVisibleQuestConditions(journalIndex, stepIndex) > 2
+end
 function CQT_TrackerPanel:RefreshTree()
 	local function ShouldOpenQuestHeader(questInfo)
 		local userRequestedOpen = self:GetTreeNodeOpenStatus(questInfo.questId)
@@ -298,30 +342,6 @@ function CQT_TrackerPanel:RefreshTree()
 		else
 			return userRequestedOpen
 		end
-	end
-	local function GetNumVisibleQuestConditions(journalIndex, stepIndex)
-		local visibleConditionCount = 0
-		for conditionIndex = 1, GetJournalQuestNumConditions(journalIndex, stepIndex) do
-			local _, _, _, _, _, isVisible = GetJournalQuestConditionValues(journalIndex, stepIndex, conditionIndex)
-			if isVisible then
-				visibleConditionCount = visibleConditionCount + 1
-			end
-		end
-		return visibleConditionCount
-	end
-	local function GetNumVisibleQuestHintSteps(journalIndex)
-		local visibleHintCount = 0
-		for stepIndex = QUEST_MAIN_STEP_INDEX + 1, GetJournalQuestNumSteps(journalIndex) do
-			local _, stepVisibility, stepType = GetJournalQuestStepInfo(journalIndex, stepIndex)
-			if stepType ~= QUEST_STEP_TYPE_END and stepVisibility == QUEST_STEP_VISIBILITY_HINT then
-				visibleHintCount = visibleHintCount + GetNumVisibleQuestConditions(journalIndex, stepIndex)
-			end
-		end
-		return visibleHintCount
-	end
-	local function IsOrDescription(journalIndex, stepIndex)
-		local _, _, stepType, overrideText = GetJournalQuestStepInfo(journalIndex, stepIndex)
-		return (not overrideText or overrideText == "") and stepType == QUEST_STEP_TYPE_OR and GetNumVisibleQuestConditions(journalIndex, stepIndex) > 2
 	end
 	local function PopulateQuestConditions(journalIndex, stepIndex, tree, parentNode, sound, open)
 		local firstNode = nil
@@ -345,12 +365,12 @@ function CQT_TrackerPanel:RefreshTree()
 					end
 				end
 			end
-			firstNode = tree:AddNode("CQT_QuestCondition", { journalIndex = journalIndex, stepIndex = stepIndex, text = overrideText, visibility = stepVisibility, isChecked = checked }, parentNode, sound, open)
+			firstNode = tree:AddNode("CQT_T_QuestConditionA", { journalIndex = journalIndex, stepIndex = stepIndex, text = overrideText, visibility = stepVisibility, isChecked = checked }, parentNode, sound, open)
 		else
 			for conditionIndex = 1, conditionCount do
 				local conditionText, curCount, maxCount, isFailCondition, isComplete, isGroupCreditShared, isVisible, conditionType = GetJournalQuestConditionInfo(journalIndex, stepIndex, conditionIndex)
 				if (not isFailCondition) and (conditionText ~= "") and isVisible then
-					local taskNode = tree:AddNode("CQT_QuestCondition", { journalIndex = journalIndex, stepIndex = stepIndex, conditionIndex = conditionIndex, text = conditionText, visibility = stepVisibility, isChecked = isComplete or (curCount == maxCount) }, parentNode, sound, open)
+					local taskNode = tree:AddNode("CQT_T_QuestConditionA", { journalIndex = journalIndex, stepIndex = stepIndex, conditionIndex = conditionIndex, text = conditionText, visibility = stepVisibility, isChecked = isComplete or (curCount == maxCount) }, parentNode, sound, open)
 					firstNode = firstNode or taskNode
 					if previousNode then
 						previousNode.nextNode = taskNode
@@ -372,10 +392,10 @@ function CQT_TrackerPanel:RefreshTree()
 	local firstNode = nil
 	local previousNode = nil
 	for i, questInfo in ipairs(questList) do
-		questNode[i] = self.trackerTree:AddNode("CQT_QuestHeader", questInfo, nil, nil, ShouldOpenQuestHeader(questInfo))
+		questNode[i] = self.trackerTree:AddNode("CQT_T_QuestHeaderA", questInfo, nil, nil, ShouldOpenQuestHeader(questInfo))
 		self.journalIndexToTreeNode[questInfo.journalIndex] = questNode[i]
 		if IsOrDescription(questInfo.journalIndex, QUEST_MAIN_STEP_INDEX) then
-			local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", { text = L(SI_CQT_QUEST_OR_DESCRIPTION) }, questNode[i], nil, true)
+			local subHeaderNode = self.trackerTree:AddNode("CQT_T_Entry", { text = L(SI_CQT_QUEST_OR_DESCRIPTION) }, questNode[i], nil, true)
 		end
 		PopulateQuestConditions(questInfo.journalIndex, QUEST_MAIN_STEP_INDEX, self.trackerTree, questNode[i], nil, true)
 		if self:GetAttribute("showOptionalStep") then
@@ -383,9 +403,9 @@ function CQT_TrackerPanel:RefreshTree()
 				local _, stepVisibility, stepType = GetJournalQuestStepInfo(questInfo.journalIndex, stepIndex)
 				if stepType ~= QUEST_STEP_TYPE_END and stepVisibility == QUEST_STEP_VISIBILITY_OPTIONAL then
 					if IsOrDescription(questInfo.journalIndex, stepIndex) then
-						local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", { text = L(SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION) }, questNode[i], nil, true)
+						local subHeaderNode = self.trackerTree:AddNode("CQT_T_Entry", { text = L(SI_CQT_QUEST_OPTIONAL_STEPS_OR_DESCRIPTION) }, questNode[i], nil, true)
 					else
-						local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", { text = L(SI_CQT_QUEST_OPTIONAL_STEPS_DESCRIPTION) }, questNode[i], nil, true)
+						local subHeaderNode = self.trackerTree:AddNode("CQT_T_Entry", { text = L(SI_CQT_QUEST_OPTIONAL_STEPS_DESCRIPTION) }, questNode[i], nil, true)
 					end
 					PopulateQuestConditions(questInfo.journalIndex, stepIndex, self.trackerTree, questNode[i], nil, true)
 				end
@@ -399,7 +419,7 @@ function CQT_TrackerPanel:RefreshTree()
 					local _, stepVisibility, stepType = GetJournalQuestStepInfo(questInfo.journalIndex, stepIndex)
 					if stepType ~= QUEST_STEP_TYPE_END and stepVisibility == QUEST_STEP_VISIBILITY_HINT then
 						if not hintSubHeaderDisplayed then
-							local subHeaderNode = self.trackerTree:AddNode("CQT_Entry", { text = zo_strformat(L(SI_CQT_QUEST_HINT_STEPS_HEADER), visibleHintCount), visibility = stepVisibility }, questNode[i], nil, false)
+							local subHeaderNode = self.trackerTree:AddNode("CQT_T_Entry", { text = zo_strformat(L(SI_CQT_QUEST_HINT_STEPS_HEADER), visibleHintCount), visibility = stepVisibility }, questNode[i], nil, false)
 							hintSubHeaderDisplayed = true
 						end
 						PopulateQuestConditions(questInfo.journalIndex, stepIndex, self.trackerTree, questNode[i], nil, false)
@@ -415,3 +435,168 @@ function CQT_TrackerPanel:IsTrackedQuestByIndex(journalIndex)
 end
 
 CQuestTracker:RegisterClassObject("CQT_TrackerPanel", CQT_TrackerPanel)
+
+
+-- =============================================================================================================================
+
+-- ---------------------------------------------------------------------------------------
+-- XML Handlers
+-- ---------------------------------------------------------------------------------------
+local function CQT_T_QuestHeaderTemplate_OnInitialized(control)
+	control.text = control:GetNamedChild("Text")
+	control.icon = control:GetNamedChild("Icon")
+	control.iconHighlight = control:GetNamedChild("IconHighlight")
+--	control.animationTemplate = "IconHeaderAnimation"
+	control.statusIcon = control:GetNamedChild("StatusIcon")
+	control.pinnedIcon = control:GetNamedChild("PinnedIcon")
+	control.focusIcon = control:GetNamedChild("FocusIcon")
+	control.OnMouseUp = CQT_T_QuestHeader_OnMouseUp
+	control.OnMouseEnter = CQT_T_QuestHeader_OnMouseEnter
+	control.OnMouseExit = CQT_T_QuestHeader_OnMouseExit
+--	control.OnMouseDoubleClick = CQT_QuestHeader_OnMouseDoubleClick
+end
+CQT:RegisterGlobalObject("CQT_T_QuestHeaderTemplate_OnInitialized", CQT_T_QuestHeaderTemplate_OnInitialized)
+
+local function CQT_T_QuestHeader_OnMouseUp(control, button, upInside)
+	if upInside then
+		if button == MOUSE_BUTTON_INDEX_LEFT then
+			if control.enabled and control.node:GetTree():IsEnabled() then
+				if select(7, GetJournalQuestInfo(control.journalIndex)) then
+					control.node:GetTree().treeNodeOpenStatus[control.questId] = not control.node:IsOpen()
+				else
+					control.node:GetTree().treeNodeOpenStatus[control.questId] = nil
+				end
+				control.node:GetTree():ToggleNode(control.node)
+				FOCUSED_QUEST_TRACKER:ForceAssist(control.journalIndex)
+			end
+		elseif button == MOUSE_BUTTON_INDEX_RIGHT then
+			ClearMenu()
+			if CQT:IsPinnedQuestByIndex(control.journalIndex) then
+				AddCustomMenuItem(L(SI_CQT_DISABLE_PINNING_QUEST), function()
+					CQT:DisablePinningQuestByIndex(control.journalIndex)
+				end)
+			else
+				AddCustomMenuItem(L(SI_CQT_ENABLE_PINNING_QUEST), function()
+					CQT:EnablePinningQuestByIndex(control.journalIndex)
+				end)
+			end
+			if not CQT:IsIgnoredQuestByIndex(control.journalIndex) then
+				AddCustomMenuItem(L(SI_CQT_ENABLE_IGNORING_QUEST), function()
+					CQT:EnableIgnoringQuestByIndex(control.journalIndex)
+				end)
+			end
+			AddCustomMenuItem(L(SI_QUEST_TRACKER_MENU_SHOW_IN_JOURNAL), function()
+				SYSTEMS:GetObject("questJournal"):FocusQuestWithIndex(control.journalIndex)
+				SCENE_MANAGER:Show(SYSTEMS:GetObject("questJournal"):GetSceneName())
+			end)
+			if GetIsQuestSharable(control.journalIndex) and IsUnitGrouped("player") then
+				AddCustomMenuItem(L(SI_QUEST_TRACKER_MENU_SHARE), function()
+					ShareQuest(control.journalIndex)
+				end)
+			end
+			AddCustomMenuItem(L(SI_QUEST_TRACKER_MENU_SHOW_ON_MAP), function()
+				local result = CQT:ShowQuestPingOnMap(control.journalIndex)
+				if result == nil then
+					ZO_WorldMap_ShowQuestOnMap(control.journalIndex)
+				end
+			end)
+			if GetJournalQuestType(control.journalIndex) ~= QUEST_TYPE_MAIN_STORY then
+				AddCustomMenuItem(L(SI_QUEST_TRACKER_MENU_ABANDON), function()
+					AbandonQuest(control.journalIndex)
+			 	end)
+			end
+			ShowMenu(control)
+		end
+	end
+end
+CQT:RegisterSharedObject("CQT_T_QuestHeader_OnMouseUp", CQT_T_QuestHeader_OnMouseUp)
+
+local function CQT_T_QuestHeader_OnMouseEnter(control)
+	local questTooltip = GetQuestTooltipManager()
+	ZO_SelectableLabel_OnMouseEnter(control.text)
+	control.text:SetDesaturation(-1.5)
+	if control.text:WasTruncated() then
+		InitializeTooltip(InformationTooltip, control, BOTTOM, -10)
+		SetTooltipText(InformationTooltip, control.text:GetText())
+	end
+	if questTooltip then
+		questTooltip:ShowQuestTooltipNextToControl(control.journalIndex, control:GetOwningWindow())
+	end
+end
+CQT:RegisterSharedObject("CQT_T_QuestHeader_OnMouseEnter", CQT_T_QuestHeader_OnMouseEnter)
+
+local function CQT_T_QuestHeader_OnMouseExit(control)
+	local questTooltip = GetQuestTooltipManager()
+	ZO_SelectableLabel_OnMouseExit(control.text)
+	control.text:SetDesaturation(0)
+	ClearTooltip(InformationTooltip)
+	if questTooltip then
+		questTooltip:HideQuestTooltip()
+	end
+end
+CQT:RegisterSharedObject("CQT_T_QuestHeader_OnMouseExit", CQT_T_QuestHeader_OnMouseExit)
+
+local function CQT_T_QuestHeader_Setup(control, open, enabled, disableAnimation)
+	enabled = enabled == nil or enabled
+	control.enabled = enabled
+	if control.node then
+		control.node.enabled = enabled
+	end
+	control.allowIconAnimation = not disableAnimation
+
+	if not control.icon.animation and control.animationTemplate and control.allowIconScaling then
+        control.icon.animation = ANIMATION_MANAGER:CreateTimelineFromVirtual(control.animationTemplate, control.icon)
+    end
+
+	if enabled and open then
+		if control.allowIconAnimation then
+			if control.icon.animation then
+				control.icon.animation:PlayForward()
+			end
+		end
+	else
+		if control.allowIconAnimation then
+			if control.icon.animation then
+				control.icon.animation:PlayBackward()
+			end
+		end
+	end
+
+	-- for ZO_SelectableLabel
+	control.text:SetSelected(open)
+	control.text:SetEnabled(enabled)
+end
+CQT:RegisterSharedObject("CQT_T_QuestHeader_Setup", CQT_T_QuestHeader_Setup)
+
+
+local function CQT_T_EntryTemplate_OnInitialized(control)
+	control.text = control:GetNamedChild("Text")
+end
+CQT:RegisterGlobalObject("CQT_T_EntryTemplate_OnInitialized", CQT_T_EntryTemplate_OnInitialized)
+
+local function CQT_T_QuestConditionTemplate_OnInitialized(control)
+	CQT_T_EntryTemplate_OnInitialized(control)
+	control.statusIcon = control:GetNamedChild("StatusIcon")
+	control.OnMouseUp = CQT_T_QuestCondition_OnMouseUp
+end
+CQT:RegisterGlobalObject("CQT_T_QuestConditionTemplate_OnInitialized", CQT_T_QuestConditionTemplate_OnInitialized)
+
+local function CQT_T_QuestCondition_OnMouseUp(control, button, upInside)
+	if upInside then
+		if button == MOUSE_BUTTON_INDEX_LEFT then
+			if control.node:GetTree():IsEnabled() then
+				local data = control.node.data
+				local journalIndex, stepIndex, conditionIndex = data.journalIndex, data.stepIndex, data.conditionIndex
+				if select(7, GetJournalQuestInfo(journalIndex)) then
+					-- focused quest only 
+					CQT.LDL:Debug("questCondition_leftClick: %s-%s-%s", tostring(journalIndex), tostring(stepIndex), tostring(conditionIndex))
+					CQT:ShowQuestPingOnMap(journalIndex, stepIndex, conditionIndex)
+					return true	-- suppress event propagation regardless of the pingingEnabled attribute.
+				end
+			end
+		elseif button == MOUSE_BUTTON_INDEX_RIGHT then
+			CQT.LDL:Debug("questCondition_rightClick:")
+		end
+	end
+end
+CQT:RegisterSharedObject("CQT_T_QuestCondition_OnMouseUp", CQT_T_QuestCondition_OnMouseUp)
