@@ -6,6 +6,7 @@
 
 --	Localization Strings
 SafeAddString(SI_BINDING_NAME_CQT_TOGGLE_TRACKER_PANEL_VISIBILITY, 		 "Toggle Tracker Panel", 1)
+SafeAddString(SI_BINDING_NAME_CQT_SHOW_FOCUSED_QUEST_ON_MAP, 	"Show Focused Quest On Map", 1)
 
 SafeAddString(SI_CQT_WELCOME_TEXT1, 							"Welcome to CQuestTracker add-on !", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT2, 							" This quest tracker will automatically update the displayed list and show recent ongoing quests with higher priority.", 1)
@@ -56,6 +57,15 @@ SafeAddString(SI_CQT_UI_CLAMPED_TO_SCREEN_OP_TIPS,				"Turn on Clamped to Screen
 SafeAddString(SI_CQT_UI_HIDE_QUEST_HINT_STEP_OP_NAME,			"Hide Quest Hint Steps", 1)
 SafeAddString(SI_CQT_UI_HIDE_QUEST_HINT_STEP_OP_TIPS,			"Turn on this option to suppress the display of quest hints, reducing the height of the tracker display area.", 1)
 SafeAddString(SI_CQT_UI_TRACKER_VISUAL_HEADER1_TEXT,			"Tracker Visual Options", 1)
+SafeAddString(SI_CQT_UI_QUEST_HEADER_ICON_SUBHEADER_TEXT, 		"Quest Header Icons:", 1)
+SafeAddString(SI_CQT_UI_SHOW_FOCUSED_QUEST_ICON_OP_NAME, 		"|u25:0::|uShow Focused Quest Icon", 1)
+SafeAddString(SI_CQT_UI_SHOW_FOCUSED_QUEST_ICON_OP_TIPS, 		"Turn on this option to show the focused quest icon in the quest header.", 1)
+SafeAddString(SI_CQT_UI_SHOW_QUEST_TYPE_ICON_OP_NAME, 			"|u25:0::|uShow Quest Type Icon", 1)
+SafeAddString(SI_CQT_UI_SHOW_QUEST_TYPE_ICON_OP_TIPS, 			"Turn on this option to show the quest type icon in the quest header.", 1)
+SafeAddString(SI_CQT_UI_QUEST_TYPE_ICON_COLOR_OP_NAME, 			"|u25:0::|uEnable Repeatable Quest Coloring", 1)
+SafeAddString(SI_CQT_UI_QUEST_TYPE_ICON_COLOR_OP_TIPS, 			"Turn on this option to allow repeatable quest coloring on the quest type icon.", 1)
+SafeAddString(SI_CQT_UI_SHOW_REPEATABLE_QUEST_ICON_OP_NAME, 	"|u25:0::|uShow Repeatable Quest Icon", 1)
+SafeAddString(SI_CQT_UI_SHOW_REPEATABLE_QUEST_ICON_OP_TIPS, 	"Turn on this option to show the repeatable quest icon as quest type icon.", 1)
 SafeAddString(SI_CQT_UI_QUEST_NAME_FONT_SUBHEADER_TEXT, 		"Quest Name Font:", 1)
 SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONT_SUBHEADER_TEXT, 	"Quest Condition Font:", 1)
 SafeAddString(SI_CQT_UI_QUEST_HINT_FONT_SUBHEADER_TEXT, 		"Quest Hint Font:", 1)
@@ -107,4 +117,12 @@ SafeAddString(SI_CQT_UI_AUTO_TRACK_ADDED_QUEST_OP_NAME, 		"|u25:0::|uAuto track 
 SafeAddString(SI_CQT_UI_AUTO_TRACK_ADDED_QUEST_OP_TIPS, 		"Turning this setting on will automatically change the focused quest to added quest. The standard setting is on.", 1)
 SafeAddString(SI_CQT_UI_AUTO_TRACK_PROGRESSED_QUEST_OP_NAME, 	"|u25:0::|uAuto track to the progressed quest", 1)
 SafeAddString(SI_CQT_UI_AUTO_TRACK_PROGRESSED_QUEST_OP_TIPS, 	"Turning this setting on will automatically change the focused quest as the quest progresses. The standard setting is off.", 1)
+SafeAddString(SI_CQT_UI_QUEST_PING_NAVIGATION_HEADER1_TEXT, 	"Quest PING Navigation", 1)
+SafeAddString(SI_CQT_UI_QUEST_PING_NAVIGATION_HEADER1_TIPS, 	"In the CQuestTracker panel, when you click on the quest condition content of the focused quest or select Show on Map from the right-click menu, it will highlight your destination on the map with ping animations. That means you will have a clearer sense of where you should go than ever before.", 1)
+SafeAddString(SI_CQT_UI_ENABLE_QUEST_PING_OP_NAME, 				"|u25:0::|uEnable Quest PING Navigation", 1)
+SafeAddString(SI_CQT_UI_ENABLE_QUEST_PING_OP_TIPS, 				"Show ping animation to focused quest destination on world map to make it easier to find quest destinations.\n Note that limit to the quest listed on the tracker panel only. The standard setting is on.", 1)
+SafeAddString(SI_CQT_UI_QUEST_PING_ON_FOCUS_CHANGE_OP_NAME, 	"|u25:0::|uAuto show quest PING on focused quest changes", 1)
+SafeAddString(SI_CQT_UI_QUEST_PING_ON_FOCUS_CHANGE_OP_TIPS, 	"Turning this setting on will automatically show the quest pings on the map when you change the focused quest.\n Note that limit to the quest listed on the tracker panel only. The standard setting is on.", 1)
+SafeAddString(SI_CQT_UI_STOP_QUEST_PING_ON_MINIMAP_OP_NAME, 	"|u25:0::|uSuppress quest PING on Minimap", 1)
+SafeAddString(SI_CQT_UI_STOP_QUEST_PING_ON_MINIMAP_OP_TIPS, 	"Turning this setting on the quest ping will only appear when you perform an action that displays your quest destination on the map. After you leave in-game map scenes, you will no longer see quest pings. Try this option if you do not want the quest ping to appear on the minimap. The standard setting is off.", 1)
 

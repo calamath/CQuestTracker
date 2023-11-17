@@ -5,6 +5,7 @@
 
 --	Localization Strings
 SafeAddString(SI_BINDING_NAME_CQT_TOGGLE_TRACKER_PANEL_VISIBILITY, 		 "トラッカーパネルの表示/非表示", 1)
+SafeAddString(SI_BINDING_NAME_CQT_SHOW_FOCUSED_QUEST_ON_MAP, 	"フォーカスクエストをマップに表示", 1)
 
 SafeAddString(SI_CQT_WELCOME_TEXT1, 							"CQuestTrackerアドオンへようこそ！", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT2, 							"　このクエストトラッカーは、表示されているリストを自動的に更新し、最近進行中のクエストをより高い優先度で表示します。", 1)
@@ -57,6 +58,15 @@ SafeAddString(SI_CQT_UI_CLAMPED_TO_SCREEN_OP_TIPS,				"クエストトラッカ�
 SafeAddString(SI_CQT_UI_HIDE_QUEST_HINT_STEP_OP_NAME,			"クエストヒントを非表示にする", 1)
 SafeAddString(SI_CQT_UI_HIDE_QUEST_HINT_STEP_OP_TIPS,			"このオプションをオンにすると、クエストのヒントの表示が抑制され、トラッカーの表示領域の高さを抑えることができます。", 1)
 SafeAddString(SI_CQT_UI_TRACKER_VISUAL_HEADER1_TEXT,			"ビジュアルオプション", 1)
+SafeAddString(SI_CQT_UI_QUEST_HEADER_ICON_SUBHEADER_TEXT, 		"クエストヘッダーアイコン:", 1)
+SafeAddString(SI_CQT_UI_SHOW_FOCUSED_QUEST_ICON_OP_NAME, 		"|u25:0::|uフォーカスクエストのアイコンを表示", 1)
+SafeAddString(SI_CQT_UI_SHOW_FOCUSED_QUEST_ICON_OP_TIPS, 		"このオプションをオンにすると、クエストヘッダーにフォーカスクエストのアイコンが表示されます。", 1)
+SafeAddString(SI_CQT_UI_SHOW_QUEST_TYPE_ICON_OP_NAME, 			"|u25:0::|uクエスト種別アイコンを表示", 1)
+SafeAddString(SI_CQT_UI_SHOW_QUEST_TYPE_ICON_OP_TIPS, 			"このオプションをオンにすると、クエストヘッダーにクエスト種別アイコンが表示されます。", 1)
+SafeAddString(SI_CQT_UI_QUEST_TYPE_ICON_COLOR_OP_NAME, 			"|u25:0::|u再プレイ可能なクエストの色づけ", 1)
+SafeAddString(SI_CQT_UI_QUEST_TYPE_ICON_COLOR_OP_TIPS, 			"このオプションをオンにすると、クエスト種別アイコンにも、再プレイ可能なクエストの色付け（水色）が行われます。", 1)
+SafeAddString(SI_CQT_UI_SHOW_REPEATABLE_QUEST_ICON_OP_NAME, 	"|u25:0::|u再プレイ可能なクエストのアイコンを表示", 1)
+SafeAddString(SI_CQT_UI_SHOW_REPEATABLE_QUEST_ICON_OP_TIPS, 	"このオプションをオンにすると、再プレイ可能なクエストのアイコンもクエスト種別アイコンの一種として表示されます。", 1)
 SafeAddString(SI_CQT_UI_QUEST_NAME_FONT_SUBHEADER_TEXT, 		"クエスト名のフォント:", 1)
 SafeAddString(SI_CQT_UI_QUEST_CONDITION_FONT_SUBHEADER_TEXT, 	"クエスト状況のフォント:", 1)
 SafeAddString(SI_CQT_UI_QUEST_HINT_FONT_SUBHEADER_TEXT, 		"クエストヒントのフォント:", 1)
@@ -108,4 +118,12 @@ SafeAddString(SI_CQT_UI_AUTO_TRACK_ADDED_QUEST_OP_NAME, 		"|u25:0::|u追加さ�
 SafeAddString(SI_CQT_UI_AUTO_TRACK_ADDED_QUEST_OP_TIPS, 		"この設定をオンにすると、クエストを引き受けたときにフォーカス中クエストを自動的にそれに変更します。 標準ではオンです。", 1)
 SafeAddString(SI_CQT_UI_AUTO_TRACK_PROGRESSED_QUEST_OP_NAME, 	"|u25:0::|u進捗したクエストに自動追尾", 1)
 SafeAddString(SI_CQT_UI_AUTO_TRACK_PROGRESSED_QUEST_OP_TIPS, 	"この設定をオンにすると、クエストが進捗したときにフォーカス中クエストを自動的にそれに変更します。標準ではオフです。", 1)
+SafeAddString(SI_CQT_UI_QUEST_PING_NAVIGATION_HEADER1_TEXT, 	"クエストPINGナビゲーション", 1)
+SafeAddString(SI_CQT_UI_QUEST_PING_NAVIGATION_HEADER1_TIPS, 	"CQuestTrackerパネルで、フォーカス中のクエストのタスク表示部を左クリックするか、右クリックメニューから「マップに表示」を選択すると、目的地がPINGアニメーションでマップに強調表示されます。つまり、今まで以上に行くべき場所が明確にわかるようになります。", 1)
+SafeAddString(SI_CQT_UI_ENABLE_QUEST_PING_OP_NAME, 				"|u25:0::|uクエストPINGナビゲーションの有効化", 1)
+SafeAddString(SI_CQT_UI_ENABLE_QUEST_PING_OP_TIPS, 				"フォーカスクエストの目的地をマップにPINGアニメーションとして表示し、クエストの目的地を見つけやすくします。\nただし、本機能はトラッカーパネルに掲載中のクエストに限定されます。標準ではオンです。", 1)
+SafeAddString(SI_CQT_UI_QUEST_PING_ON_FOCUS_CHANGE_OP_NAME, 	"|u25:0::|uフォーカス変更時にクエストPINGを自動表示", 1)
+SafeAddString(SI_CQT_UI_QUEST_PING_ON_FOCUS_CHANGE_OP_TIPS, 	"この設定をオンにすると、フォーカスクエストを変更した際に、マップにクエストPINGが自動的に表示されます。標準ではオンです。", 1)
+SafeAddString(SI_CQT_UI_STOP_QUEST_PING_ON_MINIMAP_OP_NAME, 	"|u25:0::|uミニマップでのクエストPING表示を抑制する", 1)
+SafeAddString(SI_CQT_UI_STOP_QUEST_PING_ON_MINIMAP_OP_TIPS, 	"この設定をオンにすると、クエストをマップに表示する操作を実行したときのみ、クエストPINGが表示されるようになります。マップ画面を離れると、クエストPINGは非表示になります。クエストPINGをミニマップに表示させたくない場合は、このオプションを試してください。標準ではオフです。", 1)
 

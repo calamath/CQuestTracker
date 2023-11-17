@@ -1,3 +1,8 @@
+V2.1.2: [V20102] by Calamath
+- Added option to suppress quest ping animation on minimap.
+- Added key bindings to display the focused quest destination on map. This is also intended to assist gamepad users.
+- Updated localization strings.
+
 V2.1.1: [V20101] by Calamath
 - Added quest type icon display for the quest tracker panel.
 - Added some options to adjust quest header icon settings.

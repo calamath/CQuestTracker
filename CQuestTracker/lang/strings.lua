@@ -8,6 +8,7 @@ local strings = {
 
 --	Localization Strings
 	SI_BINDING_NAME_CQT_TOGGLE_TRACKER_PANEL_VISIBILITY =		"Toggle Tracker Panel", 
+	SI_BINDING_NAME_CQT_SHOW_FOCUSED_QUEST_ON_MAP =	"Show Focused Quest On Map", 
 
 	SI_CQT_WELCOME_TEXT1 =							"Welcome to CQuestTracker add-on !", 
 	SI_CQT_WELCOME_TEXT2 =							" This quest tracker will automatically update the displayed list and show recent ongoing quests with higher priority.", 
@@ -126,6 +127,8 @@ local strings = {
 	SI_CQT_UI_ENABLE_QUEST_PING_OP_TIPS =			"Show ping animation to focused quest destination on world map to make it easier to find quest destinations.\n Note that limit to the quest listed on the tracker panel only. The standard setting is on.", 
 	SI_CQT_UI_QUEST_PING_ON_FOCUS_CHANGE_OP_NAME =	"|u25:0::|uAuto show quest PING on focused quest changes", 
 	SI_CQT_UI_QUEST_PING_ON_FOCUS_CHANGE_OP_TIPS =	"Turning this setting on will automatically show the quest pings on the map when you change the focused quest.\n Note that limit to the quest listed on the tracker panel only. The standard setting is on.", 
+	SI_CQT_UI_STOP_QUEST_PING_ON_MINIMAP_OP_NAME =	"|u25:0::|uSuppress quest PING on Minimap", 
+	SI_CQT_UI_STOP_QUEST_PING_ON_MINIMAP_OP_TIPS =	"Turning this setting on the quest ping will only appear when you perform an action that displays your quest destination on the map. After you leave in-game map scenes, you will no longer see quest pings. Try this option if you do not want the quest ping to appear on the minimap. The standard setting is off.", 
 }
 
 for stringId, stringToAdd in pairs(strings) do

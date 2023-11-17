@@ -13,6 +13,9 @@
 			<Action name="CQT_TOGGLE_TRACKER_PANEL_VISIBILITY">
 				<Down>CQT_ToggleTrackerPanelVisibility_OnKeybindDown()</Down>
 			</Action>
+			<Action name="CQT_SHOW_FOCUSED_QUEST_ON_MAP">
+				<Down>CQT_ShowFocusedQuestOnMap_OnKeybindDown()</Down>
+			</Action>
 		</Category>
 	</Layer>
 </Bindings>

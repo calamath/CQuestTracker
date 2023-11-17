@@ -759,6 +759,19 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		disabled = function() return not self.svCurrent.qPingAttributes.pingingEnabled end, 
 		default = self.SV_DEFAULT.qPingAttributes.pingingOnFocusChange, 
 	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_STOP_QUEST_PING_ON_MINIMAP_OP_NAME), 
+		getFunc = function() return self.svCurrent.qPingAttributes.stopPingingOnHidingMapScene end, 
+		setFunc = function(newValue)
+			self.svCurrent.qPingAttributes.stopPingingOnHidingMapScene = newValue
+			self:FireCallbacks("AddOnSettingsChanged", "questPing")
+		end, 
+		tooltip = L(SI_CQT_UI_STOP_QUEST_PING_ON_MINIMAP_OP_TIPS), 
+		width = "full", 
+		disabled = function() return not self.svCurrent.qPingAttributes.pingingEnabled end, 
+		default = self.SV_DEFAULT.qPingAttributes.stopPingingOnHidingMapScene, 
+	}
 	LAM:RegisterOptionControls(self.panelId, optionsData)
 end
 

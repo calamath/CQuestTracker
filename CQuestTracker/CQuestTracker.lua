@@ -310,7 +310,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.1.1", 
+	version = "2.1.2", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -381,6 +381,7 @@ local CQT_SV_DEFAULT = {
 	qPingAttributes = {
 		pingingEnabled = true, 
 		pingingOnFocusChange = true, 
+		stopPingingOnHidingMapScene = false, 
 	}, 
 	improveKeybinds = true, 
 	cycleAllQuests = false, 
@@ -520,6 +521,8 @@ function CQT:ValidateConfigDataSV(sv)
 	if sv.panelAttributes.showRepeatableQuestIcon == nil		then sv.panelAttributes.showRepeatableQuestIcon			= CQT_SV_DEFAULT.panelAttributes.showRepeatableQuestIcon					end
 	if sv.qkFont == nil											then sv.qkFont											= ZO_ShallowTableCopy(sv.qcFont)											end		-- Derived from qcFont and added
 	if sv.qPingAttributes == nil								then sv.qPingAttributes									= ZO_ShallowTableCopy(CQT_SV_DEFAULT.qPingAttributes)						end
+	if sv.qPingAttributes.stopPingingOnHidingMapScene == nil	then sv.qPingAttributes.stopPingingOnHidingMapScene		= CQT_SV_DEFAULT.qPingAttributes.stopPingingOnHidingMapScene				end
+
 	if sv.improveKeybinds == nil								then sv.improveKeybinds									= CQT_SV_DEFAULT.improveKeybinds											end
 	if sv.cycleAllQuests == nil									then sv.cycleAllQuests									= CQT_SV_DEFAULT.cycleAllQuests												end
 	if sv.cycleBackwardsMod1 == nil								then sv.cycleBackwardsMod1								= CQT_SV_DEFAULT.cycleBackwardsMod1											end
@@ -1384,6 +1387,16 @@ function CQT_ToggleTrackerPanelVisibility_OnKeybindDown()
 	CQT.settingPanel:ToggleTrackerPanelHideSetting()
 end
 CQT:RegisterGlobalObject("CQT_ToggleTrackerPanelVisibility_OnKeybindDown", CQT_ToggleTrackerPanelVisibility_OnKeybindDown)
+
+function CQT_ShowFocusedQuestOnMap_OnKeybindDown()
+	if ZO_WorldMap_IsWorldMapShowing() then
+		SCENE_MANAGER:HideCurrentScene()
+	else
+		local focusedQuestIndex = QUEST_JOURNAL_MANAGER:GetFocusedQuestIndex()
+		CQT:ShowQuestPingOnMap(focusedQuestIndex)
+	end
+end
+CQT:RegisterGlobalObject("CQT_ShowFocusedQuestOnMap_OnKeybindDown", CQT_ShowFocusedQuestOnMap_OnKeybindDown)
 
 -- ---------------------------------------------------------------------------------------
 -- Chat commands
