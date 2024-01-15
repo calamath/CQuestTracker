@@ -310,7 +310,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.1.2", 
+	version = "2.1.3", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -446,7 +446,7 @@ function CQT:OnAddOnLoaded()
 		end
 	end)
 	GAME_MENU_SCENE:RegisterCallback("StateChange", function(oldState, newState)
-		if newState == SCENE_FRAGMENT_SHOWING or newState == SCENE_FRAGMENT_HIDING then
+		if newState == SCENE_SHOWING or newState == SCENE_HIDING then
 			self:UpdateTrackerPanelVisibility()
 		end
 	end)
@@ -1251,10 +1251,8 @@ function CQT:UpdateTrackerPanelVisibility()
 		trackerPanelFragment:SetHiddenForReason("DisabledInBattlegrounds", (not self.svCurrent.panelBehavior.showInBattleground) and IsActiveWorldBattleground(), 0, 0)
 		trackerPanelFragment:SetHiddenForReason("DisabledWhileKeybindingsSettings", KEYBINDINGS_FRAGMENT:IsShowing(), 0, 0)
 		trackerPanelFragment:SetHiddenForReason("DisabledBySetting", self.svCurrent.hideCQuestTracker, 0, 0)
-
-		local isInGameMenuScene = SCENE_MANAGER:GetCurrentScene() == GAME_MENU_SCENE
-		trackerPanelFragment:SetHiddenForReason("DisabledInGameMenuScene", (not self.svCurrent.panelBehavior.showInGameMenuScene) and isInGameMenuScene, 0, 0)
-		trackerPanelTitleBarFragment:SetHiddenForReason("DisabledInGameMenuScene", (not self.svCurrent.panelBehavior.showInGameMenuScene) and isInGameMenuScene, 0, 0)
+		trackerPanelFragment:SetHiddenForReason("DisabledInGameMenuScene", (not self.svCurrent.panelBehavior.showInGameMenuScene) and GAME_MENU_SCENE:IsShowing(), 0, 0)
+		trackerPanelTitleBarFragment:SetHiddenForReason("DisabledInGameMenuScene", (not self.svCurrent.panelBehavior.showInGameMenuScene) and GAME_MENU_SCENE:IsShowing(), 0, 0)
 	end
 end
 
