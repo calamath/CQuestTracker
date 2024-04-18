@@ -150,7 +150,7 @@ end
 
 
 -- ---------------------------------------------------------------------------------------
--- LAMSettingPanel Controller Template Class                                     rel.1.0.0
+-- LAMSettingPanel Controller Template Class                                     rel.1.0.1
 -- ---------------------------------------------------------------------------------------
 CT_LAMSettingPanelController = ZO_InitializingObject:Subclass()
 function CT_LAMSettingPanelController:Initialize(panelId, panelData, optionsData)
@@ -227,5 +227,14 @@ function CT_LAMSettingPanelController:OnLAMRefreshPanel(panel)
 end
 function CT_LAMSettingPanelController:OnLAMPanelClosed(panel)
 --  Should be overridden if needed
+end
+
+-- LAM Widget Utility functions
+-- Obtains ZO_ComboBox object from LAM dropdown widget control.
+function CT_LAMSettingPanelController.GetComboBoxObject_FromDropdownWidget(widgetControl)
+	if widgetControl and type(widgetControl.data) == "table" and widgetControl.data.type == "dropdown" then
+		local container = widgetControl.combobox
+		return container and ZO_ComboBox_ObjectFromContainer(container)
+	end
 end
 

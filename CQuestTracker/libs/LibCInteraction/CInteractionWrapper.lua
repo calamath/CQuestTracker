@@ -247,7 +247,7 @@ end
 
 local INTERACTION_WRAPPER_MANAGER = CInteractionWrapperManager:New("LibCInteraction", {
 	name = "LibCInteraction", 
-	version = "1.0.1", 
+	version = "1.0.2", 
 	author = "Calamath", 
 --	authority = {2973583419,210970542}, 
 })

@@ -121,6 +121,11 @@
 				<Control name="$(parent)Container" inherits="ZO_ScrollContainer">
 					<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="3" offsetY="23" />
 					<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" offsetX="-3" offsetY="-3"/>
+					<Controls>
+                        <Control name="$(parent)ScrollChild" override="true" resizeToFitConstrains="Y">
+                            <Dimensions x="100%"/>
+                        </Control>
+					</Controls>
 				</Control>
 			</Controls>
 		</TopLevelControl>
