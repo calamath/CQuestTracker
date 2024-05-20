@@ -1,3 +1,6 @@
+V2.1.5: [V20105] by Calamath
+- Advance preparation for PTS and guaranteed backward compatibility.
+
 V2.1.4: [V20104] by Calamath
 - Addressed warning log due to the past ResizeToFitDescendents changes.
 - Updated bundled LibCInteraction version to 1.0.2 (AddOnVersion: 10002).

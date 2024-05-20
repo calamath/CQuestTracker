@@ -54,7 +54,8 @@ local questTypeIconTexture = {
 	[QUEST_TYPE_UNDAUNTED_PLEDGE]	= "EsoUI/Art/Icons/ServiceMapPins/servicepin_undaunted.dds", 
 	[QUEST_TYPE_COMPANION]			= "EsoUI/Art/Journal/Gamepad/gp_questTypeIcon_companion.dds", 
 	[QUEST_TYPE_TRIBUTE]			= "EsoUI/Art/Tribute/Gamepad/gp_tribute_tabicon_tribute.dds", 
-}                                              
+	[QUEST_TYPE_SCRIBING]			= "EsoUI/Art/TreeIcons/Gamepad/gp_tutorial_indexicon_scribing.dds", 
+}
 local function GetQuestTypeIcon(questType)
 	return questTypeIconTexture[questType]
 end

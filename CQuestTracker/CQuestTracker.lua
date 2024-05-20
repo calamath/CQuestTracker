@@ -284,6 +284,8 @@ local _SHARED_DEFINITIONS = {
 	INVALID_ZONE_INDEX = 1, 
 	INVALID_ZONE_ID = 2, 
 
+	QUEST_TYPE_SCRIBING = QUEST_TYPE_SCRIBING or 18, 	-- for backward compatibility
+
 	-- PointOfInterest Database Type
 	-- This is a superset of ZoneCompletionType.
 	POI_DB_TYPE_NONE					= ZONE_COMPLETION_TYPE_NONE, 					-- 0
@@ -310,7 +312,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.1.4", 
+	version = "2.1.5", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 

@@ -277,7 +277,7 @@ local fixedParentZoneTable = {
 	[218]	= { [ALLIANCE_ALDMERI_DOMINION] = 108, [ALLIANCE_EBONHEART_PACT] = 117, [ALLIANCE_DAGGERFALL_COVENANT] = 20, }, 	-- Circus of Cheerful Slaughter
 	[219]	= { [ALLIANCE_ALDMERI_DOMINION] = 58, [ALLIANCE_EBONHEART_PACT] = 101, [ALLIANCE_DAGGERFALL_COVENANT] = 104, }, 	-- Chateau of the Ravenous Rodent
 	[541]	= { [ALLIANCE_ALDMERI_DOMINION] = 383, [ALLIANCE_EBONHEART_PACT] = 57, [ALLIANCE_DAGGERFALL_COVENANT] = 19, }, 		-- Glade of the Divines
-	[642]	= { [ALLIANCE_ALDMERI_DOMINION] = 382, [ALLIANCE_EBONHEART_PACT] = 103, [ALLIANCE_DAGGERFALL_COVENANT] = 92, }, 	-- Eyevea (after Mages Guild Quests)
+	[267]	= { [ALLIANCE_ALDMERI_DOMINION] = 382, [ALLIANCE_EBONHEART_PACT] = 103, [ALLIANCE_DAGGERFALL_COVENANT] = 92, }, 	-- Eyevea (after Mages Guild Quests)
 	-- The Reach special places with another entrance leading to Blackreach.
 							-- Gloomreach
 	[1209]	= function() return GetParentZoneId(GetUnitWorldPosition("player")) == 1208 and 1208 end, 		-- don't worry otherwise, it will be 1207.
@@ -298,6 +298,8 @@ local fixedParentZoneTable = {
 	[1420]	= function() return HasQuest(7057) and 1413 or HasQuest(7058) and 1413 end,		-- don't worry about questId 7013 and 7056, it will be 1414.
 	[1421]	= 1413, 		-- The Forbidden Exhibit
 	[1424]	= 1413, 		-- Obscured Forum
+	-- The Scholarium
+	[1457]	= 1443, 		-- Scholarium Outer Ruins (Sunnamere)
 	-- Event Hubs
 --	[1274]	= { [ALLIANCE_ALDMERI_DOMINION] = 381, [ALLIANCE_EBONHEART_PACT] = 41, [ALLIANCE_DAGGERFALL_COVENANT] = 3, }, 		-- Garden of Shadows
 }
