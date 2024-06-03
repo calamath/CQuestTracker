@@ -1,3 +1,16 @@
+V1.1.0: [V10100] by Calamath
+- Updated API version to 101042 (ESO 10.0.x : Gold Road)
+
+[COMPATIBILITY-BREAKING CHANGE]
+The library API remain unchanged, but all interaction wrapper classes have undergone a major overhaul.
+- The default interaction wrapper class has been merged into the base interaction wrapper class. It is now obsolete.
+- The roles of keyDownCallback and keyUpCallback have been clarified as forwarding user-specific additional arguments brought by the HandleKeybindDown and HandleKeybindUp APIs.
+- The variable arguments described above are no longer passed for startedCallback, performedCallback, canceledCallback, and endedCallback.
+
+
+V1.0.3: [V10003] by Calamath
+- Fixed an issue where the endedCallback was not fired when a hold interaction was canceled.
+
 V1.0.2: [V10002] by Calamath
 - Updated API version to 101041 (ESO 9.3.x : Scions of Ithelia)
 

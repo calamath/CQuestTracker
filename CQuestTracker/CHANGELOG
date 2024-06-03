@@ -1,3 +1,9 @@
+V2.1.6: [V20106] by Calamath
+- Added option to exclude zone guide from "Cycle Focused Quest" key rotation.
+- Removed backward compatibility to Update 41.
+- Updated bundled LibCInteraction version to 1.1.0 (AddOnVersion: 10100).
+- Updated API version to 101042 (ESO 10.0.x : Gold Road)
+
 V2.1.5: [V20105] by Calamath
 - Advance preparation for PTS and guaranteed backward compatibility.
 

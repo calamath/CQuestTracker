@@ -1,11 +1,11 @@
 ## Title: LibCInteraction
-## Description: A library to provide versatile interaction events to bound actions
-## Version: 1.0.2
-## AddOnVersion: 10002
+## Description: A library to provide a generic framework for detecting specific input patterns based on down/up events of keybinding actions.
+## Version: 1.1.0
+## AddOnVersion: 10100
 ## Author: Calamath
 ## License: Artistic License 2.0
 ## IsLibrary: true
-## APIVersion: 101040 101041
+## APIVersion: 101041 101042
 ## OptionalDependsOn: LibDebugLogger>=263
 
 ; This Add-on is not created by, affiliated with or sponsored by ZeniMax 

@@ -284,8 +284,6 @@ local _SHARED_DEFINITIONS = {
 	INVALID_ZONE_INDEX = 1, 
 	INVALID_ZONE_ID = 2, 
 
-	QUEST_TYPE_SCRIBING = QUEST_TYPE_SCRIBING or 18, 	-- for backward compatibility
-
 	-- PointOfInterest Database Type
 	-- This is a superset of ZoneCompletionType.
 	POI_DB_TYPE_NONE					= ZONE_COMPLETION_TYPE_NONE, 					-- 0
@@ -312,7 +310,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.1.5", 
+	version = "2.1.6", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -387,6 +385,7 @@ local CQT_SV_DEFAULT = {
 	}, 
 	improveKeybinds = true, 
 	cycleAllQuests = false, 
+	cycleZoneGuide = false, 
 	cycleBackwardsMod1 = KEY_SHIFT, 
 	cycleBackwardsMod2 = KEY_GAMEPAD_LEFT_TRIGGER, 
 	holdToShowQuestTooltip = true, 
@@ -527,6 +526,7 @@ function CQT:ValidateConfigDataSV(sv)
 
 	if sv.improveKeybinds == nil								then sv.improveKeybinds									= CQT_SV_DEFAULT.improveKeybinds											end
 	if sv.cycleAllQuests == nil									then sv.cycleAllQuests									= CQT_SV_DEFAULT.cycleAllQuests												end
+	if sv.cycleZoneGuide == nil									then sv.cycleZoneGuide									= CQT_SV_DEFAULT.cycleZoneGuide												end
 	if sv.cycleBackwardsMod1 == nil								then sv.cycleBackwardsMod1								= CQT_SV_DEFAULT.cycleBackwardsMod1											end
 	if sv.cycleBackwardsMod2 == nil								then sv.cycleBackwardsMod2								= CQT_SV_DEFAULT.cycleBackwardsMod2											end
 	if sv.holdToShowQuestTooltip == nil							then sv.holdToShowQuestTooltip							= CQT_SV_DEFAULT.holdToShowQuestTooltip										end
@@ -595,7 +595,7 @@ function CQT:RegisterEvents()
 		self:UpdateTimeStampByIndex(journalIndex)
 		self:UpdateFocusedQuestByEvent(event, journalIndex)
 	end)
-	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_QUEST_ADVANCED, function(event, journalIndex, questName, isPushed, isComplete, mainStepChanged)
+	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_QUEST_ADVANCED, function(event, journalIndex, questName, isPushed, isComplete, mainStepChanged, hideAnnouncement)
 		self:UpdateTimeStampByIndex(journalIndex)
 		self:UpdateFocusedQuestByEvent(event, journalIndex)
 		self:RefreshQuestList()
@@ -654,7 +654,7 @@ function CQT:RegisterInteractions()
 				if isModifierKeyDown then
 					self:AssistPrevious()
 				else
-					FOCUSED_QUEST_TRACKER:AssistNext()
+					self:AssistNext()
 				end
 			else
 				if isModifierKeyDown then
@@ -737,43 +737,117 @@ end
 
 function CQT:ToggleFocusedQuestToNextInTheDisplayed()
 -- Toggle focused quest to the next quest in the displayed.
-	if #self.questList == 0 then return end
+	local numQuestList = #self.questList
+	if numQuestList == 0 then return end
 	local nextJournalIndex
 	local focusedQuestIndex = QUEST_JOURNAL_MANAGER:GetFocusedQuestIndex()
-	if self.circularJournalIndexList[focusedQuestIndex] then
+	local wasZoneStoryAssisted = IsZoneStoryAssisted()		-- Whether a zone guide is displayed on the HUD tracker
+	local wasAssistedQuestDisplayed = self.circularJournalIndexList[focusedQuestIndex] ~= nil
+	local topQuestIndex = self.questList[1].journalIndex	-- quest index of the tracked quest shown at the top of the tracker panel.
+	if wasAssistedQuestDisplayed then
 		nextJournalIndex = self.circularJournalIndexList[focusedQuestIndex].nextJournalIndex
 	else
-		nextJournalIndex = self.questList[1].journalIndex
+		nextJournalIndex = topQuestIndex
 	end
-	FOCUSED_QUEST_TRACKER:ForceAssist(nextJournalIndex)
+	if wasZoneStoryAssisted then
+		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(false)
+		if self.svCurrent.cycleZoneGuide and nextJournalIndex ~= topQuestIndex then
+			-- If the zone guide was displayed in reverse rotation, it is natural to just turn off the zone guide and do nothing.
+			return
+		end
+	end
+	if self.svCurrent.cycleZoneGuide and wasAssistedQuestDisplayed and nextJournalIndex == topQuestIndex and IsZoneStoryTracked() and not wasZoneStoryAssisted then
+		-- Attempts to display the zone guide only when the focused quest is the bottom quest of our tracker panel and a zone guide is not displayed on the HUD tracker.
+		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(true)
+	else
+		FOCUSED_QUEST_TRACKER:ForceAssist(nextJournalIndex)
+	end
 end
 
 function CQT:ToggleFocusedQuestToPreviousInTheDisplayed()
-	if #self.questList == 0 then return end
+	local numQuestList = #self.questList
+	if numQuestList == 0 then return end
 	local previousJournalIndex
 	local focusedQuestIndex = QUEST_JOURNAL_MANAGER:GetFocusedQuestIndex()
-	if self.circularJournalIndexList[focusedQuestIndex] then
+	local wasZoneStoryAssisted = IsZoneStoryAssisted()		-- Whether a zone guide is displayed on the HUD tracker
+	local wasAssistedQuestDisplayed = self.circularJournalIndexList[focusedQuestIndex] ~= nil
+	local bottomQuestIndex = self.questList[numQuestList].journalIndex	-- quest index of the tracked quest shown at the bottom of the tracker panel.
+	if wasAssistedQuestDisplayed then
 		previousJournalIndex = self.circularJournalIndexList[focusedQuestIndex].prevJournalIndex
 	else
 		previousJournalIndex = self.questList[1].journalIndex
 	end
-	FOCUSED_QUEST_TRACKER:ForceAssist(previousJournalIndex)
+	if wasZoneStoryAssisted then
+		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(false)
+		if self.svCurrent.cycleZoneGuide and previousJournalIndex ~= bottomQuestIndex then
+			-- If the zone guide was displayed in reverse rotation, it is natural to just turn off the zone guide and do nothing.
+			return
+		end
+	end
+	if self.svCurrent.cycleZoneGuide and wasAssistedQuestDisplayed and previousJournalIndex == bottomQuestIndex and IsZoneStoryTracked() and not wasZoneStoryAssisted then
+		-- Attempts to display the zone guide only when the focused quest is the top quest of our tracker panel and a zone guide is not displayed on the HUD tracker.
+		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(true)
+	else
+		FOCUSED_QUEST_TRACKER:ForceAssist(previousJournalIndex)
+	end
 end
 
-function CQT:AssistPrevious()
--- Toggle focused quest to the previous in the QJM sorted quest list. oppositte of the FOCUSED_QUEST_TRACKER:AssistNext().
+function CQT:AssistNext()
+-- Toggle focused quest to the next in the QJM sorted quest list.
 	local questList = QUEST_JOURNAL_MANAGER:GetQuestList()
 	local numQuestList = #questList
 	if numQuestList == 0 then return end
+	local nextJournalIndex
 	local focusedQuestIndex = QUEST_JOURNAL_MANAGER:GetFocusedQuestIndex()
-	local previousQuest
+	local wasZoneStoryAssisted = IsZoneStoryAssisted()		-- Whether a zone guide is displayed on the HUD tracker
 	for i, quest in ipairs(questList) do
 		if quest.questIndex == focusedQuestIndex then
-			previousQuest = (i == 1) and numQuestList or (i - 1)
+			nextJournalIndex = (i == numQuestList) and 1 or (i + 1)
 			break
 		end
 	end
-	FOCUSED_QUEST_TRACKER:ForceAssist(questList[previousQuest].questIndex)
+	if wasZoneStoryAssisted then
+		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(false)
+		if self.svCurrent.cycleZoneGuide and nextJournalIndex ~= 1 then
+			-- If the zone guide was displayed in reverse rotation, it is natural to just turn off the zone guide and do nothing.
+			return
+		end
+	end
+	if self.svCurrent.cycleZoneGuide and nextJournalIndex == 1 and IsZoneStoryTracked() and not wasZoneStoryAssisted then
+		-- Attempts to display the zone guide only when the focused quest is the last quest in the QJM sorted list and a zone guide is not displayed on the HUD tracker.
+		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(true)
+	else
+		FOCUSED_QUEST_TRACKER:ForceAssist(questList[nextJournalIndex].questIndex)
+	end
+end
+
+function CQT:AssistPrevious()
+-- Toggle focused quest to the previous in the QJM sorted quest list. oppositte of the CQT:AssistNext().
+	local questList = QUEST_JOURNAL_MANAGER:GetQuestList()
+	local numQuestList = #questList
+	if numQuestList == 0 then return end
+	local previousJournalIndex
+	local focusedQuestIndex = QUEST_JOURNAL_MANAGER:GetFocusedQuestIndex()
+	local wasZoneStoryAssisted = IsZoneStoryAssisted()		-- Whether a zone guide is displayed on the HUD tracker
+	for i, quest in ipairs(questList) do
+		if quest.questIndex == focusedQuestIndex then
+			previousJournalIndex = (i == 1) and numQuestList or (i - 1)
+			break
+		end
+	end
+	if wasZoneStoryAssisted then
+		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(false)
+		if self.svCurrent.cycleZoneGuide and previousJournalIndex ~= numQuestList then
+			-- If the zone guide was displayed in reverse rotation, it is natural to just turn off the zone guide and do nothing.
+			return
+		end
+	end
+	if self.svCurrent.cycleZoneGuide and previousJournalIndex == numQuestList and IsZoneStoryTracked() and not wasZoneStoryAssisted then
+		-- Attempts to display the zone guide only when the focused quest is the first quest in the QJM sorted list and a zone guide is not displayed on the HUD tracker.
+		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(true)
+	else
+		FOCUSED_QUEST_TRACKER:ForceAssist(questList[previousJournalIndex].questIndex)
+	end
 end
 
 function CQT:RefreshQuestList()

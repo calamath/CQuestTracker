@@ -648,6 +648,18 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		disabled = function() return not self.svCurrent.improveKeybinds end, 
 		default = not self.SV_DEFAULT.cycleAllQuests, 
 	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
+		name = L(SI_CQT_UI_CYCLE_ZONE_GUIDE_MENU_NAME), 
+		getFunc = function() return self.svCurrent.cycleZoneGuide end, 
+		setFunc = function(newValue)
+			self.svCurrent.cycleZoneGuide = newValue
+		end, 
+		tooltip = L(SI_CQT_UI_CYCLE_ZONE_GUIDE_MENU_TIPS), 
+		width = "full", 
+		disabled = function() return not self.svCurrent.improveKeybinds end, 
+		default = not self.SV_DEFAULT.cycleZoneGuide, 
+	}
 
 	local modifierKeyChoices = {}
 	local modifierKeyChoicesValues = LibCInteraction:GetSupportedModifierKeys()

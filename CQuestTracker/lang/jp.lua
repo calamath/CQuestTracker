@@ -108,6 +108,8 @@ SafeAddString(SI_CQT_UI_KEYBINDS_IMPROVEMENT_MENU_NAME, 		"|u25:0::|uフォー�
 SafeAddString(SI_CQT_UI_KEYBINDS_IMPROVEMENT_MENU_TIPS, 		"標準キーバインドの「フォーカスするクエストの切り替え」の機能を拡張します。", 1)
 SafeAddString(SI_CQT_UI_CYCLE_DISPLAYED_QUESTS_MENU_NAME, 		"|u25:0::|uクエストトラッカーに表示中のクエストを循環", 1)
 SafeAddString(SI_CQT_UI_CYCLE_DISPLAYED_QUESTS_MENU_TIPS, 		"フォーカスクエストを切り替える範囲を、CQuestTrackerパネルに表示されているものだけに限定するかどうか選択します。このオプションをオフにすると、標準のクエストトラッカーの切り替えキーと同じ動作になります。", 1)
+SafeAddString(SI_CQT_UI_CYCLE_ZONE_GUIDE_MENU_NAME, 			"|u25:0::|uゾーンガイドを循環に含める", 1)
+SafeAddString(SI_CQT_UI_CYCLE_ZONE_GUIDE_MENU_TIPS, 			"「フォーカスするクエストの切り替え」の循環リストに、追跡中のゾーンガイドを含めるかどうか選択します。標準キーバインドのクエスト循環の仕様ではデフォルトで有効になっている機能ですが、必要なければここでオフにします。", 1)
 SafeAddString(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY1_MENU_NAME, 	"|u25:0::|uクエストを逆方向に循環させる修飾キー１", 1)
 SafeAddString(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY2_MENU_NAME, 	"|u25:0::|uクエストを逆方向に循環させる修飾キー２", 1)
 SafeAddString(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY_MENU_TIPS, 		"修飾キーを選択すると、クエストを逆向きに循環させることができます。修飾キーを押しながら切り替えキーを押すと、いつもと逆方向に循環します。修飾キーは２つまで登録できます。この機能を使いたくない場合は、「" .. GetKeyName(KEY_INVALID) .. "」を選択してください。", 1)

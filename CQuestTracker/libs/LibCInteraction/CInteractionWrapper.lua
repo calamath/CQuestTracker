@@ -98,6 +98,8 @@ end
 -- ---------------------------------------------------------------------------------------
 -- CInteractionWrapperManager (LibCInteraction)
 -- ---------------------------------------------------------------------------------------
+-- This class provides a generic framework for detecting specific input patterns based on down/up events of keybinding actions.
+--
 local IsModifierKeyDown = {
 	[KEY_CTRL] = function() return IsControlKeyDown() end, 
 	[KEY_ALT] = function() return IsAltKeyDown() end, 
@@ -247,7 +249,7 @@ end
 
 local INTERACTION_WRAPPER_MANAGER = CInteractionWrapperManager:New("LibCInteraction", {
 	name = "LibCInteraction", 
-	version = "1.0.2", 
+	version = "1.1.0", 
 	author = "Calamath", 
 --	authority = {2973583419,210970542}, 
 })
@@ -256,6 +258,10 @@ local INTERACTION_WRAPPER_MANAGER = CInteractionWrapperManager:New("LibCInteract
 -- ---------------------------------------------------------------------------------------
 -- Interaction Wrapper Base Class
 -- ---------------------------------------------------------------------------------------
+-- The base class for the interaction wrapper class, which defines internal parameters and interfaces.
+-- It simply passes the key-down and key-up events of keybinding actions to callbacks without conditions.
+-- If creating a custom interaction wrapper class, you must inherit this and override interactionType with a unique string.
+--
 local CBaseInteractionWrapper = ZO_InitializingObject:Subclass()
 function CBaseInteractionWrapper:Initialize(control, actionName, data)
 	self.control = control
@@ -277,6 +283,7 @@ function CBaseInteractionWrapper:Initialize(control, actionName, data)
 	self.currentAction = nil
 	self.isStarted = false
 	self.isPerformed = false
+	self.isCanceled = false
 	self.startTime = nil
 	self.endTime = nil
 	self.targetTime = nil
@@ -334,95 +341,83 @@ function CBaseInteractionWrapper:IsModifierKeyDown(keyCode)
 	return keyCode and IsModifierKeyDown[keyCode] and IsModifierKeyDown[keyCode]() or false
 end
 function CBaseInteractionWrapper:Reset()
--- Should be Overridden
+-- Should be Overridden if needed
 	self:DisableTimer()
 	self.currentAction = nil
 	self.isStarted = false
 	self.isPerformed = false
+	self.isCanceled = false
 	self.startTime = nil
 	self.endTime = nil
 	self.targetTime = nil
 end
 function CBaseInteractionWrapper:OnKeyDown(actionName, ...)
---  Should be Overridden
+--  Should be Overridden if needed
+	if self.keyDownCallback then
+		self.keyDownCallback(self, ...)
+	end
+	self:StartInteraction(actionName)
 end
-function CBaseInteractionWrapper:PrerequisiteForStarting(actionName, ...)
---  Should be Overridden
+function CBaseInteractionWrapper:StartInteraction(actionName)
+	if self:PrerequisiteForStarting(actionName) then
+		self.isStarted = true
+		self.currentAction = actionName
+		self.startTime = GetFrameTimeMilliseconds()
+		self:OnStarted()
+		return true
+	end
 end
-function CBaseInteractionWrapper:OnStarted(actionName, ...)
---  Should be Overridden
+function CBaseInteractionWrapper:PrerequisiteForStarting(actionName)
+--  Should be Overridden if needed
+	return not self.isStarted and self:GetValue(self.enabled)
+end
+function CBaseInteractionWrapper:OnStarted()
+--  Should be Overridden if needed
+	if self.startedCallback then
+		self.startedCallback(self)
+	end
 end
 function CBaseInteractionWrapper:OnKeyUp(actionName, ...)
---  Should be Overridden
+--  Should be Overridden if needed
+	if self.keyUpCallback then
+		self.keyUpCallback(self, ...)
+	end
+	self:EndInteraction(actionName)
 end
-function CBaseInteractionWrapper:PrerequisiteForEnding(actionName, ...)
---  Should be Overridden
+function CBaseInteractionWrapper:EndInteraction(actionName)
+	actionName = actionName or self.currentAction
+	if self:PrerequisiteForEnding(actionName) then
+		self.endTime = GetFrameTimeMilliseconds()
+		self:OnEnded()
+		self:Reset()
+		return true
+	end
 end
-function CBaseInteractionWrapper:OnEnded(actionName, ...)
---  Should be Overridden
+function CBaseInteractionWrapper:PrerequisiteForEnding(actionName)
+--  Should be Overridden if needed
+	return self.isStarted
+end
+function CBaseInteractionWrapper:OnEnded()
+--  Should be Overridden if needed
+	if self.endedCallback then
+		self.endedCallback(self)
+	end
 end
 function CBaseInteractionWrapper:OnUpdate()
---  Should be Overridden
+--  Should be Overridden if needed
 end
 
 INTERACTION_WRAPPER_MANAGER:RegisterInteractionWrapperClass("base", CBaseInteractionWrapper, false)
 
 
 -- ---------------------------------------------------------------------------------------
--- Default Interaction Wrapper Class
--- ---------------------------------------------------------------------------------------
-local CDefaultInteractionWrapper = CBaseInteractionWrapper:Subclass()
-function CDefaultInteractionWrapper:Initialize(control, actionName, data)
-	CBaseInteractionWrapper.Initialize(self, control, actionName, data)
-	self.interactionType = "default"
-end
-function CDefaultInteractionWrapper:OnKeyDown(actionName, ...)
-	if self.keyDownCallback then
-		self.keyDownCallback(self, ...)
-	end
-	if self:PrerequisiteForStarting(actionName, ...) then
-		self.isStarted = true
-		self.currentAction = actionName
-		self.startTime = GetFrameTimeMilliseconds()
-		self:OnStarted(actionName, ...)
-	end
-end
-function CDefaultInteractionWrapper:PrerequisiteForStarting()
-	return not self.isStarted and self:GetValue(self.enabled)
-end
-function CDefaultInteractionWrapper:OnStarted(actionName, ...)
-	if self.startedCallback then
-		self.startedCallback(self, ...)
-	end
-end
-function CDefaultInteractionWrapper:OnKeyUp(actionName, ...)
-	if self.keyUpCallback then
-		self.keyUpCallback(self, ...)
-	end
-	if self:PrerequisiteForEnding(actionName, ...) then
-		self.endTime = GetFrameTimeMilliseconds()
-		self:OnEnded(actionName, ...)
-		self:Reset()
-	end
-end
-function CDefaultInteractionWrapper:PrerequisiteForEnding()
-	return self.isStarted
-end
-function CDefaultInteractionWrapper:OnEnded(actionName, ...)
-	if self.endedCallback then
-		self.endedCallback(self, ...)
-	end
-end
-
-INTERACTION_WRAPPER_MANAGER:RegisterInteractionWrapperClass("default", CDefaultInteractionWrapper, false)
-
-
--- ---------------------------------------------------------------------------------------
 -- Press Interaction Wrapper Class
 -- ---------------------------------------------------------------------------------------
-local CPressInteractionWrapper = CDefaultInteractionWrapper:Subclass()
+-- The press interaction class can detect both press and release timing of key bindings.
+-- 
+local CPressInteractionWrapper = CBaseInteractionWrapper:Subclass()
 function CPressInteractionWrapper:Initialize(control, actionName, data)
-	CDefaultInteractionWrapper.Initialize(self, control, actionName, data)
+	CBaseInteractionWrapper.Initialize(self, control, actionName, data)
 	self.interactionType = "press"
 end
 function CPressInteractionWrapper:PrerequisiteForEnding(actionName)
@@ -435,9 +430,13 @@ INTERACTION_WRAPPER_MANAGER:RegisterInteractionWrapperClass("press", CPressInter
 -- ---------------------------------------------------------------------------------------
 -- Hold Interaction Wrapper Class
 -- ---------------------------------------------------------------------------------------
-local CHoldInteractionWrapper = CDefaultInteractionWrapper:Subclass()
+-- The hold interaction class can detect input patterns where a key binding has been pressed for more than a certain period of time.
+-- When the hold time reaches the holdTime parameter, it triggers the perfomedCallback; if the hold time is less than that, it triggers the canceledCallback instead.
+-- Basically, it is suitable for detecting input patterns such as quick slot wheel activation in vanilla UI.
+--
+local CHoldInteractionWrapper = CBaseInteractionWrapper:Subclass()
 function CHoldInteractionWrapper:Initialize(control, actionName, data)
-	CDefaultInteractionWrapper.Initialize(self, control, actionName, data)
+	CBaseInteractionWrapper.Initialize(self, control, actionName, data)
 	self.interactionType = "hold"
 	self.duration = data.holdTime or 200
 	self.control:SetHandler("OnUpdate", function(control, time)
@@ -447,22 +446,22 @@ end
 function CHoldInteractionWrapper:PrerequisiteForStarting()
 	return not self.isPerformed and not self.isStarted and self:GetValue(self.enabled)
 end
-function CHoldInteractionWrapper:OnStarted(actionName, ...)
+function CHoldInteractionWrapper:OnStarted()
 	self.targetTime = self.startTime + self:GetValue(self.duration)
 	self:EnableTimer()
-	CDefaultInteractionWrapper.OnStarted(self, actionName, ...)
+	CBaseInteractionWrapper.OnStarted(self)
 end
 function CHoldInteractionWrapper:PrerequisiteForEnding(actionName)
 	return self.isStarted and not (self.multipleInput and self.currentAction ~= actionName)
 end
-function CHoldInteractionWrapper:OnEnded(actionName, ...)
-	if self.isPerformed then
-		CDefaultInteractionWrapper.OnEnded(self, actionName, ...)
-	else
+function CHoldInteractionWrapper:OnEnded()
+	if not self.isPerformed then
+		self.isCanceled = true
 		if self.canceledCallback then
-			self.canceledCallback(self, ...)
+			self.canceledCallback(self)
 		end
 	end
+	CBaseInteractionWrapper.OnEnded(self)
 end
 function CHoldInteractionWrapper:OnUpdate()
 --	d(GetFrameTimeMilliseconds())	-- debug

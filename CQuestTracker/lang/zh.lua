@@ -107,6 +107,8 @@ SafeAddString(SI_CQT_UI_KEYBINDS_IMPROVEMENT_MENU_NAME, 		"|u25:0::|uImprove cyc
 SafeAddString(SI_CQT_UI_KEYBINDS_IMPROVEMENT_MENU_TIPS, 		"Improve the functionality of the Cycle Focused Quest in the standard keybinds.", 1)
 SafeAddString(SI_CQT_UI_CYCLE_DISPLAYED_QUESTS_MENU_NAME, 		"|u25:0::|uSingle Tap to cycle displayed quests only", 1)
 SafeAddString(SI_CQT_UI_CYCLE_DISPLAYED_QUESTS_MENU_TIPS, 		"Select whether to limit the cycle range of the focused quest to be only those displayed in the CQuestTracker panel. Turn off this option to the same behavior as the cycle key of the default quest tracker.", 1)
+SafeAddString(SI_CQT_UI_CYCLE_ZONE_GUIDE_MENU_NAME, 			"|u25:0::|uInclude zone guide in rotation", 1)
+SafeAddString(SI_CQT_UI_CYCLE_ZONE_GUIDE_MENU_TIPS, 			"Whether to include a tracked zone guide in the quest cycle list. It's a feature enabled by default in the cycle key interaction of the vanilla UI, but turn it off here if you don't need it.", 1)
 SafeAddString(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY1_MENU_NAME, 	"|u25:0::|uModifier Key 1 to cycle quest in reverse", 1)
 SafeAddString(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY2_MENU_NAME, 	"|u25:0::|uModifier Key 2 to cycle quest in reverse", 1)
 SafeAddString(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY_MENU_TIPS, 		"Select a modifier key to cycle focused quest in reverse. Holding down the modifier key and tapping the cycle key will cycle in the opposite direction. You may register up to two modifier keys. If you don't want to use this function, please select \'" .. GetKeyName(KEY_INVALID) .. "\'.", 1)

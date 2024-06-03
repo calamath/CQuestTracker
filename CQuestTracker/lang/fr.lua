@@ -107,6 +107,8 @@ SafeAddString(SI_CQT_UI_KEYBINDS_IMPROVEMENT_MENU_NAME, 		"|u25:0::|uAméliorer 
 SafeAddString(SI_CQT_UI_KEYBINDS_IMPROVEMENT_MENU_TIPS, 		"Améliore la fonctionnalité de la touche de raccourci de défilement des quêtes.", 1)
 SafeAddString(SI_CQT_UI_CYCLE_DISPLAYED_QUESTS_MENU_NAME, 		"|u25:0::|uFaire défiler seulement les quêtes affichées", 1)
 SafeAddString(SI_CQT_UI_CYCLE_DISPLAYED_QUESTS_MENU_TIPS, 		"Limite le défilement des quêtes à celle qui sont affichées dans la fenêtre de suivi des quêtes.", 1)
+SafeAddString(SI_CQT_UI_CYCLE_ZONE_GUIDE_MENU_NAME, 			"|u25:0::|uInclude zone guide in rotation", 1)
+SafeAddString(SI_CQT_UI_CYCLE_ZONE_GUIDE_MENU_TIPS, 			"Whether to include a tracked zone guide in the quest cycle list. It's a feature enabled by default in the cycle key interaction of the vanilla UI, but turn it off here if you don't need it.", 1)
 SafeAddString(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY1_MENU_NAME, 	"|u25:0::|uModificateur 1 de défilement inversé", 1)
 SafeAddString(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY2_MENU_NAME, 	"|u25:0::|uModificateur 2 de défilement inversé", 1)
 SafeAddString(SI_CQT_UI_CYCLE_BACKWARDS_MOD_KEY_MENU_TIPS, 		"Détermine la touche permettant de faire défiler les quêtes affichées en sens inverse. Maintenir la touche de modificateur enfoncée et appuyer sur la touche de défilement des quêtes pour les faire défiler dans la direction opposée. Il est possible d'enregistrer jusqu'à deux modificateurs de touches.", 1)
