@@ -98,7 +98,7 @@
 								disabled="EsoUI/Art/Quest/quest_track_disabled.dds"
 							/>
 						</Button>
-						<Label name="$(parent)Text" text="CQuestTracker" font="ZoFontWinH5" color="INTERFACE_COLOR_TYPE_TEXT_COLORS:INTERFACE_TEXT_COLOR_SELECTED">
+						<Label name="$(parent)Text" text="" font="ZoFontWinH5" color="INTERFACE_COLOR_TYPE_TEXT_COLORS:INTERFACE_TEXT_COLOR_SELECTED">
 							<Anchor point="LEFT" relativeTo="$(parent)QuestListBtn" relativePoint="RIGHT" offsetX="5"/>
 						</Label>
 						<Button name="$(parent)SettingBtn" inherits="CQT_TitleBarButtonTemplate">

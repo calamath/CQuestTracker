@@ -12,7 +12,7 @@
 						ComparativeTooltip2:SetHidden(true)
 					</OnHide>
 					<Controls>
-						<Texture name="$(parent)Background" color="666666" excludeFromResizeToFitExtents="true" layer="BACKGROUND" level="1">
+						<Texture name="$(parent)Background" color="777777" excludeFromResizeToFitExtents="true" layer="BACKGROUND" level="1">
 							<Dimensions x="472" y="389.7806"/>
 							<Anchor point="TOPLEFT" relativePoint="TOPLEFT" offsetX="4" offsetY="4"/>
 							<TextureCoords left="0" right="0.60546875" top="0" bottom="1"/>

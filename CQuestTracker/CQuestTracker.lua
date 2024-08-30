@@ -310,7 +310,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.1.6", 
+	version = "2.1.7", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -343,7 +343,8 @@ local CQT_SV_DEFAULT = {
 		showHintStep = true, 
 		hintFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
 		hintColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
-		showFocusIcon = true, 
+		showFocusIcon = false, 
+		underlineHeaderOnFocused = true, 
 		showTypeIcon = true, 
 		enableTypeIconColoring = true, 
 		showRepeatableQuestIcon = true, 
@@ -517,6 +518,7 @@ function CQT:ValidateConfigDataSV(sv)
 	if sv.panelAttributes.hintColor == nil						then sv.panelAttributes.hintColor						= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.hintColor)				end
 	if sv.panelAttributes.titlebarColor == nil					then sv.panelAttributes.titlebarColor					= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.titlebarColor)			end
 	if sv.panelAttributes.showFocusIcon == nil					then sv.panelAttributes.showFocusIcon					= CQT_SV_DEFAULT.panelAttributes.showFocusIcon								end
+	if sv.panelAttributes.underlineHeaderOnFocused == nil		then sv.panelAttributes.underlineHeaderOnFocused		= CQT_SV_DEFAULT.panelAttributes.underlineHeaderOnFocused					end
 	if sv.panelAttributes.showTypeIcon == nil					then sv.panelAttributes.showTypeIcon					= CQT_SV_DEFAULT.panelAttributes.showTypeIcon								end
 	if sv.panelAttributes.enableTypeIconColoring == nil			then sv.panelAttributes.enableTypeIconColoring			= CQT_SV_DEFAULT.panelAttributes.enableTypeIconColoring						end
 	if sv.panelAttributes.showRepeatableQuestIcon == nil		then sv.panelAttributes.showRepeatableQuestIcon			= CQT_SV_DEFAULT.panelAttributes.showRepeatableQuestIcon					end
@@ -585,6 +587,12 @@ function CQT:RegisterEvents()
 			self.svCurrent.autoTrackToAddedQuest = newValue
 			self:FireCallbacks("AddOnSettingsChanged", "focusedQuestControl")
 		end
+	end)
+	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_DEAD, function(event)
+		self:UpdateTrackerPanelVisibility()
+	end)
+	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_ALIVE, function(event)
+		self:UpdateTrackerPanelVisibility()
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_COMBAT_STATE, function(event, inCombat)
 		if not self.svCurrent.panelBehavior.showInCombat then
@@ -1327,6 +1335,7 @@ function CQT:UpdateTrackerPanelVisibility()
 		trackerPanelFragment:SetHiddenForReason("DisabledInBattlegrounds", (not self.svCurrent.panelBehavior.showInBattleground) and IsActiveWorldBattleground(), 0, 0)
 		trackerPanelFragment:SetHiddenForReason("DisabledWhileKeybindingsSettings", KEYBINDINGS_FRAGMENT:IsShowing(), 0, 0)
 		trackerPanelFragment:SetHiddenForReason("DisabledBySetting", self.svCurrent.hideCQuestTracker, 0, 0)
+		trackerPanelFragment:SetHiddenForReason("DisabledWhenDead", IsUnitDead("player"), 0, 0)
 		trackerPanelFragment:SetHiddenForReason("DisabledInGameMenuScene", (not self.svCurrent.panelBehavior.showInGameMenuScene) and GAME_MENU_SCENE:IsShowing(), 0, 0)
 		trackerPanelTitleBarFragment:SetHiddenForReason("DisabledInGameMenuScene", (not self.svCurrent.panelBehavior.showInGameMenuScene) and GAME_MENU_SCENE:IsShowing(), 0, 0)
 	end

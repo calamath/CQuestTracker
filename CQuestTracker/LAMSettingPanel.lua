@@ -208,6 +208,17 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 	}
 	optionsData[#optionsData + 1] = {
 		type = "checkbox",
+		name = L(SI_CQT_UI_UNDERLINE_FOCUSED_QUEST_OP_NAME), 
+		getFunc = function() return self.svCurrent.panelAttributes.underlineHeaderOnFocused end, 
+		setFunc = function(newValue)
+			self:SetTrackerPanelAttribute("underlineHeaderOnFocused", newValue)
+		end, 
+		tooltip = L(SI_CQT_UI_UNDERLINE_FOCUSED_QUEST_OP_TIPS), 
+		width = "full", 
+		default = not self.SV_DEFAULT.panelAttributes.underlineHeaderOnFocused, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
 		name = L(SI_CQT_UI_SHOW_QUEST_TYPE_ICON_OP_NAME), 
 		getFunc = function() return self.svCurrent.panelAttributes.showTypeIcon end, 
 		setFunc = function(newValue)

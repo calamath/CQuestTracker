@@ -1,3 +1,9 @@
+V2.1.7: [V20107] by Calamath
+- Added option to underline the focused quest name.
+- Changed to hide the tracker panel when the player character dies.
+- Some minor improvements to the quest tooltip, such as indicating the relevant DLC for the prologue quest.
+- Updated API version to 101043 (ESO 10.1.x : Update 43)
+
 V2.1.6: [V20106] by Calamath
 - Added option to exclude zone guide from "Cycle Focused Quest" key rotation.
 - Removed backward compatibility to Update 41.

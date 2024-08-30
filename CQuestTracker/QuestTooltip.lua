@@ -79,6 +79,16 @@ function CQT_QuestTooltip_Controller:IsMultipleDescriptions(journalIndex, stepIn
 	return (not overrideText or overrideText == "") and (stepType == QUEST_STEP_TYPE_OR  or stepType == QUEST_STEP_TYPE_AND) and self:GetNumVisibleQuestConditions(journalIndex, stepIndex) > 2
 end
 
+function CQT_QuestTooltip_Controller:AddPrologueQuestDetails(journalIndex)
+	local questId = GetQuestId(journalIndex)
+	local questLinkedCollectibleId = GetQuestLinkedCollectibleId(questId)
+	if questLinkedCollectibleId then
+		self:AddLine(zo_strformat(SI_CQT_QUEST_DLC_PROLOGUE, GetCollectibleName(questLinkedCollectibleId)), "ZoFontGameMedium", 0, 1, 0, TOPLEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
+	else
+		self:AddLine(zo_strformat(SI_CQT_QUEST_DLC_PROLOGUE, L(SI_INPUT_LANGUAGE_UNKNOWN)), "ZoFontGameMedium", 0, 1, 0, TOPLEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
+	end
+end
+
 function CQT_QuestTooltip_Controller:AddRepeatableQuestDetails(journalIndex)
 	local repeatType = GetJournalQuestRepeatType(journalIndex)
 	if repeatType ~= QUEST_REPEAT_NOT_REPEATABLE then
@@ -129,6 +139,30 @@ function CQT_QuestTooltip_Controller:AddQuestConditions(journalIndex, stepIndex)
 	end
 end
 
+function CQT_QuestTooltip_Controller:SetupBackground(journalIndex)
+	local questId = GetQuestId(journalIndex)
+	local bgTexture = GetQuestBackgroundTexture(questId)
+	if bgTexture then
+		self.bg:SetTexture(bgTexture)
+		if self.bg:GetTextureFileDimensions() > 1024 then
+			-- load screen texture
+			self.bg:SetTextureCoords(0.12083333, 0.87916666, 0, 1)
+			self.bg:SetHeight(389.7806)
+		else
+			-- gp store texture
+			self.bg:SetTextureCoords(0, 0.79492187, 0, 0.52929687)
+			self.bg:SetHeight(314.6667)
+		end
+		self.bg:SetHidden(false)
+	else
+		bgTexture = GetZoneStoryKeyboardBackground(GetZoneStoryZoneIdForZoneId(GetParentZoneId(GetQuestZoneId(questId))))
+		self.bg:SetTexture(bgTexture)
+		self.bg:SetTextureCoords(0, 0.60546875, 0, 1)
+		self.bg:SetHeight(389.7806)
+		self.bg:SetHidden(bgTexture == GetZoneStoryKeyboardBackground(0))
+	end
+end
+
 function CQT_QuestTooltip_Controller:LayoutQuestTooltip(journalIndex)
 	local titleR, titleG, titleB = ZO_SELECTED_TEXT:UnpackRGB()
 	local questName, backgroundText, activeStepText, activeStepType, activeStepTrackerOverrideText, completed, tracked, questLevel, pushed, questType, zoneDisplayType = GetJournalQuestInfo(journalIndex)
@@ -137,8 +171,7 @@ function CQT_QuestTooltip_Controller:LayoutQuestTooltip(journalIndex)
 	local questIcon = GetZoneDisplayTypeIcon(zoneDisplayType)
 	local bgTexture = GetZoneStoryKeyboardBackground(GetZoneId(pz))
 	if self.bg then
-		self.bg:SetTexture(bgTexture)
-		self.bg:SetHidden(bgTexture == GetZoneStoryKeyboardBackground(0))
+		self:SetupBackground(journalIndex)
 	end
 	if questIcon then
 		ZO_ItemIconTooltip_OnAddGameData(self.tooltip, TOOLTIP_GAME_DATA_ITEM_ICON, questIcon)
@@ -212,6 +245,10 @@ function CQT_QuestTooltip_Controller:LayoutQuestTooltip(journalIndex)
 				self:AddQuestConditions(journalIndex, stepIndex)
 			end
 		end
+	end
+	if questType == QUEST_TYPE_PROLOGUE then
+		self:AddDivider()
+		self:AddPrologueQuestDetails(journalIndex)
 	end
 	if repeatType ~= QUEST_REPEAT_NOT_REPEATABLE then
 		self:AddDivider()

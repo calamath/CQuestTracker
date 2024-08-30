@@ -39,7 +39,8 @@ function CQT_TrackerPanel:Initialize(control, overriddenAttrib)
 		showHintStep = true, 
 		hintFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
 		hintColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
-		showFocusIcon = true, 
+		showFocusIcon = false, 
+		underlineHeaderOnFocused = true, 
 		showTypeIcon = true, 
 		enableTypeIconColoring = true, 
 		showRepeatableQuestIcon = true, 
@@ -207,6 +208,7 @@ function CQT_TrackerPanel:InitializeTree()
 		control.journalIndex = data.journalIndex
 		control.questId = data.questId
 		control.text:SetFont(self:GetAttribute("headerFont"))
+		control.text:SetUnderline(tracked and self:GetAttribute("underlineHeaderOnFocused"))
 		control.text.GetTextColor = HeaderNodeGetTextColor
 		control.text:RefreshTextColor()
 		control.text:SetDimensionConstraints(0, 0, HeaderNodeLabelMaxWidth(control) - timerWidth, 0)
