@@ -21,11 +21,6 @@
 					self.OnMouseExit(...)
 				end
 			</OnMouseExit>
-			<OnMouseDoubleClick>
-				if self.OnMouseDoubleClick then	
-					self.OnMouseDoubleClick(...)
-				end
-			</OnMouseDoubleClick>
 		</Control>
 		<Control name="CQT_MouseBehaviorPropagationToParent" mouseEnabled="true" virtual="true">
 			<OnMouseUp>
@@ -40,9 +35,6 @@
 			<OnMouseExit>
 				ZO_PropagateHandlerToParent("OnMouseExit", ...)
 			</OnMouseExit>
-			<OnMouseDoubleClick>
-				ZO_PropagateHandlerToParent("OnMouseDoubleClick", ...)
-			</OnMouseDoubleClick>
 		</Control>
 		<Control name="CQT_MouseBehaviorPropagationToParentNode" mouseEnabled="true" virtual="true">
 			<OnMouseUp>
@@ -81,15 +73,6 @@
 					CQT_PropagateHandlerToParentNode("OnMouseExit", ...)
 				end
 			</OnMouseExit>
-			<OnMouseDoubleClick>
-				local suppressPropagation
-				if self.OnMouseDoubleClick then	
-					suppressPropagation = self.OnMouseDoubleClick(...)
-				end
-				if not suppressPropagation then
-					CQT_PropagateHandlerToParentNode("OnMouseDoubleClick", ...)
-				end
-			</OnMouseDoubleClick>
 		</Control>
 	</Controls>
 </GuiXml>

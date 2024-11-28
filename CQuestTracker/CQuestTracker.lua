@@ -310,7 +310,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.1.7", 
+	version = "2.1.8", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -649,10 +649,11 @@ function CQT:RegisterInteractions()
 		end, 
 		performedCallback = function()
 			if self.svCurrent.holdToShowQuestTooltip then
-				local focusedQuestIndex = QUEST_JOURNAL_MANAGER:GetFocusedQuestIndex()
-				if focusedQuestIndex then
-					self.questTooltip:ShowQuestTooltip(focusedQuestIndex, GuiRoot, CENTER, 0, 0, CENTER)
-
+				if not IsInGamepadPreferredMode() or not self:WasBlacklistedHoldKeyBound() then
+					local focusedQuestIndex = QUEST_JOURNAL_MANAGER:GetFocusedQuestIndex()
+					if focusedQuestIndex then
+						self.questTooltip:ShowQuestTooltip(focusedQuestIndex, GuiRoot, CENTER, 0, 0, CENTER)
+					end
 				end
 			end
 		end, 
@@ -701,19 +702,57 @@ function CQT:CopyKeybinds(sourceActionName, destActionName)
 	return true
 end
 
+function CQT:UpdateBlacklistedHoldKeys()
+-- Since the gamepad key codes are divided between press and hold, unintended collisions can occur between the hold interaction of the press key and the key bindings of the same hold key.
+-- Therefore, the status of gamepad hold key settings must be monitored with the goal of avoiding both interactions occurring at the same time.
+	ZO_ClearTable(self.blacklistedHoldKeys)
+	local layer, category, action = GetActionIndicesFromName("ASSIST_NEXT_TRACKED_QUEST")
+	if layer and category and action then
+		for i = 1, GetMaxBindingsPerAction() do
+			local key = GetActionBindingInfo(layer, category, action, i)
+			if IsKeyCodeGamepadKey(key) and not IsKeyCodeHoldKey(key) then
+				local holdKey = ConvertKeyPressToHold(key)
+				if holdKey ~= KEY_INVALID then
+					table.insert(self.blacklistedHoldKeys, holdKey)
+				end
+			end
+		end
+	end
+end
+
+function CQT:WasBlacklistedHoldKeyBound()
+	local wasBound = false
+	local layerName = L(SI_KEYBINDINGS_LAYER_GENERAL)
+	for _, key in ipairs(self.blacklistedHoldKeys) do
+		if GetActionNameFromKey(layerName, key) ~= "" then
+			wasBound = true
+			break
+		end
+	end
+	return wasBound
+end
+
 function CQT:InitializeKeybinds()
 	self.keybinds = self.keybinds or {}
+	self.blacklistedHoldKeys = self.blacklistedHoldKeys or {}
 	self:CopyKeybinds("ASSIST_NEXT_TRACKED_QUEST", "CQT_TOGGLE_TRACKED_QUEST")
+	self:UpdateBlacklistedHoldKeys()
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_KEYBINDING_CLEARED, function(event, layerIndex, categoryIndex, actionIndex, bindingIndex)
 		local actionName = GetActionInfo(layerIndex, categoryIndex, actionIndex)
 		if self.keybinds[actionName] then
 			self:CopyKeybinds(actionName, self.keybinds[actionName])	-- Rebuild due to setting changes
+		end
+		if actionName == "ASSIST_NEXT_TRACKED_QUEST" then
+			self:UpdateBlacklistedHoldKeys()
 		end
 	end)
 	EVENT_MANAGER:RegisterForEvent(self.name, EVENT_KEYBINDING_SET, function(event, layerIndex, categoryIndex, actionIndex, bindingIndex)
 		local actionName = GetActionInfo(layerIndex, categoryIndex, actionIndex)
 		if self.keybinds[actionName] then
 			self:CopyKeybinds(actionName, self.keybinds[actionName])	-- Rebuild due to setting changes
+		end
+		if actionName == "ASSIST_NEXT_TRACKED_QUEST" then
+			self:UpdateBlacklistedHoldKeys()
 		end
 	end)
 end
@@ -743,6 +782,12 @@ function CQT:UpdateFocusedQuestByEvent(event, journalIndex)
 	end
 end
 
+function CQT:PlayQuestFocusedSound()
+	if not FOCUSED_QUEST_TRACKER.disableAudio then
+		PlaySound(SOUNDS.QUEST_FOCUSED)
+	end
+end
+
 function CQT:ToggleFocusedQuestToNextInTheDisplayed()
 -- Toggle focused quest to the next quest in the displayed.
 	local numQuestList = #self.questList
@@ -761,12 +806,14 @@ function CQT:ToggleFocusedQuestToNextInTheDisplayed()
 		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(false)
 		if self.svCurrent.cycleZoneGuide and nextJournalIndex ~= topQuestIndex then
 			-- If the zone guide was displayed in reverse rotation, it is natural to just turn off the zone guide and do nothing.
+			self:PlayQuestFocusedSound()
 			return
 		end
 	end
 	if self.svCurrent.cycleZoneGuide and wasAssistedQuestDisplayed and nextJournalIndex == topQuestIndex and IsZoneStoryTracked() and not wasZoneStoryAssisted then
 		-- Attempts to display the zone guide only when the focused quest is the bottom quest of our tracker panel and a zone guide is not displayed on the HUD tracker.
 		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(true)
+		self:PlayQuestFocusedSound()
 	else
 		FOCUSED_QUEST_TRACKER:ForceAssist(nextJournalIndex)
 	end
@@ -789,12 +836,14 @@ function CQT:ToggleFocusedQuestToPreviousInTheDisplayed()
 		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(false)
 		if self.svCurrent.cycleZoneGuide and previousJournalIndex ~= bottomQuestIndex then
 			-- If the zone guide was displayed in reverse rotation, it is natural to just turn off the zone guide and do nothing.
+			self:PlayQuestFocusedSound()
 			return
 		end
 	end
 	if self.svCurrent.cycleZoneGuide and wasAssistedQuestDisplayed and previousJournalIndex == bottomQuestIndex and IsZoneStoryTracked() and not wasZoneStoryAssisted then
 		-- Attempts to display the zone guide only when the focused quest is the top quest of our tracker panel and a zone guide is not displayed on the HUD tracker.
 		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(true)
+		self:PlayQuestFocusedSound()
 	else
 		FOCUSED_QUEST_TRACKER:ForceAssist(previousJournalIndex)
 	end
@@ -818,12 +867,14 @@ function CQT:AssistNext()
 		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(false)
 		if self.svCurrent.cycleZoneGuide and nextJournalIndex ~= 1 then
 			-- If the zone guide was displayed in reverse rotation, it is natural to just turn off the zone guide and do nothing.
+			self:PlayQuestFocusedSound()
 			return
 		end
 	end
 	if self.svCurrent.cycleZoneGuide and nextJournalIndex == 1 and IsZoneStoryTracked() and not wasZoneStoryAssisted then
 		-- Attempts to display the zone guide only when the focused quest is the last quest in the QJM sorted list and a zone guide is not displayed on the HUD tracker.
 		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(true)
+		self:PlayQuestFocusedSound()
 	else
 		FOCUSED_QUEST_TRACKER:ForceAssist(questList[nextJournalIndex].questIndex)
 	end
@@ -847,12 +898,14 @@ function CQT:AssistPrevious()
 		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(false)
 		if self.svCurrent.cycleZoneGuide and previousJournalIndex ~= numQuestList then
 			-- If the zone guide was displayed in reverse rotation, it is natural to just turn off the zone guide and do nothing.
+			self:PlayQuestFocusedSound()
 			return
 		end
 	end
 	if self.svCurrent.cycleZoneGuide and previousJournalIndex == numQuestList and IsZoneStoryTracked() and not wasZoneStoryAssisted then
 		-- Attempts to display the zone guide only when the focused quest is the first quest in the QJM sorted list and a zone guide is not displayed on the HUD tracker.
 		ZO_ZoneStories_Manager.SetTrackedZoneStoryAssisted(true)
+		self:PlayQuestFocusedSound()
 	else
 		FOCUSED_QUEST_TRACKER:ForceAssist(questList[previousJournalIndex].questIndex)
 	end

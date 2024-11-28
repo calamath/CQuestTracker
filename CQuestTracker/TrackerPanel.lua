@@ -333,16 +333,12 @@ local function IsOrDescription(journalIndex, stepIndex)
 end
 function CQT_TrackerPanel:RefreshTree()
 	local function ShouldOpenQuestHeader(questInfo)
-		local userRequestedOpen = self:GetTreeNodeOpenStatus(questInfo.questId)
-		if userRequestedOpen == nil then
-			if self:GetAttribute("compactMode") then
-				local tracked = select(7, GetJournalQuestInfo(questInfo.journalIndex))
-				return tracked or (questInfo.timestamp[3] and questInfo.timestamp[3] > 0)
-			else
-				return true
-			end
+		if self:GetAttribute("compactMode") then
+			local tracked = select(7, GetJournalQuestInfo(questInfo.journalIndex))
+			return tracked or (questInfo.timestamp[3] and questInfo.timestamp[3] > 0)	-- Only tracked or pinned quests should be true
 		else
-			return userRequestedOpen
+			local userRequestedOpen = self:GetTreeNodeOpenStatus(questInfo.questId)
+			return userRequestedOpen ~= false	-- nil should be true
 		end
 	end
 	local function PopulateQuestConditions(journalIndex, stepIndex, tree, parentNode, sound, open)
@@ -387,6 +383,19 @@ function CQT_TrackerPanel:RefreshTree()
 	local questList = self.questList
 	if not questList then return end
 	self.journalIndexToTreeNode = {}
+	--	If there are any open/close animations in progress, we should finish them instantly before we reset the tree object.
+	local animationPool = self.trackerTree:GetOpenAnimationPool()
+	if animationPool then
+		for _, timeline in animationPool:ActiveObjectIterator() do
+			if timeline:IsEnabled() and timeline:IsPlaying() then
+				if timeline:IsPlayingBackward() then
+					timeline:PlayInstantlyToStart()
+				else
+					timeline:PlayInstantlyToEnd()
+				end
+			end
+		end
+	end
 	self.trackerTree:Reset()
     self.trackerTree:SetSuspendAnimations(false)
 	self.questTimer:DiscardAllTimerLayouts()
@@ -465,10 +474,13 @@ local function CQT_T_QuestHeader_OnMouseUp(control, button, upInside)
 			if control.enabled and control.node:GetTree():IsEnabled() then
 				if select(7, GetJournalQuestInfo(control.journalIndex)) then
 					control.node:GetTree().treeNodeOpenStatus[control.questId] = not control.node:IsOpen()
+					control.node:GetTree():ToggleNode(control.node)
 				else
 					control.node:GetTree().treeNodeOpenStatus[control.questId] = nil
+					if not control.node:IsOpen() then
+						control.node:GetTree():ToggleNode(control.node)
+					end
 				end
-				control.node:GetTree():ToggleNode(control.node)
 				FOCUSED_QUEST_TRACKER:ForceAssist(control.journalIndex)
 			end
 		elseif button == MOUSE_BUTTON_INDEX_RIGHT then

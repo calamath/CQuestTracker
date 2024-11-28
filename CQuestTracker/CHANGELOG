@@ -1,3 +1,11 @@
+V2.1.8: [V20108] by Calamath
+- Addressed an issue in gamepad mode where the Cycle Focused Quest press-key hold interaction and the target icon interaction assigned to the same hold-key would occur at the same time.
+- Now we will cancel the CQuestTracker hold interaction when another action is assigned to the same hold key in gamepad mode. This does not affect keyboard mode.
+- When a zone story is tracked and displayed in the tracker panel, a sound will now play when you switch the focus to the zone story. This is a rollout of recent improvements to the default quest tracker.
+- Fixed an issue where the compact mode was not working as intended when you manually closed quest conditions in the tracker panel.
+- Fixed a potential issue related to the tree open animation when you manually opening and closing the quest condition in the tracker panel.
+- Updated API version to 101044 (ESO 10.2.x : Update 44)
+
 V2.1.7: [V20107] by Calamath
 - Added option to underline the focused quest name.
 - Changed to hide the tracker panel when the player character dies.
