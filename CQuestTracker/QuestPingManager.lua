@@ -152,9 +152,11 @@ end
 
 function CQT_QuestPing_Singleton:OnQuestAvailable(journalIndex)
 	if journalIndex == self:GetInternalQuestPingData() then
-		if g_mapPinManager.DoesCurrentMapHideQuestPins() then
+		-- TODO: Remove the following lines after update 45.
+		if g_mapPinManager.DoesCurrentMapHideQuestPins and g_mapPinManager.DoesCurrentMapHideQuestPins() then
 			return
 		end
+		-- TODO: up to this line
 		if not ZO_WorldMap_IsPinGroupShown(MAP_FILTER_QUESTS) then
 			return
 		end

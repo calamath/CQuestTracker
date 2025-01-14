@@ -49,7 +49,6 @@ local questTypeIconTexture = {
 	[QUEST_TYPE_RAID]				= "EsoUI/Art/Journal/Gamepad/gp_questTypeIcon_raid.dds", 
 	[QUEST_TYPE_AVA]				= "EsoUI/Art/Journal/Gamepad/gp_questTypeIcon_ava.dds", 
 	[QUEST_TYPE_CLASS]				= nil, 
-	[QUEST_TYPE_QA_TEST]			= nil, 
 	[QUEST_TYPE_AVA_GROUP]			= "EsoUI/Art/Journal/Gamepad/gp_questTypeIcon_avagroup.dds", 
 	[QUEST_TYPE_AVA_GRAND]			= "EsoUI/Art/Journal/Gamepad/gp_questTypeIcon_avagroup.dds", 
 	[QUEST_TYPE_HOLIDAY_EVENT]		= "EsoUI/Art/TreeIcons/Gamepad/achievement_categoryicon_events.dds", 

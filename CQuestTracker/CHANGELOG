@@ -1,3 +1,6 @@
+V2.1.9: [V20109] by Calamath
+- Fixed UI errors on Update 45 PTS and guaranteed backward compatibility.
+
 V2.1.8: [V20108] by Calamath
 - Addressed an issue in gamepad mode where the Cycle Focused Quest press-key hold interaction and the target icon interaction assigned to the same hold-key would occur at the same time.
 - Now we will cancel the CQuestTracker hold interaction when another action is assigned to the same hold key in gamepad mode. This does not affect keyboard mode.
