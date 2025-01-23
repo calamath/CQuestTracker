@@ -1,3 +1,7 @@
+V2.1.10: [V20110] by Calamath
+- Initial adjustments to support ForceConsoleFlow.
+- Updated API version to 101045 (ESO 10.3.x : Fallen Banners)
+
 V2.1.9: [V20109] by Calamath
 - Fixed UI errors on Update 45 PTS and guaranteed backward compatibility.
 

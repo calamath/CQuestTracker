@@ -103,6 +103,7 @@ local questBackgroundTexture = {
 	[6843]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_prologue_druidlaurel_1x1.dds", 				-- Sojourn of the Druid King
 	[6967]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_prologue_leramilthewise_1x1.dds", 			-- Eye of Fate
 	[7079]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_prologue_galsabaru_1x1.dds", 				-- Prisoner of Fate
+	[7290]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_prologue_princeazah_1x1.dds", 				-- A Guild in Crisis
 
 -- Event Quest
 	[5635]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_chefdonolon_1x1.dds", 						-- Ache for Cake (2016)

@@ -310,7 +310,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.1.9", 
+	version = "2.1.10", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -452,11 +452,13 @@ function CQT:OnAddOnLoaded()
 			self:UpdateTrackerPanelVisibility()
 		end
 	end)
-	KEYBINDINGS_FRAGMENT:RegisterCallback("StateChange", function(oldState, newState)
-		if newState == SCENE_FRAGMENT_SHOWING or newState == SCENE_FRAGMENT_HIDING then
-			self:UpdateTrackerPanelVisibility()
-		end
-	end)
+	if KEYBINDINGS_FRAGMENT then
+		KEYBINDINGS_FRAGMENT:RegisterCallback("StateChange", function(oldState, newState)
+			if newState == SCENE_FRAGMENT_SHOWING or newState == SCENE_FRAGMENT_HIDING then
+				self:UpdateTrackerPanelVisibility()
+			end
+		end)
+	end
 
 	-- LAM setting panel
 	self.settingPanel = self:CreateClassObject("CQT_LAMSettingPanel", "CQuestTracker_Options", self.svCurrent, self.svAccount, CQT_SV_DEFAULT)
@@ -541,7 +543,9 @@ function CQT:RegisterEvents()
 		self.LDL:Debug("EVENT_PLAYER_ACTIVATED : initial =", initial, ", isFirstTime =", self.isFirstTimePlayerActivated)
 		if self.isFirstTimePlayerActivated then
 			self.isFirstTimePlayerActivated = false
-			self.settingPanel:InitializeSettingPanel()
+			if self.settingPanel then
+				self.settingPanel:InitializeSettingPanel()
+			end
 			if GetSetting_Bool(SETTING_TYPE_UI, UI_SETTING_SHOW_QUEST_TRACKER) ~= not self.svCurrent.hideFocusedQuestTracker then
 				SetSetting(SETTING_TYPE_UI, UI_SETTING_SHOW_QUEST_TRACKER, self.svCurrent.hideFocusedQuestTracker and "false" or "true")	-- Override default quest tracker visibility with our save data settings.
 			end
@@ -681,7 +685,7 @@ function CQT:CopyKeybinds(sourceActionName, destActionName)
 	if layer and category and action then
 		if IsProtectedFunction("UnbindAllKeysFromAction") then
 			CallSecureProtected("UnbindAllKeysFromAction", layer, category, action)
-		else
+		elseif not IsPrivateFunction("UnbindAllKeysFromAction") then
 			UnbindAllKeysFromAction(layer, category, action)
 		end
 	else

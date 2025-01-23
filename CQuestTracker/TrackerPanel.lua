@@ -335,7 +335,7 @@ function CQT_TrackerPanel:RefreshTree()
 	local function ShouldOpenQuestHeader(questInfo)
 		if self:GetAttribute("compactMode") then
 			local tracked = select(7, GetJournalQuestInfo(questInfo.journalIndex))
-			return tracked or (questInfo.timestamp[3] and questInfo.timestamp[3] > 0)	-- Only tracked or pinned quests should be true
+			return tracked or (questInfo.timestamp[3] and questInfo.timestamp[3] > 0 or false)	-- Only tracked or pinned quests should be true
 		else
 			local userRequestedOpen = self:GetTreeNodeOpenStatus(questInfo.questId)
 			return userRequestedOpen ~= false	-- nil should be true
