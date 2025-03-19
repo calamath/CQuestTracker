@@ -1,3 +1,7 @@
+V2.2.0: [V20200] by Calamath
+- Improved the vanilla quest journal to support CQuestTracker.
+- You can now control whether to pin or ignore individual quests from the quest journal screen in both gamepad and keyboard mode.
+
 V2.1.10: [V20110] by Calamath
 - Initial adjustments to support ForceConsoleFlow.
 - Updated API version to 101045 (ESO 10.3.x : Fallen Banners)

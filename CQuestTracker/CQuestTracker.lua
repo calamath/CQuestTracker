@@ -310,7 +310,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.1.10", 
+	version = "2.2.0", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -459,6 +459,10 @@ function CQT:OnAddOnLoaded()
 			end
 		end)
 	end
+
+	-- quest journal customizing
+	self.questJournalCustomizerKeyboard = self:CreateClassObject("CQuestJournalCustomizer_Keyboard", self.svCurrent)
+	self.questJournalCustomizerGamepad = self:CreateClassObject("CQuestJournalCustomizer_Gamepad", self.svCurrent)
 
 	-- LAM setting panel
 	self.settingPanel = self:CreateClassObject("CQT_LAMSettingPanel", "CQuestTracker_Options", self.svCurrent, self.svAccount, CQT_SV_DEFAULT)
@@ -1484,6 +1488,16 @@ function CQT:RegisterSharedAPI()
 -- ** _Returns:_ *bool* _isIgnored_
 	self._shared.IsIgnoredQuestByIndex = function(_, journalIndex)
 		return self:IsIgnoredQuestByIndex(journalIndex)
+	end
+
+-- * CQT:AssistNext()
+	self._shared.AssistNext = function()
+		return self:AssistNext()
+	end
+
+-- * CQT:AssistPrevious()
+	self._shared.AssistPrevious = function()
+		return self:AssistPrevious()
 	end
 
 -- * CQT:ShowQuestPingOnMap(journalIndex, stepIndex, conditionIndex)

@@ -508,16 +508,25 @@ function CWorldMapUtility:OpenWorldMapScene()
 -- NOTE: This is the magic code to remove the impacts of the four major minimap addons and safely transition into the world map scene.
 --       Although seemingly meaningless, each line has a meaning and should never be modified unless you know what it means. Replacing with an equivalent code is also unacceptable.
 	if not ZO_WorldMap_IsWorldMapShowing() then
-		ZO_WorldMap:SetHidden(ZO_WorldMap:IsHidden())
-		if not WORLD_MAP_FRAGMENT:IsShowing() and not ZO_WorldMap:IsHidden() then
---			CQT.LDL:Warn("OpenWorldMapScene : ZO_WorldMap is showing.")
-			ZO_WorldMap:SetHidden(true)
+		if SCENE_MANAGER:IsShowingBaseScene() then
+			ZO_WorldMap:SetHidden(ZO_WorldMap:IsHidden())
+			if not WORLD_MAP_FRAGMENT:IsShowing() and not ZO_WorldMap:IsHidden() then
+--				CQT.LDL:Warn("OpenWorldMapScene : ZO_WorldMap is showing.")
+				ZO_WorldMap:SetHidden(true)
+			end
+			ZO_WorldMap_ShowWorldMap()
+--			if not WORLD_MAP_MANAGER:IsInMode(MAP_MODE_LARGE_CUSTOM) then
+--				CQT.LDL:Debug("OpenWorldMapScene : [FAILSAFE] changing map mode")
+--				WORLD_MAP_MANAGER:SetToMode(MAP_MODE_LARGE_CUSTOM)
+--			end
+		else
+			-- If the transition is not from the base scene, return to the previous scene when the map scene is hidden.
+			if IsInGamepadPreferredMode() then
+				SCENE_MANAGER:Push("gamepad_worldMap")
+			else
+				SCENE_MANAGER:Push("worldMap")
+    		end
 		end
-		ZO_WorldMap_ShowWorldMap()
---		if not WORLD_MAP_MANAGER:IsInMode(MAP_MODE_LARGE_CUSTOM) then
---			CQT.LDL:Debug("OpenWorldMapScene : [FAILSAFE] changing map mode")
---			WORLD_MAP_MANAGER:SetToMode(MAP_MODE_LARGE_CUSTOM)
---		end
 	end
 end
 
