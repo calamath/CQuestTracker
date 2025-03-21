@@ -1,3 +1,6 @@
+V2.2.1: [V20201] by Calamath
+- Fixed an issue with quest sharing not working on the journal screen.
+
 V2.2.0: [V20200] by Calamath
 - Improved the vanilla quest journal to support CQuestTracker.
 - You can now control whether to pin or ignore individual quests from the quest journal screen in both gamepad and keyboard mode.

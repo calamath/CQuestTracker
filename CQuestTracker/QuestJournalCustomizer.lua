@@ -161,7 +161,35 @@ function CQuestJournalCustomizer_Gamepad:OnDeferredInitialize()
 	-- We would add a keybind button for pinning to the keybind strip for the options menu.
 	local optionsKeybindStripDescriptor = self.questJournal.optionsKeybindStripDescriptor
 	if optionsKeybindStripDescriptor then
-		optionsKeybindStripDescriptor[#optionsKeybindStripDescriptor + 1] = self.keybindButtonDescriptor["pinning"]
+		optionsKeybindStripDescriptor[#optionsKeybindStripDescriptor + 1] = {
+		-- Pin / Unpin Quest
+			alignment = KEYBIND_STRIP_ALIGN_LEFT, 
+			name = function()
+				if CQT:IsPinnedQuestByIndex(self:GetSelectedQuestIndex()) then
+					return L(SI_CQT_DISABLE_PINNING_QUEST)
+				else
+					return L(SI_CQT_ENABLE_PINNING_QUEST)
+				end
+			end, 
+			keybind = "UI_SHORTCUT_TERTIARY", 
+			callback = function()
+				local selectedQuestIndex = self:GetSelectedQuestIndex()
+				if CQT:IsPinnedQuestByIndex(selectedQuestIndex) then
+					CQT:DisablePinningQuestByIndex(selectedQuestIndex)
+				else
+					CQT:EnablePinningQuestByIndex(selectedQuestIndex)
+				end
+				self:UpdateQuestJournalDetailTitle(selectedQuestIndex)
+				self:UpdateKeybindStripDescriptors()
+			end, 
+			visible = function()
+				if self:GetSelectedQuestIndex() then
+					return true
+				else
+					return false
+				end
+			end, 
+		}
 	end
 
 	-- After RefreshOptionsList runs, we add our menu items and rebuild the list.
@@ -331,10 +359,63 @@ function CQuestJournalCustomizer_Keyboard:OnDeferredInitialize()
 		end, 
 	}
 	-- Pin / Unpin Quest
-	self.keybindStripDescriptor[#self.keybindStripDescriptor + 1] = self.keybindButtonDescriptor["pinning"]
+	self.keybindStripDescriptor[#self.keybindStripDescriptor + 1] = {
+		alignment = KEYBIND_STRIP_ALIGN_LEFT, 
+		name = function()
+			if CQT:IsPinnedQuestByIndex(self:GetSelectedQuestIndex()) then
+				return L(SI_CQT_DISABLE_PINNING_QUEST)
+			else
+				return L(SI_CQT_ENABLE_PINNING_QUEST)
+			end
+		end, 
+		keybind = "UI_SHORTCUT_SECONDARY", 
+		callback = function()
+			local selectedQuestIndex = self:GetSelectedQuestIndex()
+			if CQT:IsPinnedQuestByIndex(selectedQuestIndex) then
+				CQT:DisablePinningQuestByIndex(selectedQuestIndex)
+			else
+				CQT:EnablePinningQuestByIndex(selectedQuestIndex)
+			end
+			self:UpdateQuestJournalDetailTitle(selectedQuestIndex)
+			self:UpdateKeybindStripDescriptors()
+		end, 
+		visible = function()
+			if self:GetSelectedQuestIndex() then
+				return true
+			else
+				return false
+			end
+		end, 
+	}
 	-- Ignoring / Disable ignoring Quest
-	self.keybindStripDescriptor[#self.keybindStripDescriptor + 1] = self.keybindButtonDescriptor["ignoring"]
-
+	self.keybindStripDescriptor[#self.keybindStripDescriptor + 1] = {
+		alignment = KEYBIND_STRIP_ALIGN_LEFT, 
+		name = function()
+			if CQT:IsIgnoredQuestByIndex(self:GetSelectedQuestIndex()) then
+				return L(SI_CQT_DISABLE_IGNORING_QUEST)
+			else
+				return L(SI_CQT_ENABLE_IGNORING_QUEST)
+			end
+		end, 
+		keybind = "UI_SHORTCUT_QUINARY", 
+		callback = function()
+			local selectedQuestIndex = self:GetSelectedQuestIndex()
+			if CQT:IsIgnoredQuestByIndex(selectedQuestIndex) then
+				CQT:DisableIgnoringQuestByIndex(selectedQuestIndex)
+			else
+				CQT:EnableIgnoringQuestByIndex(selectedQuestIndex)
+			end
+			self:UpdateQuestJournalDetailTitle(selectedQuestIndex)
+			self:UpdateKeybindStripDescriptors()
+		end, 
+		visible = function()
+			if self:GetSelectedQuestIndex() then
+				return true
+			else
+				return false
+			end
+		end, 
+	}
 
 	self.questJournal:RegisterCallback("QuestSelected", function()
 		self:UpdateKeybindStripDescriptors()
