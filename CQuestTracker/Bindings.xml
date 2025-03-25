@@ -16,6 +16,11 @@
 			<Action name="CQT_SHOW_FOCUSED_QUEST_ON_MAP">
 				<Down>CQT_ShowFocusedQuestOnMap_OnKeybindDown()</Down>
 			</Action>
+			<!-- This action performs CQT_TOGGLE_TRACKED_QUEST interactions under special conditions. -->
+			<Action name="CQT_ASSIST_PREVIOUS_TRACKED_QUEST" holdAndChordInteraction="RUN_ANYWAY">
+				<Down>LibCInteraction:HandleKeybindDown("CQT_TOGGLE_TRACKED_QUEST", keybind)</Down>
+				<Up>LibCInteraction:HandleKeybindUp("CQT_TOGGLE_TRACKED_QUEST", keybind)</Up>
+			</Action>
 		</Category>
 	</Layer>
 </Bindings>

@@ -41,6 +41,11 @@ do
 end
 
 function CQuestJournalCustomizer_Shared:OnDeferredInitialize()
+	-- NOTE: We should not use the gamepadPreferredKeybind specifier if there is already another button assigned to the key specified by 'keybind'.
+	-- It is unclear whether this is intended, but the existing keybind button would be overwritten and replaced.
+	-- Also, specifying your own keybind actions with gamepadPreferredKeybind will not work as intended.
+
+--[[
 	self.keybindButtonDescriptor = {
 		-- Pin / Unpin Quest
 		["pinning"] = {
@@ -104,6 +109,7 @@ function CQuestJournalCustomizer_Shared:OnDeferredInitialize()
 			end, 
 		}, 
 	}
+]]
 end
 
 function CQuestJournalCustomizer_Shared:UpdateKeybindStripDescriptors()
@@ -158,9 +164,28 @@ function CQuestJournalCustomizer_Gamepad:OnDeferredInitialize()
 	end
 	KEYBIND_STRIP:UpdateKeybindButtonGroup(mainKeybindStripDescriptor)
 
-	-- We would add a keybind button for pinning to the keybind strip for the options menu.
 	local optionsKeybindStripDescriptor = self.questJournal.optionsKeybindStripDescriptor
 	if optionsKeybindStripDescriptor then
+		-- We would add a keybind button for picking out quest to the keybind strip for the options menu.
+		optionsKeybindStripDescriptor[#optionsKeybindStripDescriptor + 1] = {
+		-- Pick out Quest
+			alignment = KEYBIND_STRIP_ALIGN_LEFT, 
+			name = L(SI_CQT_PICK_OUT_QUEST), 
+			keybind = "UI_SHORTCUT_SECONDARY", 
+			callback = function()
+				local selectedQuestIndex = self:GetSelectedQuestIndex()
+				CQT:PickOutQuestByIndex(selectedQuestIndex)
+			end, 
+			visible = function()
+				local selectedQuestIndex = self:GetSelectedQuestIndex()
+				if selectedQuestIndex and not CQT:IsIgnoredQuestByIndex(selectedQuestIndex) and not CQT:IsPinnedQuestByIndex(selectedQuestIndex) then
+					return true
+				else
+					return false
+				end
+			end, 
+		}
+		-- We would add a keybind button for pinning to the keybind strip for the options menu.
 		optionsKeybindStripDescriptor[#optionsKeybindStripDescriptor + 1] = {
 		-- Pin / Unpin Quest
 			alignment = KEYBIND_STRIP_ALIGN_LEFT, 
@@ -252,8 +277,17 @@ end
 
 function CQuestJournalCustomizer_Gamepad:UpdateKeybindStripDescriptors()
 	KEYBIND_STRIP:UpdateKeybindButtonGroup(self.questJournal.optionsKeybindStripDescriptor)
+	local optionsList = self.questJournal.optionsList
+	local numListItems = optionsList:GetNumItems()
+	local selectedIndex = optionsList:GetSelectedIndex()
 	-- In gamepad mode, we need to rebuild the list of options menu at the same time.
 	self.questJournal:RefreshOptionsList()
+	-- But we do not want to move selected items in the options menu before/after switching menu items such as pin/unpin.
+	if optionsList:GetSelectedIndex() ~= selectedIndex then
+		if optionsList:GetNumItems() == numListItems then
+			optionsList:SetSelectedIndexWithoutAnimation(selectedIndex)
+		end
+	end
 end
 
 function CQuestJournalCustomizer_Gamepad:UpdateQuestJournalDetailTitle(questIndex)
@@ -335,7 +369,7 @@ function CQuestJournalCustomizer_Keyboard:OnDeferredInitialize()
 		callback = function()
 			local selectedQuestIndex = self:GetSelectedQuestIndex()
 			if selectedQuestIndex then
-				ShareQuest(selectedQuestIndex)
+				QUEST_JOURNAL_MANAGER:ShareQuest(selectedQuestIndex)
 			end
 		end, 
 		visible = function()

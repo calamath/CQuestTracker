@@ -166,6 +166,17 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 	}
 	optionsData[#optionsData + 1] = {
 		type = "checkbox",
+		name = L(SI_CQT_UI_LOCK_POSITION_AND_SIZE_OP_NAME), 
+		getFunc = function() return not self.svCurrent.panelAttributes.movable end, 
+		setFunc = function(newValue)
+			self:SetTrackerPanelAttribute("movable", not newValue)
+		end, 
+		tooltip = L(SI_CQT_UI_LOCK_POSITION_AND_SIZE_OP_TIPS), 
+		width = "full", 
+		default = not self.SV_DEFAULT.panelAttributes.movable, 
+	}
+	optionsData[#optionsData + 1] = {
+		type = "checkbox",
 		name = L(SI_CQT_UI_CLAMPED_TO_SCREEN_OP_NAME), 
 		getFunc = function() return self.svCurrent.panelAttributes.clampedToScreen end, 
 		setFunc = function(newValue)
@@ -204,7 +215,7 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		end, 
 		tooltip = L(SI_CQT_UI_SHOW_FOCUSED_QUEST_ICON_OP_TIPS), 
 		width = "full", 
-		default = not self.SV_DEFAULT.panelAttributes.showFocusIcon, 
+		default = self.SV_DEFAULT.panelAttributes.showFocusIcon, 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "checkbox",
@@ -215,7 +226,7 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		end, 
 		tooltip = L(SI_CQT_UI_UNDERLINE_FOCUSED_QUEST_OP_TIPS), 
 		width = "full", 
-		default = not self.SV_DEFAULT.panelAttributes.underlineHeaderOnFocused, 
+		default = self.SV_DEFAULT.panelAttributes.underlineHeaderOnFocused, 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "checkbox",
@@ -226,7 +237,7 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		end, 
 		tooltip = L(SI_CQT_UI_SHOW_QUEST_TYPE_ICON_OP_TIPS), 
 		width = "full", 
-		default = not self.SV_DEFAULT.panelAttributes.showTypeIcon, 
+		default = self.SV_DEFAULT.panelAttributes.showTypeIcon, 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "checkbox",
@@ -238,7 +249,7 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		tooltip = L(SI_CQT_UI_QUEST_TYPE_ICON_COLOR_OP_TIPS), 
 		width = "full", 
 		disabled = function() return not self.svCurrent.panelAttributes.showTypeIcon end, 
-		default = not self.SV_DEFAULT.panelAttributes.enableTypeIconColoring, 
+		default = self.SV_DEFAULT.panelAttributes.enableTypeIconColoring, 
 	}
 	optionsData[#optionsData + 1] = {
 		type = "checkbox",
@@ -250,7 +261,7 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		tooltip = L(SI_CQT_UI_SHOW_REPEATABLE_QUEST_ICON_OP_TIPS), 
 		width = "full", 
 		disabled = function() return not self.svCurrent.panelAttributes.showTypeIcon end, 
-		default = not self.SV_DEFAULT.panelAttributes.showRepeatableQuestIcon, 
+		default = self.SV_DEFAULT.panelAttributes.showRepeatableQuestIcon, 
 	}
 
 	local fontTypeChoices = {

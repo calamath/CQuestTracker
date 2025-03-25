@@ -7,6 +7,7 @@
 --	Localization Strings
 SafeAddString(SI_BINDING_NAME_CQT_TOGGLE_TRACKER_PANEL_VISIBILITY, 		 "Toggle Tracker Panel", 1)
 SafeAddString(SI_BINDING_NAME_CQT_SHOW_FOCUSED_QUEST_ON_MAP, 	"Show Focused Quest On Map", 1)
+SafeAddString(SI_BINDING_NAME_CQT_ASSIST_PREVIOUS_TRACKED_QUEST, 	"Reverse Cycle Focused Quest", 1)
 
 SafeAddString(SI_CQT_WELCOME_TEXT1, 							"Welcome to CQuestTracker add-on !", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT2, 							" This quest tracker will automatically update the displayed list and show recent ongoing quests with higher priority.", 1)
@@ -53,6 +54,8 @@ SafeAddString(SI_CQT_UI_MAX_NUM_QUEST_DISPLAYED_OP_NAME,		"Max number of quests 
 SafeAddString(SI_CQT_UI_MAX_NUM_QUEST_DISPLAYED_OP_TIPS,		"Adjust the maximum number of quests displayed in the tracker panel as needed. The recommended value is 5.", 1)
 SafeAddString(SI_CQT_UI_COMPACT_MODE_OP_NAME,					"Compact Mode", 1)
 SafeAddString(SI_CQT_UI_COMPACT_MODE_OP_TIPS,					"Turn on Compact Mode to limit the display of quest conditions. Only focused or pinned quests will be displayed, thus reducing the height of the tracker display area.", 1)
+SafeAddString(SI_CQT_UI_LOCK_POSITION_AND_SIZE_OP_NAME,			"Lock Position and Size", 1)
+SafeAddString(SI_CQT_UI_LOCK_POSITION_AND_SIZE_OP_TIPS,			"Turning on this option to lock the position and size of the tracker panel.", 1)
 SafeAddString(SI_CQT_UI_CLAMPED_TO_SCREEN_OP_NAME,				"Clamped to Screen", 1)
 SafeAddString(SI_CQT_UI_CLAMPED_TO_SCREEN_OP_TIPS,				"Turn on Clamped to Screen to prevent the quest tracker from sticking out of the screen.", 1)
 SafeAddString(SI_CQT_UI_HIDE_QUEST_HINT_STEP_OP_NAME,			"Hide Quest Hint Steps", 1)

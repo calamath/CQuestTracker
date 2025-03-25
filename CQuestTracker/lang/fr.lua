@@ -7,6 +7,7 @@
 --	Localization Strings
 SafeAddString(SI_BINDING_NAME_CQT_TOGGLE_TRACKER_PANEL_VISIBILITY, 		 "Toggle Tracker Panel", 1)
 SafeAddString(SI_BINDING_NAME_CQT_SHOW_FOCUSED_QUEST_ON_MAP, 	"Show Focused Quest On Map", 1)
+SafeAddString(SI_BINDING_NAME_CQT_ASSIST_PREVIOUS_TRACKED_QUEST, 	"Reverse Cycle Focused Quest", 1)
 
 SafeAddString(SI_CQT_WELCOME_TEXT1, 							"Fonctionnement du module de suivi des quêtes", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT2, 							" La fenêtre de suivi des quêtes se met automatiquement à jour avec une priorité plus élevée pour les quêtes récentes en cours.", 1)
@@ -53,6 +54,8 @@ SafeAddString(SI_CQT_UI_MAX_NUM_QUEST_DISPLAYED_OP_NAME,		"Nombre max de quêtes
 SafeAddString(SI_CQT_UI_MAX_NUM_QUEST_DISPLAYED_OP_TIPS,		"Détermine le nombre de quêtes maximum affichées dans la fenêtre de suivi de quête de l'extension.", 1)
 SafeAddString(SI_CQT_UI_COMPACT_MODE_OP_NAME,					"Afficher en mode compact", 1)
 SafeAddString(SI_CQT_UI_COMPACT_MODE_OP_TIPS,					"Retire l'affichage des conditions de toutes les quêtes hormis celles qui sont épinglées et suivies afin de réduire la taille de la fenêtre en hauteur.", 1)
+SafeAddString(SI_CQT_UI_LOCK_POSITION_AND_SIZE_OP_NAME,			"Lock Position and Size", 1)
+SafeAddString(SI_CQT_UI_LOCK_POSITION_AND_SIZE_OP_TIPS,			"Turning on this option to lock the position and size of the tracker panel.", 1)
 SafeAddString(SI_CQT_UI_CLAMPED_TO_SCREEN_OP_NAME,				"Attacher à l'écran", 1)
 SafeAddString(SI_CQT_UI_CLAMPED_TO_SCREEN_OP_TIPS,				"Empêche la fenêtre de suivi des quêtes de sortir de l'écran.", 1)
 SafeAddString(SI_CQT_UI_HIDE_QUEST_HINT_STEP_OP_NAME,			"Cacher les indices de quêtes", 1)

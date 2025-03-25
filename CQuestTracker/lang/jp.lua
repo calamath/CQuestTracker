@@ -6,6 +6,7 @@
 --	Localization Strings
 SafeAddString(SI_BINDING_NAME_CQT_TOGGLE_TRACKER_PANEL_VISIBILITY, 		 "トラッカーパネルの表示/非表示", 1)
 SafeAddString(SI_BINDING_NAME_CQT_SHOW_FOCUSED_QUEST_ON_MAP, 	"フォーカスクエストをマップに表示", 1)
+SafeAddString(SI_BINDING_NAME_CQT_ASSIST_PREVIOUS_TRACKED_QUEST, 	"フォーカスクエストを逆順に切り替え", 1)
 
 SafeAddString(SI_CQT_WELCOME_TEXT1, 							"CQuestTrackerアドオンへようこそ！", 1)
 SafeAddString(SI_CQT_WELCOME_TEXT2, 							"　このクエストトラッカーは、表示されているリストを自動的に更新し、最近進行中のクエストをより高い優先度で表示します。", 1)
@@ -54,6 +55,8 @@ SafeAddString(SI_CQT_UI_MAX_NUM_QUEST_DISPLAYED_OP_NAME,		"クエストの最大
 SafeAddString(SI_CQT_UI_MAX_NUM_QUEST_DISPLAYED_OP_TIPS,		"必要に応じて、トラッカーパネルに表示されるクエストの最大数を調整します。推奨値は５です。", 1)
 SafeAddString(SI_CQT_UI_COMPACT_MODE_OP_NAME,					"コンパクトモード", 1)
 SafeAddString(SI_CQT_UI_COMPACT_MODE_OP_TIPS,					"コンパクトモードをオンにして、クエスト状況の表示を制限します。 フォーカス中のクエストまたはピン留めされたクエストのみが表示されるため、トラッカーの表示領域の高さを抑えることができます。", 1)
+SafeAddString(SI_CQT_UI_LOCK_POSITION_AND_SIZE_OP_NAME,			"パネルの位置とサイズを固定", 1)
+SafeAddString(SI_CQT_UI_LOCK_POSITION_AND_SIZE_OP_TIPS,			"このオプションをオンにすると、トラッカーパネルの位置とサイズが固定されます。", 1)
 SafeAddString(SI_CQT_UI_CLAMPED_TO_SCREEN_OP_NAME,				"画面内に表示", 1)
 SafeAddString(SI_CQT_UI_CLAMPED_TO_SCREEN_OP_TIPS,				"クエストトラッカーが画面からはみ出さないようにするには、[画面内に表示]をオンにします。", 1)
 SafeAddString(SI_CQT_UI_HIDE_QUEST_HINT_STEP_OP_NAME,			"クエストヒントを非表示にする", 1)

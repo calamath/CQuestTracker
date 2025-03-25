@@ -20,6 +20,8 @@ function CQT_TrackerPanel:Initialize(control, overriddenAttrib)
 	self._attrib = {
 		compactMode = false, 
 		clampedToScreen = false, 
+		movable = true, 
+		resizeHandleSize = 4, 
 		offsetX = 400, 
 		offsetY = 300, 
 		width = 400, 
@@ -55,7 +57,7 @@ function CQT_TrackerPanel:Initialize(control, overriddenAttrib)
 	self.journalIndexToTreeNode = {}
 	self.questTimer = GetQuestTimerManager()
 	control:SetHandler("OnMouseEnter", function(control)
-		if MouseIsInside(self.titlebar) and not self.titlebar:IsHidden() then
+		if MouseIsInside(self.titlebar) and not self.titlebar:IsHidden() and self:GetAttribute("movable") then
 			self:ShowPanelFrame()
 		end
 	end)
@@ -90,11 +92,13 @@ function CQT_TrackerPanel:Initialize(control, overriddenAttrib)
 		end
 	end)
 	self:SetupPanelVisual()
+	self:SetupPanelMovability()
 	self:HidePanelFrame()
 	self:InitializeTree()
 	self:ResetAnchorPosition()
 	CQT:RegisterCallback("TrackerPanelAttributeSettingsChanged", function(key)
 		self:SetupPanelVisual()
+		self:SetupPanelMovability()
 		self:RefreshTree()
 	end)
 	CQT:RegisterCallback("TrackerPanelQuestListUpdated", function(questList)
@@ -149,6 +153,13 @@ function CQT_TrackerPanel:HidePanelFrame()
 		local r, g, b = unpack(self:GetAttribute("titlebarColor"))
 		self.panelBg:SetEdgeColor(r, g, b, 0)
 	end
+end
+
+function CQT_TrackerPanel:SetupPanelMovability()
+	local movable = self:GetAttribute("movable")
+	self.panelControl:SetMovable(movable)
+	-- When the tracker panel is movable, make it resizable as well.
+	self.panelControl:SetResizeHandleSize(movable and self:GetAttribute("resizeHandleSize") or 0)
 end
 
 function CQT_TrackerPanel:GetControl()
@@ -505,7 +516,7 @@ local function CQT_T_QuestHeader_OnMouseUp(control, button, upInside)
 			end)
 			if GetIsQuestSharable(control.journalIndex) and IsUnitGrouped("player") then
 				AddCustomMenuItem(L(SI_QUEST_TRACKER_MENU_SHARE), function()
-					ShareQuest(control.journalIndex)
+					QUEST_JOURNAL_MANAGER:ShareQuest(control.journalIndex)
 				end)
 			end
 			AddCustomMenuItem(L(SI_QUEST_TRACKER_MENU_SHOW_ON_MAP), function()

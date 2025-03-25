@@ -306,11 +306,22 @@ local _SHARED_DEFINITIONS = {
 	POI_DB_TYPE_GROUP_DUNGEON			= 102,  -- (node POI)
 	POI_DB_TYPE_TRIAL_DUNGEON			= 103,  -- (node POI)
 	POI_DB_TYPE_HOUSE					= 104,  -- (node POI)
+
+	-- CQuestTracker sounds
+	CQT_SOUNDS = {
+		FOCUSED							= SOUNDS.QUEST_FOCUSED, 
+		PICK_OUT						= SOUNDS.CHAMPION_SPINNER_UP, 
+		RULE_OUT						= SOUNDS.CHAMPION_SPINNER_DOWN, 
+		ENABLE_PINNING					= SOUNDS.PROMOTIONAL_EVENT_TRACK_ACTIVITY_CLICK, 
+		DISABLE_PINNING					= SOUNDS.PROMOTIONAL_EVENT_TRACK_ACTIVITY_UNCLICK, 
+		ENABLE_IGNORING					= SOUNDS.GUILD_SELF_LEFT, 
+		DISABLE_IGNORING				= SOUNDS.GUILD_SELF_JOINED, 
+	}, 
 }
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.2.1", 
+	version = "2.2.2", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -331,6 +342,7 @@ local CQT_SV_DEFAULT = {
 	panelAttributes = {
 		compactMode = false, 
 		clampedToScreen = false, 
+		movable = true, 
 		offsetX = 400, 
 		offsetY = 300, 
 		width = 400, 
@@ -519,6 +531,7 @@ end
 function CQT:ValidateConfigDataSV(sv)
 	if sv.panelAttributes.compactMode == nil					then sv.panelAttributes.compactMode						= CQT_SV_DEFAULT.panelAttributes.compactMode								end
 	if sv.panelAttributes.clampedToScreen == nil				then sv.panelAttributes.clampedToScreen					= CQT_SV_DEFAULT.panelAttributes.clampedToScreen							end
+	if sv.panelAttributes.movable == nil						then sv.panelAttributes.movable							= CQT_SV_DEFAULT.panelAttributes.movable									end
 	if sv.panelAttributes.headerColorSelected == nil			then sv.panelAttributes.headerColorSelected				= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.headerColorSelected)	end
 	if sv.panelAttributes.hintFont == nil						then sv.panelAttributes.hintFont						= sv.panelAttributes.conditionFont											end		-- Derived from conditionFont and added
 	if sv.panelAttributes.hintColor == nil						then sv.panelAttributes.hintColor						= ZO_ShallowTableCopy(CQT_SV_DEFAULT.panelAttributes.hintColor)				end
@@ -651,6 +664,9 @@ function CQT:RegisterInteractions()
 		enabled = function()
 			return self.trackerPanel:GetFragment():IsShowing()
 		end, 
+		keyDownCallback = function(interaction, sourceKeybindName)
+			interaction.forceReverse = sourceKeybindName == "CQT_ASSIST_PREVIOUS_TRACKED_QUEST"
+		end, 
 		holdTime = 300, 
 		endedCallback = function()
 			self.questTooltip:HideQuestTooltip()
@@ -666,7 +682,7 @@ function CQT:RegisterInteractions()
 			end
 		end, 
 		canceledCallback = function(interaction)
-			local isModifierKeyDown = interaction:IsModifierKeyDown(self.svCurrent.cycleBackwardsMod1) or interaction:IsModifierKeyDown(self.svCurrent.cycleBackwardsMod2)
+			local isModifierKeyDown = interaction.forceReverse or interaction:IsModifierKeyDown(self.svCurrent.cycleBackwardsMod1) or interaction:IsModifierKeyDown(self.svCurrent.cycleBackwardsMod2)
 			if self.svCurrent.cycleAllQuests then
 				if isModifierKeyDown then
 					self:AssistPrevious()
@@ -713,6 +729,7 @@ end
 function CQT:UpdateBlacklistedHoldKeys()
 -- Since the gamepad key codes are divided between press and hold, unintended collisions can occur between the hold interaction of the press key and the key bindings of the same hold key.
 -- Therefore, the status of gamepad hold key settings must be monitored with the goal of avoiding both interactions occurring at the same time.
+-- NOTE: At this time, the key bindings of CQT_ASSIST_PREVIOUS_TRACKED_QUEST is not considered.
 	ZO_ClearTable(self.blacklistedHoldKeys)
 	local layer, category, action = GetActionIndicesFromName("ASSIST_NEXT_TRACKED_QUEST")
 	if layer and category and action then
@@ -792,7 +809,7 @@ end
 
 function CQT:PlayQuestFocusedSound()
 	if not FOCUSED_QUEST_TRACKER.disableAudio then
-		PlaySound(SOUNDS.QUEST_FOCUSED)
+		PlaySound(CQT_SOUNDS.FOCUSED)
 	end
 end
 
@@ -1009,49 +1026,64 @@ function CQT:IsTrackedQuest(questId)
 	return foundIndex and self:IsTrackedQuestByIndex(foundIndex) or false
 end
 
-function CQT:PickOutQuestByIndex(journalIndex)
-	return self:PickOutQuest(GetQuestId(journalIndex))
+function CQT:PickOutQuestByIndex(journalIndex, suppressSound)
+	return self:PickOutQuest(GetQuestId(journalIndex), suppressSound)
 end
-function CQT:PickOutQuest(questId)
+function CQT:PickOutQuest(questId, suppressSound)
 	self:UpdateTimeStamp(questId)
+	if not suppressSound then
+		PlaySound(CQT_SOUNDS.PICK_OUT)
+	end
 	self:RefreshQuestList()
 end
 
-function CQT:PickOutPinnedQuestByIndex(journalIndex)
-	return self:PickOutPinnedQuest(GetQuestId(journalIndex))
+function CQT:PickOutPinnedQuestByIndex(journalIndex, suppressSound)
+	return self:PickOutPinnedQuest(GetQuestId(journalIndex), suppressSound)
 end
-function CQT:PickOutPinnedQuest(questId)
+function CQT:PickOutPinnedQuest(questId, suppressSound)
 	self:UpdateTimeStamp(questId)
+	if not suppressSound then
+		PlaySound(CQT_SOUNDS.PICK_OUT)
+	end
 	self:SetPinnedStatusTimeStamp(questId)
 	self:RefreshQuestList()
 end
 
-function CQT:RuleOutQuestByIndex(journalIndex)
-	return self:RuleOutQuest(GetQuestId(journalIndex))
+function CQT:RuleOutQuestByIndex(journalIndex, suppressSound)
+	return self:RuleOutQuest(GetQuestId(journalIndex), suppressSound)
 end
-function CQT:RuleOutQuest(questId)
+function CQT:RuleOutQuest(questId, suppressSound)
 	self:UpdateTimeStamp(questId, 0 - GetTimeStamp(), 0 - GetGameTimeMilliseconds())
+	if not suppressSound then
+		PlaySound(CQT_SOUNDS.RULE_OUT)
+	end
 	if self:IsPinnedQuest(questId) then
 		self:ResetPinnedStatusTimeStamp(questId)
 	end
 	self:RefreshQuestList()
 end
 
-function CQT:EnablePinningQuestByIndex(journalIndex)
-	return self:EnablePinningQuest(GetQuestId(journalIndex))
+function CQT:EnablePinningQuestByIndex(journalIndex, suppressSound)
+	return self:EnablePinningQuest(GetQuestId(journalIndex), suppressSound)
 end
-function CQT:EnablePinningQuest(questId)
+function CQT:EnablePinningQuest(questId, suppressSound)
 	if self:IsUnrecordedQuest(questId) then
 		self:UpdateTimeStamp(questId)
+	end
+	if not suppressSound then
+		PlaySound(CQT_SOUNDS.ENABLE_PINNING)
 	end
 	self:SetPinnedStatusTimeStamp(questId)
 	self:RefreshQuestList()
 end
 
-function CQT:DisablePinningQuestByIndex(journalIndex)
-	return self:DisablePinningQuest(GetQuestId(journalIndex))
+function CQT:DisablePinningQuestByIndex(journalIndex, suppressSound)
+	return self:DisablePinningQuest(GetQuestId(journalIndex), suppressSound)
 end
-function CQT:DisablePinningQuest(questId)
+function CQT:DisablePinningQuest(questId, suppressSound)
+	if not suppressSound then
+		PlaySound(CQT_SOUNDS.DISABLE_PINNING)
+	end
 	self:ResetPinnedStatusTimeStamp(questId)
 	self:RefreshQuestList()
 end
@@ -1063,21 +1095,27 @@ function CQT:IsPinnedQuest(questId)
 	return self.activityLog.quest[questId] and self.activityLog.quest[questId][3] and self.activityLog.quest[questId][3] > 0
 end
 
-function CQT:EnableIgnoringQuestByIndex(journalIndex)
-	return self:EnableIgnoringQuest(GetQuestId(journalIndex))
+function CQT:EnableIgnoringQuestByIndex(journalIndex, suppressSound)
+	return self:EnableIgnoringQuest(GetQuestId(journalIndex), suppressSound)
 end
-function CQT:EnableIgnoringQuest(questId)
+function CQT:EnableIgnoringQuest(questId, suppressSound)
 	if self:IsUnrecordedQuest(questId) then
 		self:UpdateTimeStamp(questId, 0 - GetTimeStamp(), 0 - GetGameTimeMilliseconds())
+	end
+	if not suppressSound then
+		PlaySound(CQT_SOUNDS.ENABLE_IGNORING)
 	end
 	self:SetPinnedStatusTimeStamp(questId, 0 - GetTimeStamp())
 	self:RefreshQuestList()
 end
 
-function CQT:DisableIgnoringQuestByIndex(journalIndex)
-	return self:DisableIgnoringQuest(GetQuestId(journalIndex))
+function CQT:DisableIgnoringQuestByIndex(journalIndex, suppressSound)
+	return self:DisableIgnoringQuest(GetQuestId(journalIndex), suppressSound)
 end
-function CQT:DisableIgnoringQuest(questId)
+function CQT:DisableIgnoringQuest(questId, suppressSound)
+	if not suppressSound then
+		PlaySound(CQT_SOUNDS.DISABLE_IGNORING)
+	end
 	self:ResetPinnedStatusTimeStamp(questId)
 	self:RefreshQuestList()
 end
@@ -1448,24 +1486,24 @@ function CQT:RegisterSharedAPI()
 		return self:IsTrackedQuestByIndex(journalIndex)
 	end
 
--- * CQT:PickOutQuestByIndex(journalIndex)
-	self._shared.PickOutQuestByIndex = function(_, journalIndex)
-		return self:PickOutQuestByIndex(journalIndex)
+-- * CQT:PickOutQuestByIndex(journalIndex, suppressSound)
+	self._shared.PickOutQuestByIndex = function(_, journalIndex, suppressSound)
+		return self:PickOutQuestByIndex(journalIndex, suppressSound)
 	end
 
--- * CQT:RuleOutQuestByIndex(journalIndex)
-	self._shared.RuleOutQuestByIndex = function(_, journalIndex)
-		return self:RuleOutQuestByIndex(journalIndex)
+-- * CQT:RuleOutQuestByIndex(journalIndex, suppressSound)
+	self._shared.RuleOutQuestByIndex = function(_, journalIndex, suppressSound)
+		return self:RuleOutQuestByIndex(journalIndex, suppressSound)
 	end
 
--- * CQT:EnablePinningQuestByIndex(journalIndex)
-	self._shared.EnablePinningQuestByIndex = function(_, journalIndex)
-		return self:EnablePinningQuestByIndex(journalIndex)
+-- * CQT:EnablePinningQuestByIndex(journalIndex, suppressSound)
+	self._shared.EnablePinningQuestByIndex = function(_, journalIndex, suppressSound)
+		return self:EnablePinningQuestByIndex(journalIndex, suppressSound)
 	end
 
--- * CQT:DisablePinningQuestByIndex(journalIndex)
-	self._shared.DisablePinningQuestByIndex = function(_, journalIndex)
-		return self:DisablePinningQuestByIndex(journalIndex)
+-- * CQT:DisablePinningQuestByIndex(journalIndex, suppressSound)
+	self._shared.DisablePinningQuestByIndex = function(_, journalIndex, suppressSound)
+		return self:DisablePinningQuestByIndex(journalIndex, suppressSound)
 	end
 
 -- * CQT:IsPinnedQuestByIndex(journalIndex)
@@ -1474,14 +1512,14 @@ function CQT:RegisterSharedAPI()
 		return self:IsPinnedQuestByIndex(journalIndex)
 	end
 
--- * CQT:EnableIgnoringQuestByIndex(journalIndex)
-	self._shared.EnableIgnoringQuestByIndex = function(_, journalIndex)
-		return self:EnableIgnoringQuestByIndex(journalIndex)
+-- * CQT:EnableIgnoringQuestByIndex(journalIndex, suppressSound)
+	self._shared.EnableIgnoringQuestByIndex = function(_, journalIndex, suppressSound)
+		return self:EnableIgnoringQuestByIndex(journalIndex, suppressSound)
 	end
 
--- * CQT:DisableIgnoringQuestByIndex(journalIndex)
-	self._shared.DisableIgnoringQuestByIndex = function(_, journalIndex)
-		return self:DisableIgnoringQuestByIndex(journalIndex)
+-- * CQT:DisableIgnoringQuestByIndex(journalIndex, suppressSound)
+	self._shared.DisableIgnoringQuestByIndex = function(_, journalIndex, suppressSound)
+		return self:DisableIgnoringQuestByIndex(journalIndex, suppressSound)
 	end
 
 -- * CQT:IsIgnoredQuestByIndex(journalIndex)

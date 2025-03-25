@@ -1,3 +1,10 @@
+V2.2.2: [V20202] by Calamath
+- Added a keybind option for reverse cycle quest in response to a request to assign a different key.
+- Added option to lock the position and size of the tracker panel.
+- Added operation sounds to pinning, ignoring, sharing and picking out quests.
+- Some minor QOL improvements for the gamepad quest journal options menu.
+- Added the pick out quest keybind button to the gamepad quest journal options screen.
+
 V2.2.1: [V20201] by Calamath
 - Fixed an issue with quest sharing not working on the journal screen.
 
