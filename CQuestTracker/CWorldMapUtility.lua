@@ -258,7 +258,7 @@ end
 -- Note: This is slightly different from the geographic correspondence, since dungeon entrances sometimes represent portals that warp between two geographically distant points.
 local fixedParentZoneTable = {
 	-- Main Quest
-	[199]	= { [ALLIANCE_ALDMERI_DOMINION] = 381, [ALLIANCE_EBONHEART_PACT] = 41, [ALLIANCE_DAGGERFALL_COVENANT] = 3, }, 		-- The Harborage
+	[1429]	= { [ALLIANCE_ALDMERI_DOMINION] = 381, [ALLIANCE_EBONHEART_PACT] = 41, [ALLIANCE_DAGGERFALL_COVENANT] = 3, }, 		-- The Harborage
 	-- Fighters Guild Places
 	[207]	= { [ALLIANCE_ALDMERI_DOMINION] = 383, [ALLIANCE_EBONHEART_PACT] = 57, [ALLIANCE_DAGGERFALL_COVENANT] = 19, }, 		-- Mzeneldt
 	[208]	= { [ALLIANCE_ALDMERI_DOMINION] = 108, [ALLIANCE_EBONHEART_PACT] = 117, [ALLIANCE_DAGGERFALL_COVENANT] = 20, }, 	-- The Earth Forge (solo instance : The Prismatic Core)

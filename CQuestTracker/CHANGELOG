@@ -1,3 +1,7 @@
+V2.2.3: [V20203] by Calamath
+- Temporarily removed the welcome message dialog.
+- Updated API version to 101048 (ESO 11.2.x : Seasons of the Worm Cult Part 2)
+
 V2.2.2: [V20202] by Calamath
 - Added a keybind option for reverse cycle quest in response to a request to assign a different key.
 - Added option to lock the position and size of the tracker panel.

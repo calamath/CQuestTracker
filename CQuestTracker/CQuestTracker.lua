@@ -321,7 +321,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.2.2", 
+	version = "2.2.3", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -576,7 +576,7 @@ function CQT:RegisterEvents()
 				-- Check if this is the first login for this character after using this addon.
 				if not self.activityLog.apiVersion then
 					self.activityLog.apiVersion = self.currentApiVersion
-					self:ShowWelcomeMessageDialog()
+--					self:ShowWelcomeMessageDialog()
 				end
 				-- Check if this is the first login after api version update since using this addon.
 				if self.activityLog.apiVersion < self.currentApiVersion then
