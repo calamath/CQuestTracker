@@ -13,12 +13,12 @@ local CQT = CQuestTracker:SetSharedEnvironment()
 local L = GetString
 
 -- ---------------------------------------------------------------------------------------
--- Quest Journal Customizer Base Class (CQuestJournalCustomizer_Shared)
+-- QuestJournal_Quests Customizer Base Class (CQuestJournalCustomizer_Shared)
 -- ---------------------------------------------------------------------------------------
 local CQuestJournalCustomizer_Shared = ZO_DeferredInitializingObject:Subclass()
-function CQuestJournalCustomizer_Shared:Initialize(questJournalObject, questJournalScene, currentSavedVars)
+function CQuestJournalCustomizer_Shared:Initialize(questJournalQuestsObject, questJournalScene, currentSavedVars)
 	ZO_DeferredInitializingObject.Initialize(self, questJournalScene)
-	self.questJournal = questJournalObject
+	self.questJournal = questJournalQuestsObject
 	self.svCurrent = currentSavedVars or {}
 end
 
@@ -125,11 +125,11 @@ CQT:RegisterSharedObject("CQuestJournalCustomizer_Shared", CQuestJournalCustomiz
 
 
 -- ---------------------------------------------------------------------------------------
--- Quest Journal Customizer Gamepad Class (CQuestJournalCustomizer_Gamepad)
+-- QuestJournal_Quests Customizer Gamepad Class (CQuestJournalCustomizer_Gamepad)
 -- ---------------------------------------------------------------------------------------
 local CQuestJournalCustomizer_Gamepad = CQuestJournalCustomizer_Shared:Subclass()
 function CQuestJournalCustomizer_Gamepad:Initialize(svCurrent)
-	CQuestJournalCustomizer_Shared.Initialize(self, SYSTEMS:GetGamepadObject("questJournal") or QUEST_JOURNAL_GAMEPAD, SYSTEMS:GetGamepadRootScene("questJournal") or GAMEPAD_QUEST_JOURNAL_ROOT_SCENE, svCurrent)
+	CQuestJournalCustomizer_Shared.Initialize(self, ZO_QUEST_JOURNAL_QUESTS_GAMEPAD or SYSTEMS:GetGamepadObject("questJournal") or QUEST_JOURNAL_GAMEPAD, SYSTEMS:GetGamepadRootScene("questJournal") or GAMEPAD_QUEST_JOURNAL_ROOT_SCENE, svCurrent)
 end
 
 function CQuestJournalCustomizer_Gamepad:OnDeferredInitialize()
@@ -309,11 +309,11 @@ CQuestTracker:RegisterClassObject("CQuestJournalCustomizer_Gamepad", CQuestJourn
 
 
 -- ---------------------------------------------------------------------------------------
--- Quest Journal Customizer Keyboard Class (CQuestJournalCustomizer_Keyboard)
+-- QuestJournal_Quests Customizer Keyboard Class (CQuestJournalCustomizer_Keyboard)
 -- ---------------------------------------------------------------------------------------
 local CQuestJournalCustomizer_Keyboard = CQuestJournalCustomizer_Shared:Subclass()
 function CQuestJournalCustomizer_Keyboard:Initialize(svCurrent)
-	CQuestJournalCustomizer_Shared.Initialize(self, SYSTEMS:GetKeyboardObject("questJournal") or QUEST_JOURNAL_KEYBOARD, SYSTEMS:GetKeyboardRootScene("questJournal") or QUEST_JOURNAL_SCENE, svCurrent)
+	CQuestJournalCustomizer_Shared.Initialize(self, ZO_QUEST_JOURNAL_QUESTS_KEYBOARD or SYSTEMS:GetKeyboardObject("questJournal") or QUEST_JOURNAL_KEYBOARD, SYSTEMS:GetKeyboardRootScene("questJournal") or QUEST_JOURNAL_SCENE, svCurrent)
 end
 
 function CQuestJournalCustomizer_Keyboard:OnDeferredInitialize()

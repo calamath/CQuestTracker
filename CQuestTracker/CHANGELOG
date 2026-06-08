@@ -1,3 +1,7 @@
+V2.2.4: [V20204] by Calamath
+- Expanded the acceptable range for font size settings up to 64 points.
+- Updated API version to 101050 (ESO 12.0.x : Update 50)
+
 V2.2.3: [V20203] by Calamath
 - Temporarily removed the welcome message dialog.
 - Updated API version to 101048 (ESO 11.2.x : Seasons of the Worm Cult Part 2)

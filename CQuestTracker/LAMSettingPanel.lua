@@ -275,26 +275,6 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		"custom", 
 	}
 	local fontStyleChoices = LMP:List("font")
-	local fontSizeChoices = {
-		"14", 
-		"15", 
-		"16", 
-		"17", 
-		"18", 
-		"19", 
-		"20", 
-		"24", 
-	}
-	local fontSizeChoicesValues = {
-		"$(KB_14)", 
-		"$(KB_15)", 
-		"$(KB_16)", 
-		"$(KB_17)", 
-		"$(KB_18)", 
-		"$(KB_19)", 
-		"$(KB_20)", 
-		"$(KB_24)", 
-	}
 	local fontWeightChoices = {
 		"normal", 
 		"shadow", 
@@ -306,9 +286,9 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 	local function GetFontDescriptor(font)
 		local fontPath = font[FONT_TYPE] == "custom" and LMP:Fetch("font", font[FONT_STYLE]) or font[FONT_TYPE]
 		if font[FONT_WEIGHT] and font[FONT_WEIGHT] ~= "normal" then
-			return string.format("%s|%s|%s", fontPath, font[FONT_SIZE], font[FONT_WEIGHT])
+			return string.format("%s|%u|%s", fontPath, font[FONT_SIZE], font[FONT_WEIGHT])
 		else
-			return string.format("%s|%s", fontPath, font[FONT_SIZE])
+			return string.format("%s|%u", fontPath, font[FONT_SIZE])
 		end
 	end
 	optionsData[#optionsData + 1] = {
@@ -345,17 +325,17 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		default = self.SV_DEFAULT.qhFont[FONT_STYLE], 
 	}
 	optionsData[#optionsData + 1] = {
-		type = "dropdown", 
+		type = "slider", 
 		name = L(SI_CQT_UI_COMMON_FONTSIZE_MENU_NAME), 
 		tooltip = L(SI_CQT_UI_QUEST_NAME_FONTSIZE_MENU_TIPS), 
-		choices = fontSizeChoices, 
-		choicesValues = fontSizeChoicesValues, 
+		min = 8,
+		max = 64,
 		getFunc = function() return self.svCurrent.qhFont[FONT_SIZE] end, 
-		setFunc = function(sizeStr)
-			self.svCurrent.qhFont[FONT_SIZE] = sizeStr
+		setFunc = function(fontSize)
+			self.svCurrent.qhFont[FONT_SIZE] = fontSize
 			self:SetTrackerPanelAttribute("headerFont", GetFontDescriptor(self.svCurrent.qhFont))
 		end, 
-		scrollable = 15, 
+		clampInput = false, 
 		default = self.SV_DEFAULT.qhFont[FONT_SIZE], 
 	}
 	optionsData[#optionsData + 1] = {
@@ -441,17 +421,17 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		default = self.SV_DEFAULT.qcFont[FONT_STYLE], 
 	}
 	optionsData[#optionsData + 1] = {
-		type = "dropdown", 
+		type = "slider", 
 		name = L(SI_CQT_UI_COMMON_FONTSIZE_MENU_NAME), 
 		tooltip = L(SI_CQT_UI_QUEST_CONDITION_FONTSIZE_MENU_TIPS), 
-		choices = fontSizeChoices, 
-		choicesValues = fontSizeChoicesValues, 
+		min = 8,
+		max = 64,
 		getFunc = function() return self.svCurrent.qcFont[FONT_SIZE] end, 
-		setFunc = function(sizeStr)
-			self.svCurrent.qcFont[FONT_SIZE] = sizeStr
+		setFunc = function(fontSize)
+			self.svCurrent.qcFont[FONT_SIZE] = fontSize
 			self:SetTrackerPanelAttribute("conditionFont", GetFontDescriptor(self.svCurrent.qcFont))
 		end, 
-		scrollable = 15, 
+		clampInput = false, 
 		default = self.SV_DEFAULT.qcFont[FONT_SIZE], 
 	}
 	optionsData[#optionsData + 1] = {
@@ -519,17 +499,17 @@ function CQT_LAMSettingPanel:CreateSettingPanel()
 		default = self.SV_DEFAULT.qkFont[FONT_STYLE], 
 	}
 	optionsData[#optionsData + 1] = {
-		type = "dropdown", 
+		type = "slider", 
 		name = L(SI_CQT_UI_COMMON_FONTSIZE_MENU_NAME), 
 		tooltip = L(SI_CQT_UI_QUEST_HINT_FONTSIZE_MENU_TIPS), 
-		choices = fontSizeChoices, 
-		choicesValues = fontSizeChoicesValues, 
+		min = 8,
+		max = 64,
 		getFunc = function() return self.svCurrent.qkFont[FONT_SIZE] end, 
-		setFunc = function(sizeStr)
-			self.svCurrent.qkFont[FONT_SIZE] = sizeStr
+		setFunc = function(fontSize)
+			self.svCurrent.qkFont[FONT_SIZE] = fontSize
 			self:SetTrackerPanelAttribute("hintFont", GetFontDescriptor(self.svCurrent.qkFont))
 		end, 
-		scrollable = 15, 
+		clampInput = false, 
 		default = self.SV_DEFAULT.qkFont[FONT_SIZE], 
 	}
 	optionsData[#optionsData + 1] = {

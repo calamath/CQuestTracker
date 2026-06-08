@@ -321,7 +321,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.2.3", 
+	version = "2.2.4", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 
@@ -347,13 +347,13 @@ local CQT_SV_DEFAULT = {
 		offsetY = 300, 
 		width = 400, 
 		height = 600, 
-		headerFont = "$(BOLD_FONT)|$(KB_18)|soft-shadow-thick", 
+		headerFont = "$(BOLD_FONT)|18|soft-shadow-thick", 
 		headerColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_NORMAL) }, 
 		headerColorSelected = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
-		conditionFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
+		conditionFont = "$(BOLD_FONT)|15|soft-shadow-thick", 
 		conditionColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
 		showHintStep = true, 
-		hintFont = "$(BOLD_FONT)|$(KB_15)|soft-shadow-thick", 
+		hintFont = "$(BOLD_FONT)|15|soft-shadow-thick", 
 		hintColor = { GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SELECTED) }, 
 		showFocusIcon = false, 
 		underlineHeaderOnFocused = true, 
@@ -366,19 +366,19 @@ local CQT_SV_DEFAULT = {
 	qhFont = {
 		[FONT_TYPE] = "$(BOLD_FONT)", 
 		[FONT_STYLE] = "", 
-		[FONT_SIZE] = "$(KB_18)", 
+		[FONT_SIZE] = 18, 
 		[FONT_WEIGHT] = "soft-shadow-thick", 
 	}, 
 	qcFont = {
 		[FONT_TYPE] = "$(BOLD_FONT)", 
 		[FONT_STYLE] = "", 
-		[FONT_SIZE] = "$(KB_15)", 
+		[FONT_SIZE] = 15, 
 		[FONT_WEIGHT] = "soft-shadow-thick", 
 	}, 
 	qkFont = {
 		[FONT_TYPE] = "$(BOLD_FONT)", 
 		[FONT_STYLE] = "", 
-		[FONT_SIZE] = "$(KB_15)", 
+		[FONT_SIZE] = 15, 
 		[FONT_WEIGHT] = "soft-shadow-thick", 
 	}, 
 	panelBehavior = {
@@ -529,6 +529,41 @@ function CQT:OnAddOnLoaded()
 end
 
 function CQT:ValidateConfigDataSV(sv)
+	-- font size format changes in V2.2.4
+	local fontSizeMap
+	if self.lang == "jp" or self.lang == "zh" then
+		fontSizeMap = {
+			["$(KB_14)"] = 12, 
+			["$(KB_15)"] = 13, 
+			["$(KB_16)"] = 15, 
+			["$(KB_17)"] = 15, 
+			["$(KB_18)"] = 16, 
+			["$(KB_19)"] = 17, 
+			["$(KB_20)"] = 18, 
+			["$(KB_24)"] = 22, 
+		}
+	else
+		fontSizeMap = {
+			["$(KB_14)"] = 14, 
+			["$(KB_15)"] = 15, 
+			["$(KB_16)"] = 16, 
+			["$(KB_17)"] = 17, 
+			["$(KB_18)"] = 18, 
+			["$(KB_19)"] = 19, 
+			["$(KB_20)"] = 20, 
+			["$(KB_24)"] = 24, 
+		}
+	end
+	if type(sv.qhFont[FONT_SIZE]) == "string" then
+		sv.qhFont[FONT_SIZE] = fontSizeMap[sv.qhFont[FONT_SIZE]] or CQT_SV_DEFAULT.qhFont[FONT_SIZE]
+	end
+	if type(sv.qcFont[FONT_SIZE]) == "string" then
+		sv.qcFont[FONT_SIZE] = fontSizeMap[sv.qcFont[FONT_SIZE]] or CQT_SV_DEFAULT.qcFont[FONT_SIZE]
+	end
+	if type(sv.qkFont[FONT_SIZE]) == "string" then
+		sv.qkFont[FONT_SIZE] = fontSizeMap[sv.qkFont[FONT_SIZE]] or CQT_SV_DEFAULT.qkFont[FONT_SIZE]
+	end
+
 	if sv.panelAttributes.compactMode == nil					then sv.panelAttributes.compactMode						= CQT_SV_DEFAULT.panelAttributes.compactMode								end
 	if sv.panelAttributes.clampedToScreen == nil				then sv.panelAttributes.clampedToScreen					= CQT_SV_DEFAULT.panelAttributes.clampedToScreen							end
 	if sv.panelAttributes.movable == nil						then sv.panelAttributes.movable							= CQT_SV_DEFAULT.panelAttributes.movable									end
@@ -541,7 +576,7 @@ function CQT:ValidateConfigDataSV(sv)
 	if sv.panelAttributes.showTypeIcon == nil					then sv.panelAttributes.showTypeIcon					= CQT_SV_DEFAULT.panelAttributes.showTypeIcon								end
 	if sv.panelAttributes.enableTypeIconColoring == nil			then sv.panelAttributes.enableTypeIconColoring			= CQT_SV_DEFAULT.panelAttributes.enableTypeIconColoring						end
 	if sv.panelAttributes.showRepeatableQuestIcon == nil		then sv.panelAttributes.showRepeatableQuestIcon			= CQT_SV_DEFAULT.panelAttributes.showRepeatableQuestIcon					end
-	if sv.qkFont == nil											then sv.qkFont											= ZO_ShallowTableCopy(sv.qcFont)											end		-- Derived from qcFont and added
+	if sv.qkFont == nil											then sv.qkFont											= ZO_ShallowTableCopy(CQT_SV_DEFAULT.qkFont)								end
 	if sv.qPingAttributes == nil								then sv.qPingAttributes									= ZO_ShallowTableCopy(CQT_SV_DEFAULT.qPingAttributes)						end
 	if sv.qPingAttributes.stopPingingOnHidingMapScene == nil	then sv.qPingAttributes.stopPingingOnHidingMapScene		= CQT_SV_DEFAULT.qPingAttributes.stopPingingOnHidingMapScene				end
 
