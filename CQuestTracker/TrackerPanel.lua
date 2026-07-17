@@ -188,7 +188,7 @@ end
 
 function CQT_TrackerPanel:ResetAnchorPosition()
 	self.panelControl:ClearAnchors()
-	self.panelControl:SetAnchor(TOPLEFT, guiRoot, TOPLEFT, self:GetAttribute("offsetX"), self:GetAttribute("offsetY"))
+	self.panelControl:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self:GetAttribute("offsetX"), self:GetAttribute("offsetY"))
 	self.panelControl:SetDimensions(self:GetAttribute("width"), self:GetAttribute("height"))
 	self.container:SetWidth(self.container:GetParent():GetWidth())
 	self.trackerTree.width = self.container:GetWidth()

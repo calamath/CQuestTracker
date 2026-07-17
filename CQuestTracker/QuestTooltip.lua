@@ -211,7 +211,7 @@ function CQT_QuestTooltip_Controller:LayoutQuestTooltip(journalIndex)
 		else
 			objectivesHeader = L(SI_CQT_QUEST_OBJECTIVES_HEADER)
 		end
-		self:AddLine(zo_strformat(objectivesHeader, self:IsMultipleDescriptions(journalIndex, MAIN_STEP_INDEX) and 2 or 1), "ZoFontGameMedium", titleR, titleG, titleB, LEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_LEFT, true)
+		self:AddLine(zo_strformat(objectivesHeader, self:IsMultipleDescriptions(journalIndex, QUEST_MAIN_STEP_INDEX) and 2 or 1), "ZoFontGameMedium", titleR, titleG, titleB, LEFT, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_LEFT, true)
 		self:AddLine(activeStepText, "ZoFontGameMedium", ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB())
 		self:AddDivider()
 		self:AddQuestConditions(journalIndex, QUEST_MAIN_STEP_INDEX)
@@ -267,7 +267,7 @@ end
 
 function CQT_QuestTooltip_Controller:ShowQuestTooltipNextToControl(journalIndex, owner, offsetX)
 	local PADDING = offsetX or 10
-	jorunalIndex = journalIndex or owner.journalIndex
+	journalIndex = journalIndex or owner.journalIndex
 	if journalIndex then
 		local relativePoint = LEFT	-- or user preference
 		if (owner:GetRight() + PADDING + self.tooltip:GetWidth()) > GuiRoot:GetRight() then

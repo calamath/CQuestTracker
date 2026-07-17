@@ -556,7 +556,6 @@ function CWorldMapUtility:ShowQuestOnMap(journalIndex, stepIndex, conditionIndex
 				if result ~= SET_MAP_RESULT_FAILED then
 					destinationStepIndex = stepIndex
 					destinationConditionIndex = conditionIndex
-					isComplete = select(4, GetJournalQuestConditionValues(journalIndex, stepIndex, conditionIndex))
 				end
 			end
 			-- Normally, we would switch to the destination map here.

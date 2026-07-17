@@ -33,6 +33,7 @@ local zoneDisplayTypeIconTexture = {
 	[ZONE_DISPLAY_TYPE_ZONE_STORY]		= "EsoUI/Art/Journal/Gamepad/gp_questTypeIcon_zoneStory.dds", 
 	[ZONE_DISPLAY_TYPE_COMPANION]		= "EsoUI/Art/Journal/Gamepad/gp_questTypeIcon_companion.dds", 
 	[ZONE_DISPLAY_TYPE_ENDLESS_DUNGEON]	= "EsoUI/Art/Journal/Gamepad/gp_questTypeIcon_endlessDungeon.dds", 
+	[ZONE_DISPLAY_TYPE_ADVENTURE_ZONE]	= "EsoUI/Art/Journal/Gamepad/gp_questTypeIcon_adventureZone.dds", 
 }
 local function GetZoneDisplayTypeIcon(zoneDisplayType)
 	return zoneDisplayTypeIconTexture[zoneDisplayType]
@@ -58,6 +59,8 @@ local questTypeIconTexture = {
 	[QUEST_TYPE_COMPANION]			= "EsoUI/Art/Journal/Gamepad/gp_questTypeIcon_companion.dds", 
 	[QUEST_TYPE_TRIBUTE]			= "EsoUI/Art/Tribute/Gamepad/gp_tribute_tabicon_tribute.dds", 
 	[QUEST_TYPE_SCRIBING]			= "EsoUI/Art/TreeIcons/Gamepad/gp_tutorial_indexicon_scribing.dds", 
+	[QUEST_TYPE_FAVOR]				= nil, 
+	[QUEST_TYPE_TAMRIEL_TALE]		= nil, 
 }
 local function GetQuestTypeIcon(questType)
 	return questTypeIconTexture[questType]
@@ -70,15 +73,16 @@ local questBackgroundTexture = {
 -- Supported textures: 512px wide gamepad store textures and loading screen textures.
 
 -- Tutorial Quest
-	[4961]	= "EsoUI/Art/Store/Gamepad/gp_crwn_consumables_werewolfbite_1x1.dds", 						-- Hircine's Gift
-	[4964]	= "EsoUI/Art/Store/Gamepad/gp_crwn_consumables_vampirebite.dds", 							-- Scion of the Blood Matron
+	[4961]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_werewolf_firralthel_1x1.dds", 				-- Hircine's Gift
+	[4964]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_vampirism_azisathekeeper_1x1.dds", 			-- Scion of the Blood Matron
 	[5949]	= "EsoUI/Art/Store/Gamepad/gp_crwn_bullet_mw_pvpbattlegrounds_1x1.dds", 					-- For Glory
 	[6130]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_roomtospare_felandedemarie_1x1.dds", 		-- Room to Spare
 	[6532]	= "EsoUI/Art/Store/Gamepad/gp_crwn_housing_housingquestgiver_1x1.dds", 						-- Guild Listings
 	[6646]	= "EsoUI/Art/LoadingScreens/loadscreen_u30_tutorial_01.dds", 								-- The Gates of Adamant
 	[6799]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_talesoftribute_brahgas_1x1.dds", 			-- Tales of Tribute
 	[7061]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_endlessarchive_mastermalkhest_1x1.dds", 	-- The Margins of Ire
-	[7104]	= "EsoUI/Art/LoadingScreens/loadscreen_scribing_01.dds", 									-- The Second Era of Scribing.
+	[7104]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_scribing_adeptirnardrirnil_1x1.dds", 		-- The Second Era of Scribing.
+	[7325]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_subclassing_bahtraathunding_1x1.dds", 		-- A Study in Discipline
 
 -- Prologue Quest
 	[5935]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_vv_divineconundrum_1x1.dds", 				-- The Missing Prophecy
@@ -105,6 +109,8 @@ local questBackgroundTexture = {
 	[7079]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_prologue_galsabaru_1x1.dds", 				-- Prisoner of Fate
 	[7290]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_prologue_princeazah_1x1.dds", 				-- A Guild in Crisis
 	[7310]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_prologue_princeazah_1x1.dds", 				-- Justice for the Fallen
+	[7168]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_glenthievesguild_skeevernivo_1x1.dds", 		-- The Codex Caper
+	[7418]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_sheogorath_noththeunhinged_1x1.dds", 		-- Sheogorath Takes a Holiday
 
 -- Event Quest
 	[5635]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_chefdonolon_1x1.dds", 						-- Ache for Cake (2016)
@@ -128,6 +134,9 @@ local questBackgroundTexture = {
 	[7029]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_gatesofoblivion_plokun_1x1.dds", 			-- Burdensome Beasts
 	[7060]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_secretsofthetelvanni_masterfaras_1x1.dds", 	-- The Telvanni Secret
 	[7191]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_apprenticemogh_1x1.dds",  					-- For Cake's Sake
+
+-- Event Zone Quest
+	[7363]	= "EsoUI/Art/Store/Gamepad/gp_crwn_queststarter_nightmarket_thecurator_1x1.dds", 			-- Those Who Would Rule
 }
 local function GetQuestBackgroundTexture(questId)
 	return questBackgroundTexture[questId]

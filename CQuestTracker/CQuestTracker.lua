@@ -9,7 +9,7 @@
 -- Note :
 -- This addon works that uses the library LibAddonMenu-2.0 by sirinsidiator, Seerah, released under the Artistic License 2.0
 -- This addon works that uses the library LibCustomMenu by votan.
--- This addon works that uses the library LibMediaProvider-1.0 by Seerah, released under the LGPL-2.1 license.
+-- This addon works that uses the library LibMediaProvider by Seerah, released under the LGPL-2.1 license.
 -- This addon works that uses the library LibCInteraction by Calamath, released under the Artistic License 2.0
 -- You will need to obtain the above libraries separately.
 --
@@ -28,16 +28,17 @@ end
 
 
 -- ---------------------------------------------------------------------------------------
--- CT_SimpleAddonFramework: Simple Add-on Framework Template Class              rel.1.0.11
+-- CT_MinimalAddonFramework: Minimal Add-on Framework Template Class            rel.1.1.12
 -- ---------------------------------------------------------------------------------------
-local CT_SimpleAddonFramework = ZO_Object:Subclass()
-function CT_SimpleAddonFramework:New(...)
+local CT_MinimalAddonFramework = ZO_Object:Subclass()
+function CT_MinimalAddonFramework:New(...)
 	local newObject = setmetatable({}, self)
 	newObject:Initialize(...)
+	newObject:ConfigDebug()
 	newObject:OnInitialized(...)
 	return newObject
 end
-function CT_SimpleAddonFramework:Initialize(name, attributes)
+function CT_MinimalAddonFramework:Initialize(name, attributes)
 	if type(name) ~= "string" or name == "" then return end
 	self._name = name
 	self._isInitialized = false
@@ -48,18 +49,13 @@ function CT_SimpleAddonFramework:Initialize(name, attributes)
 			end
 		end
 	end
-	self.authority = self.authority or {}
-	self._class = {}
-	self._shared = nil
 	self._external = {
 		name = self.name or self._name, 
 		version = self.version, 
 		author = self.author, 
-		RegisterClassObject = function(_, ...) self:RegisterClassObject(...) end, 
 	}
 	assert(not _G[name], name .. " is already loaded.")
 	_G[name] = self._external
-	self:ConfigDebug()
 	EVENT_MANAGER:RegisterForEvent(self._name, EVENT_ADD_ON_LOADED, function(event, addonName)
 		if addonName ~= self._name then return end
 		EVENT_MANAGER:UnregisterForEvent(self._name, EVENT_ADD_ON_LOADED)
@@ -67,25 +63,52 @@ function CT_SimpleAddonFramework:Initialize(name, attributes)
 		self._isInitialized = true
 	end)
 end
-function CT_SimpleAddonFramework:ConfigDebug(arg)
+function CT_MinimalAddonFramework:ConfigDebug()
+	local Dummy = function() end
+	self.LDL = { Verbose = Dummy, Debug = Dummy, Info = Dummy, Warn = Dummy, Error = Dummy, }
+	self._isDebugMode = false
+end
+function CT_MinimalAddonFramework:OnInitialized(name, attributes)
+--  Available when overridden in an inherited class
+end
+function CT_MinimalAddonFramework:OnAddOnLoaded(event, addonName)
+--  Should be Overridden
+end
+
+-- ---------------------------------------------------------------------------------------
+-- CT_SimpleAddonFramework: Simple Add-on Framework Template Class              rel.1.1.12
+-- ---------------------------------------------------------------------------------------
+local CT_SimpleAddonFramework = CT_MinimalAddonFramework:Subclass()
+function CT_SimpleAddonFramework:Initialize(name, attributes)
+	CT_MinimalAddonFramework.Initialize(self, name, attributes)
+	if self._external then
+		self._class = {}
+		self._shared = nil
+		self._external.RegisterClassObject = function(_, ...) self:RegisterClassObject(...) end
+	end
+end
+function CT_SimpleAddonFramework:ConfigDebug(auth)
 	local debugMode = false
-	local key = HashString(GetDisplayName())
-	if LibDebugLogger then
-		for _, v in pairs(arg or self.authority or {}) do
+	auth = auth or self.authority
+	if type(auth) == "table" then
+		local key = HashString(GetDisplayName())
+		for _, v in pairs(auth) do
 			if key == v then debugMode = true end
 		end
 	end
 	if debugMode then
-		self._logger = self._logger or LibDebugLogger(self._name)
+		if not self._logger then
+			if not IsConsoleUI() and LibDebugLogger then
+				self._logger = LibDebugLogger(self._name)
+			else
+				local Printf = function(_, ...) df(...) end
+				self._logger = { Verbose = Printf, Debug = Printf, Info = Printf, Warn = Printf, Error = Printf, }
+			end
+		end
 		self.LDL = self._logger
 	else
-		self.LDL = {
-			Verbose = function() end, 
-			Debug = function() end, 
-			Info = function() end, 
-			Warn = function() end, 
-			Error = function() end, 
-		}
+		local Dummy = function() end
+		self.LDL = { Verbose = Dummy, Debug = Dummy, Info = Dummy, Warn = Dummy, Error = Dummy, }
 	end
 	self._isDebugMode = debugMode
 end
@@ -107,15 +130,10 @@ function CT_SimpleAddonFramework:CreateClassObject(className, ...)
 		return self._class[className]:New(...)
 	end
 end
-function CT_SimpleAddonFramework:OnInitialized(name, attributes)
---  Available when overridden in an inherited class
-end
-function CT_SimpleAddonFramework:OnAddOnLoaded(event, addonName)
---  Should be Overridden
-end
+
 
 -- ---------------------------------------------------------------------------------------
--- CT_AddonFramework: Add-on Framework Template Class for multiple modules      rel.1.0.11
+-- CT_AddonFramework: Add-on Framework Template Class for multiple modules      rel.1.1.12
 -- ---------------------------------------------------------------------------------------
 local CT_AddonFramework = CT_SimpleAddonFramework:Subclass()
 function CT_AddonFramework:Initialize(name, attributes)
@@ -130,34 +148,28 @@ function CT_AddonFramework:Initialize(name, attributes)
 		CreateClassObject = function(_, ...) return self:CreateClassObject(...) end, 
 		RegisterGlobalObject = function(_, ...) return self:RegisterGlobalObject(...) end, 
 		RegisterSharedObject = function(_, ...) return self:RegisterSharedObject(...) end, 
-		RegisterCallback = function(_, ...) return self:RegisterCallback(...) end, 
-		UnregisterCallback = function(_, ...) return self:UnregisterCallback(...) end, 
-		FireCallbacks = function(_, ...) return self:FireCallbacks(...) end, 
 	}
 	self._external.SetSharedEnvironment = function()
 		-- This method is intended to be called in the main chunk and should not be called inside functions.
 		self:EnableCustomEnvironment(self._env, 3)	-- [Main Chunk]: self._external:SetSharedEnvironment() -> self:EnableCustomEnvironment(t, 3) -> setfenv(3, t)
 		return self._shared
 	end
-	self._external.FireCallbacks = function(_, ...) return self:FireCallbacks(...) end 
 	if self._enableCallback then
 		self._callbackObject = ZO_CallbackObject:New()
-		self.RegisterCallback = function(self, ...)
-			return self._callbackObject:RegisterCallback(...)
-		end
-		self.UnregisterCallback = function(self, ...)
-			return self._callbackObject:UnregisterCallback(...)
-		end
-		self.FireCallbacks = function(self, ...)
-			return self._callbackObject:FireCallbacks(...)
-		end
+		self.RegisterCallback = function(self, ...) return self._callbackObject:RegisterCallback(...) end
+		self.UnregisterCallback = function(self, ...) return self._callbackObject:UnregisterCallback(...) end
+		self.FireCallbacks = function(self, ...) return self._callbackObject:FireCallbacks(...) end
+		self._shared.RegisterCallback = function(_, ...) return self._callbackObject:RegisterCallback(...) end
+		self._shared.UnregisterCallback = function(_, ...) return self._callbackObject:UnregisterCallback(...) end
+		self._shared.FireCallbacks = function(_, ...) return self._callbackObject:FireCallbacks(...) end
+		self._external.FireCallbacks = function(_, ...) return self._callbackObject:FireCallbacks(...) end
 	end
 	if self._enableEnvironment then
 		self:EnableCustomEnvironment(self._env, 4)	-- [Main Chunk]: self:New() -> self:Initialize() -> EnableCustomEnvironment(t, 4) -> setfenv(4, t)
 	end
 end
-function CT_AddonFramework:ConfigDebug(arg)
-	CT_SimpleAddonFramework.ConfigDebug(self, arg)
+function CT_AddonFramework:ConfigDebug(auth)
+	CT_SimpleAddonFramework.ConfigDebug(self, auth)
 	if self._shared then
 		self._shared.LDL = self.LDL
 	end
@@ -192,15 +204,6 @@ function CT_AddonFramework:RegisterSharedObject(objectName, sharedObject)
 	else
 		return false
 	end
-end
-function CT_AddonFramework:RegisterCallback(...)
--- stub: Method name reserved
-end
-function CT_AddonFramework:UnregisterCallback(...)
--- stub: Method name reserved
-end
-function CT_AddonFramework:FireCallbacks(...)
--- stub: Method name reserved
 end
 
 
@@ -321,7 +324,7 @@ local _SHARED_DEFINITIONS = {
 local _ENV = CT_AddonFramework:CreateCustomEnvironment(_SHARED_DEFINITIONS)
 local CQT = CT_AddonFramework:New("CQuestTracker", {
 	name = "CQuestTracker", 
-	version = "2.2.4", 
+	version = "2.2.5", 
 	author = "Calamath", 
 	savedVarsSV = "CQuestTrackerSV", 
 	savedVarsVersion = 1, 

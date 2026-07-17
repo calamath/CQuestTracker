@@ -1,3 +1,7 @@
+V2.2.5: [V20205] by Calamath
+- Fixed leaking global variables. Special thanks to: DakJaniels
+- Some minor improvements.
+
 V2.2.4: [V20204] by Calamath
 - Expanded the acceptable range for font size settings up to 64 points.
 - Updated API version to 101050 (ESO 12.0.x : Update 50)
