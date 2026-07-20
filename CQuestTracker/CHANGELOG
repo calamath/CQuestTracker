@@ -1,3 +1,6 @@
+V2.2.6: [V20206] by Calamath
+- Updated Simplified Chinese translations. Special thanks to: FusRoDah
+
 V2.2.5: [V20205] by Calamath
 - Fixed leaking global variables. Special thanks to: DakJaniels
 - Some minor improvements.
